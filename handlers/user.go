@@ -6,6 +6,7 @@ import (
 
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/keycloak"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/pkg/apifirst"
+	"github.com/gorilla/mux"
 )
 
 // Handlers Interface represents all server handlers.
@@ -62,6 +63,31 @@ func (s UserHandlers) GetAllUsers(response *apifirst.Response, request *http.Req
 	response.SetBody(t)
 
 	return nil
+}
+
+func (s UserHandlers) GetUserByUsername(response *apifirst.Response, request *http.Request) error {
+	params := mux.Vars(request)
+	username := params["username"]
+
+	kUser, err := keycloak.GetUser(username)
+	if err != nil {
+		response.SetStatus(http.StatusNotFound)
+		return err
+	}
+
+	log.Println(kUser)
+
+	var user User
+
+	user.Email = *kUser.Email
+	user.Firstname = *kUser.FirstName
+	user.Lastname = *kUser.LastName
+	user.Username = *kUser.Username
+
+	response.SetStatus(http.StatusOK)
+	response.SetBody(user)
+
+	return err
 }
 
 // CreateUser

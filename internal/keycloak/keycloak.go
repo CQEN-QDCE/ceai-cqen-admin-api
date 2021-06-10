@@ -74,3 +74,32 @@ func GetUsers() ([]*gocloak.User, error) {
 
 	return users, nil
 }
+
+func GetUser(username string) (*gocloak.User, error) {
+	c, err := GetClient()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var briefRep = true
+	ctx := context.Background()
+	users, err := (*c.client).GetUsers(
+		ctx,
+		c.token.AccessToken,
+		c.realm,
+		gocloak.GetUsersParams{
+			BriefRepresentation: &briefRep,
+			Username:            &username,
+		})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(users) > 1 {
+		return nil, nil
+	}
+
+	return users[0], nil
+}
