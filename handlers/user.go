@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
+	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/keycloak"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/pkg/apifirst"
 )
 
@@ -36,22 +38,30 @@ type BogusUser struct {
 
 // GetAllUsers
 func (s UserHandlers) GetAllUsers(response *apifirst.Response, request *http.Request) error {
-	var err error
-
-	u := User{
-		Email:     "user@example.com",
-		Firstname: "Bobby",
-		Lastname:  "Beaulieu",
-		Username:  "bobeau01",
+	kusers, err := keycloak.GetUsers()
+	if err != nil {
+		response.SetStatus(http.StatusInternalServerError)
+		log.Println(err)
+		return err
 	}
 
-	var t [1]User
+	t := make([]User, 0, len(kusers))
 
-	t[0] = u
+	for _, kuser := range kusers {
+		var user User
 
+		user.Email = *kuser.Email
+		user.Firstname = *kuser.FirstName
+		user.Lastname = *kuser.LastName
+		user.Username = *kuser.Username
+
+		t = append(t, user)
+	}
+
+	response.SetStatus(http.StatusOK)
 	response.SetBody(t)
 
-	return err
+	return nil
 }
 
 // CreateUser
