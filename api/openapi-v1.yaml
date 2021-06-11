@@ -64,7 +64,6 @@ paths:
   /user:
     get:
       operationId: GetUsers
-      Get the list of users defined in the environment.
       responses:
         '200':
           description: OK
@@ -333,7 +332,6 @@ paths:
   /keycloak/user:
     get:
       operationId: GetUsers
-      Get the list of users defined in the environment.
       responses:
         '200':
           description: OK
@@ -414,8 +412,9 @@ paths:
           description: OK
   /keycloak/group:
     get:
-      operationId: GetGroups
-      Get the list of groups defined in Keycloak.
+      operationId: GetProjects
+      description: >-
+       Get the list of groups defined in Keycloak.
       responses:
         '200':
           description: OK
@@ -580,7 +579,6 @@ paths:
   /openshift/user:
     get:
       operationId: GetUsers
-      Get the list of users defined in Openshift.
       responses:
         '200':
           description: OK
@@ -662,7 +660,6 @@ paths:
   /aws/scim/user:
     get:
       operationId: GetUsers
-      Get the list of users defined in aws/scim.
       responses:
         '200':
           description: OK
