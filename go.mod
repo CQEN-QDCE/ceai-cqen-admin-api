@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.3.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.2.1
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.3.1
-	github.com/getkin/kin-openapi v0.62.0
+	github.com/getkin/kin-openapi v0.63.0
 	github.com/gorilla/mux v1.8.0
 	github.com/joho/godotenv v1.3.0
 	github.com/openshift/api v0.0.0-20210610130314-a6ac319a7eed

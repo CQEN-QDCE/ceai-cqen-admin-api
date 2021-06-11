@@ -23,6 +23,22 @@ components:
           format: email
         username: 
           type: string
+    Laboratory:
+      type: object
+      required: 
+        - "id"
+        - "name"
+        - "description"
+        - "gitrepo"
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        gitrepo:
+          type: string
 paths:
   /user:
     get:
@@ -126,3 +142,34 @@ paths:
       responses:
         '200':
           description: OK
+  /laboratory:
+    get:
+      operationId: GetLaboratories
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Laboratory'
+  /laboratory/{laboratoryid}:
+    get:
+      operationId: GetLaboratoryById
+      description: >-
+        Get a laboratory by its id.
+      parameters:
+        - name: id
+          in: path
+          description: The id of the targetted laboratory.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Laboratory'

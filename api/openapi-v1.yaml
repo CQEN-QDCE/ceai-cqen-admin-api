@@ -1,6 +1,7 @@
 openapi: '3.0.3'
 info:
   title: API d'administration de l'infrastructure du Centre d'expertise appliquée en innovation du CQEN
+  description: Cet API permet d'administrer l'infrastructure d'expérimentation afin de supporter l'offre de services de laboratoires.
   version: '1.0'
 servers:
   - url: /
@@ -23,10 +24,47 @@ components:
           format: email
         username: 
           type: string
+    Laboratory:
+      type: object
+      required: 
+        - "id"
+        - "displayname"
+        - "description"
+        - "gitrepo"
+      properties:
+        id:
+          type: string
+        displayname:
+          type: string
+        description:
+          type: string
+        gitrepo:
+          type: string
+    Project:
+      type: object
+      required: 
+        - "id"
+        - "displayname"
+        - "description"
+      properties:
+        id:
+          type: string
+        displayname:
+          type: string
+        description:
+          type: string     
+    Group:
+      type: object
+      required: 
+        - "id"
+      properties:
+        id:
+          type: string
 paths:
   /user:
     get:
-      operationId: GetAllUsers
+      operationId: GetUsers
+      Get the list of users defined in the environment.
       responses:
         '200':
           description: OK
@@ -39,7 +77,7 @@ paths:
     post:
       operationId: CreateUser
       description: >-
-        Create user
+        Create a user in the environment.
       requestBody:
         required: true
         content:
@@ -51,13 +89,13 @@ paths:
           description: OK
   /user/{username}:
     get:
-      operationId: GetUserByUsername
+      operationId: GetUserFromUsername
       description: >-
-        Get a user
+        Get a user from its username.
       parameters:
         - name: username
           in: path
-          description: Username
+          description: The username of the targetted user.
           required: true
           schema:
             type: string
@@ -71,11 +109,11 @@ paths:
     put:
       operationId: UpdateUser
       description: >-
-        Update a user
+        Update a user.
       parameters:
         - name: username
           in: path
-          description: Username
+          description: The username of the targetted user.
           required: true
           schema:
             type: string
@@ -94,11 +132,11 @@ paths:
     delete:
       operationId: DeleteUser
       description: >-
-        Deactivate a user
+        Delete a user.
       parameters:
         - name: username
           in: path
-          description: Username
+          description: The username of the targetted user.
           required: true
           schema:
             type: string
@@ -113,7 +151,7 @@ paths:
       parameters:
         - name: username
           in: path
-          description: Username
+          description: The username of the targetted user.
           required: true
           schema:
             type: string
@@ -126,3 +164,580 @@ paths:
       responses:
         '200':
           description: OK
+  /laboratory:
+    get:
+      operationId: GetLaboratories
+      description: >-
+        Get the list of laboratories contained in the environment.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Laboratory'
+    post:
+      operationId: CreateLaboratory
+      description: >-
+        Create the entire laboratory. That includes : users, projects, source code repository, etc.
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Laboratory'
+      responses:
+        '200':
+          description: OK
+  /laboratory/{laboratoryid}:
+    get:
+      operationId: GetLaboratoryFromId
+      description: >-
+        Get a laboratory from its identifier.
+      parameters:
+        - name: id
+          in: path
+          description: The identifier of the targetted laboratory.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Laboratory'
+    put:
+      operationId: UpdateLaboratory
+      description: >-
+        Update the attributes of a laboratory.
+      parameters:
+        - name: id
+          in: path
+          description: The identifier of the targetted laboratory.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Laboratory'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Laboratory'
+    delete:
+      operationId: DeleteLaboratory
+      description: >-
+        This endpoint deletes a laboratory. 
+      parameters:
+        - name: id
+          in: path
+          description: The identifier of the targetted laboratory.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /project:
+    get:
+      operationId: GetProjects
+      description: >-
+        Get the list of projects defined in the environment.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Project'
+    post:
+      operationId: CreateProject
+      description: >-
+        Create a project in the development environment.
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        '200':
+          description: OK
+  /project/{projectid}:
+    get:
+      operationId: GetProjectFromId
+      description: >-
+        Get a project from its identifier.
+      parameters:
+        - name: id
+          in: path
+          description: The identifier of the targetted project.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+    put:
+      operationId: UpdateProject
+      description: >-
+        Update the attributes of a project.
+      parameters:
+        - name: id
+          in: path
+          description: The identifier of the targetted project.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+    delete:
+      operationId: DeleteProject
+      description: >-
+        Delete a project. 
+      parameters:
+        - name: id
+          in: path
+          description: The identifier of the targetted project.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /keycloak/user:
+    get:
+      operationId: GetUsers
+      Get the list of users defined in the environment.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/User'
+    post:
+      operationId: CreateUser
+      description: >-
+        Create a user in the environment.
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: OK
+  /keycloak/user/{username}:
+    get:
+      operationId: GetUserFromUsername
+      description: >-
+        Get a user from its username in Keycloak.
+      parameters:
+        - name: username
+          in: path
+          description: The username of the targetted user.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    put:
+      operationId: UpdateUser
+      description: >-
+        Update a user in Keycloak.
+      parameters:
+        - name: username
+          in: path
+          description: The username of the targetted user.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    delete:
+      operationId: DeleteUser
+      description: >-
+        Delete a user in Keycloak.
+      parameters:
+        - name: username
+          in: path
+          description: The username of the targetted user.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /keycloak/group:
+    get:
+      operationId: GetGroups
+      Get the list of groups defined in Keycloak.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Group'
+    post:
+      operationId: CreateGroup
+      description: >-
+        Create a group in Keycloak.
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Group'
+      responses:
+        '200':
+          description: OK
+  /keycloak/group/{groupname}:
+    get:
+      operationId: GetGroupFromId
+      description: >-
+        Get a group from its identifier in Keycloak.
+      parameters:
+        - name: id
+          in: path
+          description: The identifier of the targetted group.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+    put:
+      operationId: UpdateGroup
+      description: >-
+        Update a group in Keycloak.
+      parameters:
+        - name: id
+          in: path
+          description: The identifier of the targetted group.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Group'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+    delete:
+      operationId: DeleteGroup
+      description: >-
+        Delete a group in Keycloak..
+      parameters:
+        - name: id
+          in: path
+          description: The identiier of the targetted group.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK          
+  /openshift/project:
+    get:
+      operationId: GetProjects
+      description: >-
+       Get the list of projects defined in Openshift.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Project'
+    post:
+      operationId: CreateProject
+      description: >-
+        Create a project in Openshift.
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        '200':
+          description: OK
+  /openshift/project/{projectid}:
+    get:
+      operationId: GetProjectFromId
+      description: >-
+        Get a project from its identifier in Openshift.
+      parameters:
+        - name: id
+          in: path
+          description: The identifier of the targetted project.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+    put:
+      operationId: UpdateProject
+      description: >-
+        Update the attributes of a project Openshift.
+      parameters:
+        - name: id
+          in: path
+          description: The identifier of the targetted project.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+    delete:
+      operationId: DeleteProject
+      description: >-
+        Delete a project in Openshift. 
+      parameters:
+        - name: id
+          in: path
+          description: The identifier of the targetted project.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /openshift/user:
+    get:
+      operationId: GetUsers
+      Get the list of users defined in Openshift.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/User'
+    post:
+      operationId: CreateUser
+      description: >-
+        Create a user in Openshift.
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: OK
+  /openshift/user/{username}:
+    get:
+      operationId: GetUserFromUsername
+      description: >-
+        Get a user from its username in Openshift.
+      parameters:
+        - name: username
+          in: path
+          description: The username of the targetted user.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    put:
+      operationId: UpdateUser
+      description: >-
+        Update a user in Openshift.
+      parameters:
+        - name: username
+          in: path
+          description: The username of the targetted user.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    delete:
+      operationId: DeleteUser
+      description: >-
+        Delete a user in Openshift.
+      parameters:
+        - name: username
+          in: path
+          description: The username of the targetted user.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK         
+  /aws/scim/user:
+    get:
+      operationId: GetUsers
+      Get the list of users defined in aws/scim.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/User'
+    post:
+      operationId: CreateUser
+      description: >-
+        Create a user in aws/scim.
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: OK
+  /aws/scim/user/{username}:
+    get:
+      operationId: GetUserFromUsername
+      description: >-
+        Get a user from its username in aws/scim.
+      parameters:
+        - name: username
+          in: path
+          description: The username of the targetted user.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    put:
+      operationId: UpdateUser
+      description: >-
+        Update a user in aws/scim.
+      parameters:
+        - name: username
+          in: path
+          description: The username of the targetted user.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    delete:
+      operationId: DeleteUser
+      description: >-
+        Delete a user in aws/scim.
+      parameters:
+        - name: username
+          in: path
+          description: The username of the targetted user.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK    
