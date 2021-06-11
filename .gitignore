@@ -16,3 +16,5 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+ceai-cqen-admin-api
+.DS_Store
