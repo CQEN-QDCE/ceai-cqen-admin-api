@@ -2,6 +2,7 @@ package keycloak
 
 import (
 	"context"
+	"errors"
 	"os"
 
 	"github.com/Nerzal/gocloak/v8"
@@ -97,8 +98,9 @@ func GetUser(username string) (*gocloak.User, error) {
 		return nil, err
 	}
 
-	if len(users) > 1 {
-		return nil, nil
+	if len(users) < 1 {
+		err := errors.New("Username not found.")
+		return nil, err
 	}
 
 	return users[0], nil

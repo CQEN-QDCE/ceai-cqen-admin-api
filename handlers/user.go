@@ -13,7 +13,7 @@ import (
 type UserHandlersInterface interface {
 
 	// (GET /user)
-	GetAllUsers(response *apifirst.Response, r *http.Request) error
+	GetUsers(response *apifirst.Response, r *http.Request) error
 	CreateUser(response *apifirst.Response, r *http.Request) error
 }
 
@@ -38,7 +38,7 @@ type BogusUser struct {
 }
 
 // GetAllUsers
-func (s UserHandlers) GetAllUsers(response *apifirst.Response, request *http.Request) error {
+func (s UserHandlers) GetUsers(response *apifirst.Response, request *http.Request) error {
 	kusers, err := keycloak.GetUsers()
 	if err != nil {
 		response.SetStatus(http.StatusInternalServerError)

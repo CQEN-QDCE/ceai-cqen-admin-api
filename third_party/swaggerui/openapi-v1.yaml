@@ -1,0 +1,128 @@
+openapi: '3.0.3'
+info:
+  title: API d'administration de l'infrastructure du Centre d'expertise appliquée en innovation du CQEN
+  version: '1.0'
+servers:
+  - url: /v1
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - "firstname"
+        - "lastname"
+        - "email"
+        - "username"
+      properties:
+        firstname:
+          type: string
+        lastname:
+          type: string
+        email:
+          type: string
+          format: email
+        username: 
+          type: string
+paths:
+  /user:
+    get:
+      operationId: GetAllUsers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/User'
+    post:
+      operationId: CreateUser
+      description: >-
+        Create user
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: OK
+  /user/{username}:
+    get:
+      operationId: GetUserByUsername
+      description: >-
+        Get a user
+      parameters:
+        - name: username
+          in: path
+          description: Username
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    put:
+      operationId: UpdateUser
+      description: >-
+        Update a user
+      parameters:
+        - name: username
+          in: path
+          description: Username
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    delete:
+      operationId: DeleteUser
+      description: >-
+        Deactivate a user
+      parameters:
+        - name: username
+          in: path
+          description: Username
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /user/resetpassword/{username}/{delay}:
+    get:
+      operationId: ResetUserPassword
+      description: >-
+        Reset a user password. Mail with reset procedure will be sent.
+      parameters:
+        - name: username
+          in: path
+          description: Username
+          required: true
+          schema:
+            type: string
+        - name: delay
+          in: path
+          description: Delay in hours before locking account if user do not change password 
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK

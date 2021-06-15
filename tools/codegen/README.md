@@ -1,0 +1,1 @@
+# Générer du code à partir de la spécificiation OpenAPI

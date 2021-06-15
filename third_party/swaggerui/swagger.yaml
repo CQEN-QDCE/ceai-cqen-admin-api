@@ -1,0 +1,414 @@
+openapi: '3.0.3'
+info:
+  title: API d'administration de l'infrastructure du Centre d'expertise appliquée en innovation du CQEN
+  description: Cet API permet d'administrer l'infrastructure d'expérimentation afin de supporter l'offre de services de laboratoires.
+  version: '1.0'
+servers:
+  - url: /
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - "firstname"
+        - "lastname"
+        - "email"
+        - "username"
+      properties:
+        firstname:
+          type: string
+        lastname:
+          type: string
+        email:
+          type: string
+          format: email
+        username: 
+          type: string
+    Laboratory:
+      type: object
+      required: 
+        - "id"
+        - "displayname"
+        - "description"
+        - "gitrepo"
+      properties:
+        id:
+          type: string
+        displayname:
+          type: string
+        description:
+          type: string
+        gitrepo:
+          type: string
+    Project:
+      type: object
+      required: 
+        - "id"
+        - "displayname"
+        - "description"
+      properties:
+        id:
+          type: string
+        displayname:
+          type: string
+        description:
+          type: string     
+    Group:
+      type: object
+      required: 
+        - "id"
+      properties:
+        id:
+          type: string
+paths:
+  /user:
+    get:
+      operationId: GetUsers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/User'
+    post:
+      operationId: CreateUser
+      description: >-
+        Create a user in the environment.
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: OK
+  /user/{username}:
+    get:
+      operationId: GetUserFromUsername
+      description: >-
+        Get a user from its username.
+      parameters:
+        - name: username
+          in: path
+          description: The username of the targetted user.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    put:
+      operationId: UpdateUser
+      description: >-
+        Update a user.
+      parameters:
+        - name: username
+          in: path
+          description: The username of the targetted user.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    delete:
+      operationId: DeleteUser
+      description: >-
+        Delete a user.
+      parameters:
+        - name: username
+          in: path
+          description: The username of the targetted user.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /user/resetpassword/{username}/{delay}:
+    get:
+      operationId: ResetUserPassword
+      description: >-
+        Reset a user password. Mail with reset procedure will be sent.
+      parameters:
+        - name: username
+          in: path
+          description: The username of the targetted user.
+          required: true
+          schema:
+            type: string
+        - name: delay
+          in: path
+          description: Delay in hours before locking account if user do not change password 
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+  /laboratory:
+    get:
+      operationId: GetLaboratories
+      description: >-
+        Get the list of laboratories contained in the environment.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Laboratory'
+    post:
+      operationId: CreateLaboratory
+      description: >-
+        Create the entire laboratory. That includes : users, projects, source code repository, etc.
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Laboratory'
+      responses:
+        '200':
+          description: OK
+  /laboratory/{laboratoryid}:
+    get:
+      operationId: GetLaboratoryFromId
+      description: >-
+        Get a laboratory from its identifier.
+      parameters:
+        - name: laboratoryid
+          in: path
+          description: The identifier of the targetted laboratory.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Laboratory'
+    put:
+      operationId: UpdateLaboratory
+      description: >-
+        Update the attributes of a laboratory.
+      parameters:
+        - name: laboratoryid
+          in: path
+          description: The identifier of the targetted laboratory.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Laboratory'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Laboratory'
+    delete:
+      operationId: DeleteLaboratory
+      description: >-
+        This endpoint deletes a laboratory. 
+      parameters:
+        - name: laboratoryid
+          in: path
+          description: The identifier of the targetted laboratory.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /project:
+    get:
+      operationId: GetProjects
+      description: >-
+        Get the list of projects defined in the environment.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Project'
+    post:
+      operationId: CreateProject
+      description: >-
+        Create a project in the development environment.
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        '200':
+          description: OK
+  /project/{projectid}:
+    get:
+      operationId: GetProjectFromId
+      description: >-
+        Get a project from its identifier.
+      parameters:
+        - name: projectid
+          in: path
+          description: The identifier of the targetted project.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+    put:
+      operationId: UpdateProject
+      description: >-
+        Update the attributes of a project.
+      parameters:
+        - name: projectid
+          in: path
+          description: The identifier of the targetted project.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+    delete:
+      operationId: DeleteProject
+      description: >-
+        Delete a project. 
+      parameters:
+        - name: projectid
+          in: path
+          description: The identifier of the targetted project.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK       
+  /openshift/project:
+    get:
+      operationId: GetProjects
+      description: >-
+       Get the list of projects defined in Openshift.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Project'
+    post:
+      operationId: CreateProject
+      description: >-
+        Create a project in Openshift.
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        '200':
+          description: OK
+  /openshift/project/{projectid}:
+    get:
+      operationId: GetProjectFromId
+      description: >-
+        Get a project from its identifier in Openshift.
+      parameters:
+        - name: projectid
+          in: path
+          description: The identifier of the targetted project.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+    put:
+      operationId: UpdateProject
+      description: >-
+        Update the attributes of a project Openshift.
+      parameters:
+        - name: projectid
+          in: path
+          description: The identifier of the targetted project.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+    delete:
+      operationId: DeleteProject
+      description: >-
+        Delete a project in Openshift. 
+      parameters:
+        - name: projectid
+          in: path
+          description: The identifier of the targetted project.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK

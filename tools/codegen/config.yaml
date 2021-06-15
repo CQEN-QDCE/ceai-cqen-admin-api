@@ -1,0 +1,8 @@
+output:
+  adminapi.go.gen
+package: handlers
+generate:
+  - types
+  - chi-server
+  - skip-prune
+templates: templates/

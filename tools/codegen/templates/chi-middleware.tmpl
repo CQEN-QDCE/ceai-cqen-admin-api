@@ -1,0 +1,21 @@
+// ServerInterfaceWrapper converts contexts to parameters.
+type ServerInterfaceWrapper struct {
+    Handler ServerInterface
+}
+
+{{range .}}{{$opid := .OperationId}}
+
+// {{$opid}} operation middleware
+func (siw *ServerInterfaceWrapper) {{$opid}}(response *apifirst.Response, r *http.Request) error {
+  {{if .PathParams}}
+  params := mux.Vars(request)
+  {{end}}
+  
+  {{range .PathParams}}// ------------- Path parameter "{{.ParamName}}" -------------
+  {{$varName := .GoVariableName}}{{$varName}} := params["{{$varName}}}"]
+
+  {{end}}
+
+}
+
+{{end}}

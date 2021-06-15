@@ -11,11 +11,18 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
+# Generated code file templates
+*.gen
+
 # Config and env files
 .env
+test.env
 kubeconfig
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
 ceai-cqen-admin-api
 .DS_Store
+
+# IDE and Editor files
+.vscode

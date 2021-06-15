@@ -1,0 +1,7 @@
+// ServerInterface represents all server handlers.
+type ServerInterface interface {
+{{range .}}{{.SummaryAsComment }}
+// ({{.Method}} {{.Path}})
+{{.OperationId}}(response *apifirst.Response, r *http.Request) error
+{{end}}
+}

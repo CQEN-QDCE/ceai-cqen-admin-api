@@ -15,6 +15,7 @@ require (
 	github.com/openshift/api v0.0.0-20210610130314-a6ac319a7eed
 	github.com/openshift/client-go v0.0.0-20210521082421-73d9475a9142
 	github.com/rakyll/statik v0.1.7
+	golang.org/x/text v0.3.5 // indirect
 	k8s.io/apimachinery v0.21.1
 	k8s.io/client-go v0.21.1
 )
