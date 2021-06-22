@@ -1,5 +1,8 @@
 GET http://127.0.0.1:3000/user HTTP/1.1
 
+###
+
+GET http://127.0.0.1:3000/user/bobby@example.com HTTP/1.1
 
 ###
 

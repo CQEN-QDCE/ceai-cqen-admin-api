@@ -40,11 +40,16 @@ func GetUsers() ([]*scim.User, error) {
 		return nil, err
 	}
 
-	users, err := (*c).GetUsers()
+	return (*c).GetUsers()
+}
+
+func GetUser(username string) (*scim.User, error) {
+	c, err := GetScimClient()
 
 	if err != nil {
 		return nil, err
 	}
 
-	return users, nil
+	//In AWS SCIM usernames are emails
+	return (*c).FindUserByEmail(username)
 }

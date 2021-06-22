@@ -3,11 +3,18 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/keycloak"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/pkg/apifirst"
+	"github.com/Nerzal/gocloak/v8"
 	"github.com/gorilla/mux"
 )
+
+const LAB_TOP_GROUP = "/Laboratories/"
+
+const ADMIN_ROLE_NAME = "Admin"
+const DEV_ROLE_NAME = "Developer"
 
 // Handlers Interface represents all server handlers.
 type UserHandlersInterface interface {
@@ -23,22 +30,88 @@ type UserHandlers struct {
 
 // User defines model for User.
 type User struct {
-	Email     string `json:"email,omitempty"`
-	Firstname string `json:"firstname,omitempty"`
-	Lastname  string `json:"lastname,omitempty"`
-	Username  string `json:"username,omitempty"`
+	Disabled     bool   `json:"disabled,omitempty"`
+	Email        string `json:"email"`
+	Firstname    string `json:"firstname"`
+	Infrarole    string `json:"infrarole,omitempty"`
+	Lastname     string `json:"lastname"`
+	Organisation string `json:"organisation"`
 }
 
-// User defines model for User.
-type BogusUser struct {
-	Email     string `json:"emailx,omitempty"`
-	Firstname string `json:"firstname,omitempty"`
-	Lastname  string `json:"lastname,omitempty"`
-	Username  string `json:"username,omitempty"`
+// UserWithLabs defines model for UserWithLabs.
+type UserWithLabs struct {
+	// Embedded struct due to allOf(#/components/schemas/User)
+	User `yaml:",inline"`
+	// Embedded fields due to inline allOf schema
+	Laboratories *[]LaboratoryRole `json:"laboratories,omitempty"`
+}
+
+// LaboratoryRole defines model for LaboratoryRole.
+type LaboratoryRole struct {
+	Laboratory string `json:"laboratory"`
+	Role       string `json:"role"`
+}
+
+func mapKeycloakUser(kuser *gocloak.User) *User {
+	var user User
+
+	user.Email = *kuser.Email //email is used as username or id
+	user.Firstname = *kuser.FirstName
+	user.Lastname = *kuser.LastName
+	user.Disabled = !gocloak.PBool(kuser.Enabled)
+
+	//Iterate RealmRoles to fing infraRole (Admin || Developer)
+	if kuser.RealmRoles != nil {
+		for _, role := range *kuser.RealmRoles {
+			if role == ADMIN_ROLE_NAME {
+				user.Infrarole = ADMIN_ROLE_NAME
+			}
+		}
+	}
+
+	//Non-admin user is a dev, even if not in Developer group?
+	if user.Infrarole == "" {
+		user.Infrarole = DEV_ROLE_NAME
+	}
+
+	//Values in attributes
+	if kuser.Attributes != nil {
+		attributes := *kuser.Attributes
+		user.Organisation = attributes["organisation"][0]
+	}
+
+	return &user
+}
+
+func mapKeycloakUserWithLabs(kuser *gocloak.User, kgroups []*gocloak.Group) *UserWithLabs {
+	user := mapKeycloakUser(kuser)
+
+	userWL := UserWithLabs{User: *user}
+
+	//Populate laboratories
+	var laboratoryRoles []LaboratoryRole
+
+	//For now, role assigned on a lab is the same a user has on the whole infra
+	for _, kgroup := range kgroups {
+		if strings.HasPrefix(*kgroup.Path, LAB_TOP_GROUP) {
+			laboratoryRoles = append(laboratoryRoles, LaboratoryRole{*kgroup.Name, user.Infrarole})
+		}
+	}
+
+	if len(laboratoryRoles) > 0 {
+		userWL.Laboratories = &laboratoryRoles
+	}
+
+	return &userWL
+}
+
+func GetKeycloakAdminGroup() (*gocloak.Group, error) {
+	return keycloak.GetGroup(ADMIN_ROLE_NAME)
 }
 
 // GetAllUsers
 func (s UserHandlers) GetUsers(response *apifirst.Response, request *http.Request) error {
+	//Extract all users
 	kusers, err := keycloak.GetUsers()
 	if err != nil {
 		response.SetStatus(http.StatusInternalServerError)
@@ -46,48 +119,85 @@ func (s UserHandlers) GetUsers(response *apifirst.Response, request *http.Reques
 		return err
 	}
 
-	t := make([]User, 0, len(kusers))
+	//getUsers do not provide roles and groups
+	//For performance extract all users of the admin group and assume the rest has the user role
+	kAdminGroup, err := GetKeycloakAdminGroup()
+	if err != nil {
+		response.SetStatus(http.StatusInternalServerError)
+		log.Println(err)
+		return err
+	}
+
+	kadmins, err := keycloak.GetGroupMembers(*kAdminGroup.ID)
+	//Create a dictionary of admin for easy search
+	adminsDict := make(map[string]*gocloak.User, len(kadmins))
+
+	for _, kadmin := range kadmins {
+
+		adminsDict[*kadmin.Email] = kadmin
+	}
+
+	//Build user list
+	usersList := make([]User, 0, len(kusers))
 
 	for _, kuser := range kusers {
-		var user User
+		//Add admin role to kuser if he is in the list
+		if _, ok := adminsDict[*kuser.Email]; ok {
+			reamlRole := []string{ADMIN_ROLE_NAME}
+			kuser.RealmRoles = &reamlRole
+		}
 
-		user.Email = *kuser.Email
-		user.Firstname = *kuser.FirstName
-		user.Lastname = *kuser.LastName
-		user.Username = *kuser.Username
-
-		t = append(t, user)
+		usersList = append(usersList, *mapKeycloakUser(kuser))
 	}
 
 	response.SetStatus(http.StatusOK)
-	response.SetBody(t)
+	response.SetBody(usersList)
 
 	return nil
 }
 
-func (s UserHandlers) GetUserByUsername(response *apifirst.Response, request *http.Request) error {
+func (s UserHandlers) GetUserFromUsername(response *apifirst.Response, request *http.Request) error {
 	params := mux.Vars(request)
 	username := params["username"]
 
-	kUser, err := keycloak.GetUser(username)
+	kuser, err := keycloak.GetUser(username)
 	if err != nil {
 		response.SetStatus(http.StatusNotFound)
 		return err
 	}
 
-	log.Println(kUser)
+	//Get groups
+	kgroups, err := keycloak.GetUserGroups(kuser)
+	if err != nil {
+		response.SetStatus(http.StatusInternalServerError)
+		log.Println(err)
+		return err
+	}
 
-	var user User
+	//Get Roles, because keycloak won't get them in its User endpoint
+	kroles, err := keycloak.GetUserRoles(kuser)
+	if err != nil {
+		response.SetStatus(http.StatusInternalServerError)
+		log.Println(err)
+		return err
+	}
 
-	user.Email = *kUser.Email
-	user.Firstname = *kUser.FirstName
-	user.Lastname = *kUser.LastName
-	user.Username = *kUser.Username
+	//Add roles to kuser
+	krolesList := make([]string, len(kroles))
+
+	for _, krole := range kroles {
+		krolesList = append(krolesList, *krole.Name)
+	}
+
+	kuser.RealmRoles = &krolesList
+
+	//Map User
+	user := mapKeycloakUserWithLabs(kuser, kgroups)
 
 	response.SetStatus(http.StatusOK)
 	response.SetBody(user)
 
-	return err
+	return nil
 }
 
 // CreateUser
