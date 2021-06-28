@@ -12,7 +12,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
-var Handlers handlers.UserHandlers
+var Handlers handlers.ServerHandlers
 
 var OpenAPIDoc *openapi3.T
 
