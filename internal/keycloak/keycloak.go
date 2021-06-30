@@ -58,7 +58,7 @@ func GetUsers() ([]*gocloak.User, error) {
 		return nil, err
 	}
 
-	var briefRep = true
+	var briefRep = false
 	ctx := context.Background()
 
 	users, err := (*c.client).GetUsers(
@@ -83,7 +83,7 @@ func GetUser(username string) (*gocloak.User, error) {
 		return nil, err
 	}
 
-	var briefRep = true
+	var briefRep = false
 	ctx := context.Background()
 	users, err := (*c.client).GetUsers(
 		ctx,
@@ -104,4 +104,132 @@ func GetUser(username string) (*gocloak.User, error) {
 	}
 
 	return users[0], nil
+}
+
+func CreateUser(user *gocloak.User) error {
+	c, err := GetClient()
+
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+
+	_, err = (*c.client).CreateUser(
+		ctx,
+		c.token.AccessToken,
+		c.realm,
+		*user)
+
+	return err
+}
+
+func GetUserRoles(user *gocloak.User) ([]*gocloak.Role, error) {
+	c, err := GetClient()
+
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	roles, err := (*c.client).GetCompositeRealmRolesByUserID(
+		ctx,
+		c.token.AccessToken,
+		c.realm,
+		*user.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return roles, nil
+}
+
+func GetUserGroups(user *gocloak.User) ([]*gocloak.Group, error) {
+	c, err := GetClient()
+
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	var briefRep = true
+
+	groups, err := (*c.client).GetUserGroups(
+		ctx,
+		c.token.AccessToken,
+		c.realm,
+		*user.ID,
+		gocloak.GetGroupsParams{
+			BriefRepresentation: &briefRep,
+		})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return groups, nil
+}
+
+func GetGroup(groupName string) (*gocloak.Group, error) {
+	c, err := GetClient()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var briefRep = true
+	ctx := context.Background()
+
+	groups, err := (*c.client).GetGroups(
+		ctx,
+		c.token.AccessToken,
+		c.realm,
+		gocloak.GetGroupsParams{
+			BriefRepresentation: &briefRep,
+			Search:              &groupName,
+		})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(groups) < 1 {
+		err := errors.New("Group not found.")
+		return nil, err
+	}
+
+	if len(groups) > 1 {
+		err := errors.New("Group name is not unique.")
+		return nil, err
+	}
+
+	return groups[0], nil
+}
+
+func GetGroupMembers(groupName string) ([]*gocloak.User, error) {
+	c, err := GetClient()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var briefRep = true
+	ctx := context.Background()
+
+	users, err := (*c.client).GetGroupMembers(
+		ctx,
+		c.token.AccessToken,
+		c.realm,
+		groupName,
+		gocloak.GetGroupsParams{
+			BriefRepresentation: &briefRep,
+		})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }

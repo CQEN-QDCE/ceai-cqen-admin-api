@@ -3,6 +3,7 @@ package aws
 import (
 	"testing"
 
+	scim "github.com/CQEN-QDCE/aws-sso-scim-goclient"
 	"github.com/joho/godotenv"
 )
 
@@ -20,5 +21,23 @@ func TestGetUsers(t *testing.T) {
 
 	for _, user := range users {
 		println(user.Username)
+		println(user.DisplayName)
+		println(user.Name.FamilyName)
+		println(user.Name.GivenName)
 	}
+}
+
+func TestCreateGroups(t *testing.T) {
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		t.Fatal("Error loading .env file: " + err.Error())
+	}
+
+	grp, err := CreateGroup(scim.NewGroup("TestGroup"))
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	t.Log(grp.DisplayName)
 }
