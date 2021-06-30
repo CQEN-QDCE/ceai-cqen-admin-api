@@ -106,6 +106,24 @@ func GetUser(username string) (*gocloak.User, error) {
 	return users[0], nil
 }
 
+func CreateUser(user *gocloak.User) error {
+	c, err := GetClient()
+
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+
+	_, err = (*c.client).CreateUser(
+		ctx,
+		c.token.AccessToken,
+		c.realm,
+		*user)
+
+	return err
+}
+
 func GetUserRoles(user *gocloak.User) ([]*gocloak.Role, error) {
 	c, err := GetClient()
 
