@@ -13,7 +13,8 @@ components:
         - "firstname"
         - "lastname"
         - "email"
-        - "username"
+        - "organisation"
+        - "infrarole"
       properties:
         firstname:
           type: string
@@ -22,15 +23,32 @@ components:
         email:
           type: string
           format: email
-        username: 
+        organisation: 
           type: string
+        infrarole:
+          type: string
+          enum:
+            - Admin
+            - Developer
+          default: Developer
+        disabled: 
+          type: boolean
+          default: false
+    UserWithLabs:
+      allOf:
+      - $ref: '#/components/schemas/User'
+      - type: object
+        properties:
+          laboratories:
+            type: array
+            items: 
+              $ref: '#/components/schemas/LaboratoryRole'
     Laboratory:
       type: object
       required: 
         - "id"
         - "displayname"
         - "description"
-        - "gitrepo"
       properties:
         id:
           type: string
@@ -40,7 +58,42 @@ components:
           type: string
         gitrepo:
           type: string
-    Project:
+        users:
+          type: array
+          items: 
+            $ref: '#/components/schemas/LaboratoryUser'
+        openshiftprojects:
+          type: array
+          items: 
+            $ref: '#/components/schemas/OpenshiftProject'
+    LaboratoryUser:
+      type: object
+      required:
+        - "email"
+        - "role"
+      properties:
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum:
+            - admin
+            - developer
+    LaboratoryRole:
+      type: object
+      required:
+        - "laboratory"
+        - "role"
+      properties:
+        laboratory:
+          type: string
+        role:
+          type: string
+          enum:
+            - Admin
+            - Developer
+    OpenshiftProject:
       type: object
       required: 
         - "id"
@@ -53,13 +106,6 @@ components:
           type: string
         description:
           type: string     
-    Group:
-      type: object
-      required: 
-        - "id"
-      properties:
-        id:
-          type: string
 paths:
   /user:
     get:
@@ -104,7 +150,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/UserWithLabs'
     put:
       operationId: UpdateUser
       description: >-
@@ -142,27 +188,6 @@ paths:
       responses:
         '200':
           description: OK
-  /user/resetpassword/{username}/{delay}:
-    get:
-      operationId: ResetUserPassword
-      description: >-
-        Reset a user password. Mail with reset procedure will be sent.
-      parameters:
-        - name: username
-          in: path
-          description: The username of the targetted user.
-          required: true
-          schema:
-            type: string
-        - name: delay
-          in: path
-          description: Delay in hours before locking account if user do not change password 
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: OK
   /laboratory:
     get:
       operationId: GetLaboratories
@@ -196,7 +221,7 @@ paths:
       description: >-
         Get a laboratory from its identifier.
       parameters:
-        - name: id
+        - name: laboratoryid
           in: path
           description: The identifier of the targetted laboratory.
           required: true
@@ -214,7 +239,7 @@ paths:
       description: >-
         Update the attributes of a laboratory.
       parameters:
-        - name: id
+        - name: laboratoryid
           in: path
           description: The identifier of the targetted laboratory.
           required: true
@@ -237,7 +262,7 @@ paths:
       description: >-
         This endpoint deletes a laboratory. 
       parameters:
-        - name: id
+        - name: laboratoryid
           in: path
           description: The identifier of the targetted laboratory.
           required: true
@@ -246,253 +271,6 @@ paths:
       responses:
         '200':
           description: OK
-  /project:
-    get:
-      operationId: GetProjects
-      description: >-
-        Get the list of projects defined in the environment.
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/Project'
-    post:
-      operationId: CreateProject
-      description: >-
-        Create a project in the development environment.
-      requestBody:
-        required: true
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/Project'
-      responses:
-        '200':
-          description: OK
-  /project/{projectid}:
-    get:
-      operationId: GetProjectFromId
-      description: >-
-        Get a project from its identifier.
-      parameters:
-        - name: id
-          in: path
-          description: The identifier of the targetted project.
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Project'
-    put:
-      operationId: UpdateProject
-      description: >-
-        Update the attributes of a project.
-      parameters:
-        - name: id
-          in: path
-          description: The identifier of the targetted project.
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/Project'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Project'
-    delete:
-      operationId: DeleteProject
-      description: >-
-        Delete a project. 
-      parameters:
-        - name: id
-          in: path
-          description: The identifier of the targetted project.
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-  /keycloak/user:
-    get:
-      operationId: GetUsers
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/User'
-    post:
-      operationId: CreateUser
-      description: >-
-        Create a user in the environment.
-      requestBody:
-        required: true
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/User'
-      responses:
-        '200':
-          description: OK
-  /keycloak/user/{username}:
-    get:
-      operationId: GetUserFromUsername
-      description: >-
-        Get a user from its username in Keycloak.
-      parameters:
-        - name: username
-          in: path
-          description: The username of the targetted user.
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-    put:
-      operationId: UpdateUser
-      description: >-
-        Update a user in Keycloak.
-      parameters:
-        - name: username
-          in: path
-          description: The username of the targetted user.
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/User'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-    delete:
-      operationId: DeleteUser
-      description: >-
-        Delete a user in Keycloak.
-      parameters:
-        - name: username
-          in: path
-          description: The username of the targetted user.
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-  /keycloak/group:
-    get:
-      operationId: GetProjects
-      description: >-
-       Get the list of groups defined in Keycloak.
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/Group'
-    post:
-      operationId: CreateGroup
-      description: >-
-        Create a group in Keycloak.
-      requestBody:
-        required: true
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/Group'
-      responses:
-        '200':
-          description: OK
-  /keycloak/group/{groupname}:
-    get:
-      operationId: GetGroupFromId
-      description: >-
-        Get a group from its identifier in Keycloak.
-      parameters:
-        - name: id
-          in: path
-          description: The identifier of the targetted group.
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Group'
-    put:
-      operationId: UpdateGroup
-      description: >-
-        Update a group in Keycloak.
-      parameters:
-        - name: id
-          in: path
-          description: The identifier of the targetted group.
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/Group'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Group'
-    delete:
-      operationId: DeleteGroup
-      description: >-
-        Delete a group in Keycloak..
-      parameters:
-        - name: id
-          in: path
-          description: The identiier of the targetted group.
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK          
   /openshift/project:
     get:
       operationId: GetProjects
@@ -506,7 +284,7 @@ paths:
               schema:
                 type: array
                 items: 
-                  $ref: '#/components/schemas/Project'
+                  $ref: '#/components/schemas/OpenshiftProject'
     post:
       operationId: CreateProject
       description: >-
@@ -516,7 +294,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/Project'
+              $ref: '#/components/schemas/OpenshiftProject'
       responses:
         '200':
           description: OK
@@ -526,7 +304,7 @@ paths:
       description: >-
         Get a project from its identifier in Openshift.
       parameters:
-        - name: id
+        - name: projectid
           in: path
           description: The identifier of the targetted project.
           required: true
@@ -538,13 +316,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Project'
+                $ref: '#/components/schemas/OpenshiftProject'
     put:
       operationId: UpdateProject
       description: >-
         Update the attributes of a project Openshift.
       parameters:
-        - name: id
+        - name: projectid
           in: path
           description: The identifier of the targetted project.
           required: true
@@ -554,20 +332,20 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/Project'
+              $ref: '#/components/schemas/OpenshiftProject'
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Project'
+                $ref: '#/components/schemas/OpenshiftProject'
     delete:
       operationId: DeleteProject
       description: >-
         Delete a project in Openshift. 
       parameters:
-        - name: id
+        - name: projectid
           in: path
           description: The identifier of the targetted project.
           required: true
@@ -576,165 +354,3 @@ paths:
       responses:
         '200':
           description: OK
-  /openshift/user:
-    get:
-      operationId: GetUsers
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/User'
-    post:
-      operationId: CreateUser
-      description: >-
-        Create a user in Openshift.
-      requestBody:
-        required: true
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/User'
-      responses:
-        '200':
-          description: OK
-  /openshift/user/{username}:
-    get:
-      operationId: GetUserFromUsername
-      description: >-
-        Get a user from its username in Openshift.
-      parameters:
-        - name: username
-          in: path
-          description: The username of the targetted user.
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-    put:
-      operationId: UpdateUser
-      description: >-
-        Update a user in Openshift.
-      parameters:
-        - name: username
-          in: path
-          description: The username of the targetted user.
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/User'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-    delete:
-      operationId: DeleteUser
-      description: >-
-        Delete a user in Openshift.
-      parameters:
-        - name: username
-          in: path
-          description: The username of the targetted user.
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK         
-  /aws/scim/user:
-    get:
-      operationId: GetUsers
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/User'
-    post:
-      operationId: CreateUser
-      description: >-
-        Create a user in aws/scim.
-      requestBody:
-        required: true
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/User'
-      responses:
-        '200':
-          description: OK
-  /aws/scim/user/{username}:
-    get:
-      operationId: GetUserFromUsername
-      description: >-
-        Get a user from its username in aws/scim.
-      parameters:
-        - name: username
-          in: path
-          description: The username of the targetted user.
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-    put:
-      operationId: UpdateUser
-      description: >-
-        Update a user in aws/scim.
-      parameters:
-        - name: username
-          in: path
-          description: The username of the targetted user.
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/User'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-    delete:
-      operationId: DeleteUser
-      description: >-
-        Delete a user in aws/scim.
-      parameters:
-        - name: username
-          in: path
-          description: The username of the targetted user.
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK    

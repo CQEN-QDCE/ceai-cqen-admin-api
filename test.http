@@ -1,5 +1,8 @@
 GET http://127.0.0.1:3000/user HTTP/1.1
 
+###
+
+GET http://127.0.0.1:3000/user/bobby@example.com HTTP/1.1
 
 ###
 
@@ -10,13 +13,15 @@ content-type: application/json
     "name": "sample",
     "time": "Wed, 21 Oct 2015 18:27:50 GMT"
 }
+
 ###
 POST http://127.0.0.1:3000/user HTTP/1.1
 content-type: application/json
 
     {
-        "email": "John.Doe@example.com",
-        "firstname": "John",
-        "lastname": "Doe",
-        "username": "Johnny"
+        "email": "test@example.com",
+        "firstname": "Bobby",
+        "lastname": "Test",
+        "organisation": "OPE",
+        "infrarole": "Developer"
     }
