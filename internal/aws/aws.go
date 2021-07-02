@@ -3,6 +3,7 @@ package aws
 import (
 	"context"
 	"os"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -11,10 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 )
 
+const SSO_CLIENT_TOKEN_TTL = 60
+
 var ssoClient *ssoadmin.Client
+var ssoClientTime int64
 
 func GetSsoClient() (*ssoadmin.Client, error) {
-	if ssoClient != nil {
+	if ssoClient != nil && (time.Now().Unix()-ssoClientTime < SSO_CLIENT_TOKEN_TTL) {
 		return ssoClient, nil
 	}
 
@@ -22,7 +26,6 @@ func GetSsoClient() (*ssoadmin.Client, error) {
 	awsSecret := os.Getenv("AWS_SECRET")
 
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
-		// Hard coded credentials.
 		config.WithCredentialsProvider(credentials.StaticCredentialsProvider{
 			Value: aws.Credentials{
 				AccessKeyID:     awsAccessKey,
@@ -34,7 +37,8 @@ func GetSsoClient() (*ssoadmin.Client, error) {
 		return nil, err
 	}
 
-	ssoClient := ssoadmin.NewFromConfig(cfg)
+	ssoClient = ssoadmin.NewFromConfig(cfg)
+	ssoClientTime = time.Now().Unix()
 
 	return ssoClient, nil
 }

@@ -265,7 +265,7 @@ func (s ServerHandlers) CreateUser(response *apifirst.Response, r *http.Request)
 			Attributes: &attributes,
 		}
 
-		kerr = keycloak.CreateUser(&kuser)
+		_, kerr = keycloak.CreateUser(&kuser)
 	}
 
 	ofunc := func() {
@@ -321,7 +321,22 @@ func (s ServerHandlers) CreateUser(response *apifirst.Response, r *http.Request)
 		return aerr
 	}
 
+	//Send password change email
+	err := keycloak.ExecuteCurrentActionEmail(puser.Email)
+
+	if aerr != nil {
+		log.Println(err.Error())
+		response.SetStatus(http.StatusInternalServerError)
+		return aerr
+	}
+
 	response.SetStatus(http.StatusCreated)
 
 	return nil
 }
+
+/*
+func (s ServerHandlers) UpdateUser(response *apifirst.Response, r *http.Request) error {
+	return
+}
+*/

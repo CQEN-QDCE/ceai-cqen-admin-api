@@ -3,15 +3,19 @@ package aws
 import (
 	"net/http"
 	"os"
+	"time"
 
 	scim "github.com/CQEN-QDCE/aws-sso-scim-goclient"
 )
 
-var client *scim.Client
+const SCIM_CLIENT_TOKEN_TTL = 60
+
+var scimClient *scim.Client
+var scimClientTime int64
 
 func GetScimClient() (*scim.Client, error) {
-	if client != nil {
-		return client, nil
+	if scimClient != nil && (time.Now().Unix()-scimClientTime < SCIM_CLIENT_TOKEN_TTL) {
+		return scimClient, nil
 	}
 
 	endpoint := os.Getenv("SCIM_ENDPOINT")
@@ -28,9 +32,10 @@ func GetScimClient() (*scim.Client, error) {
 		return nil, err
 	}
 
-	client := &awsClient
+	scimClient = &awsClient
+	scimClientTime = time.Now().Unix()
 
-	return client, nil
+	return scimClient, nil
 }
 
 func GetUsers() ([]*scim.User, error) {
