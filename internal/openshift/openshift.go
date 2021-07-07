@@ -107,6 +107,29 @@ func AddUserInGroup(userName string, groupName string) error {
 	return err
 }
 
+func RemoveUserFromGroup(userName string, groupName string) error {
+	userV1Client, err := GetUserClient()
+	if err != nil {
+		return err
+	}
+
+	group, err := userV1Client.Groups().Get(context.TODO(), groupName, metav1.GetOptions{})
+
+	inGroup, pos := UserInGroup(userName, group)
+
+	if inGroup {
+		if len(group.Users) > 1 {
+			group.Users = append(group.Users[:pos], group.Users[pos+1:]...) //Removing an array element in go...
+		} else {
+			group.Users = []string{} //Replace with a empty array if it only has our user in it
+		}
+
+		_, err = userV1Client.Groups().Update(context.TODO(), group, metav1.UpdateOptions{})
+	}
+
+	return err
+}
+
 //Check if a user is in a group
 func UserInGroup(username string, group *userv1.Group) (bool, int) {
 	for i, user := range group.Users {

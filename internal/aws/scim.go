@@ -118,3 +118,13 @@ func AddUserToGroup(user *scim.User, group *scim.Group) error {
 
 	return (*c).AddUserToGroup(user, group)
 }
+
+func RemoveUserFromGroup(user *scim.User, group *scim.Group) error {
+	c, err := GetScimClient()
+
+	if err != nil {
+		return err
+	}
+
+	return (*c).RemoveUserFromGroup(user, group)
+}

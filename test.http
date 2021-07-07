@@ -2,26 +2,28 @@ GET http://127.0.0.1:3000/user HTTP/1.1
 
 ###
 
-GET http://127.0.0.1:3000/user/bobby@example.com HTTP/1.1
+GET http://127.0.0.1:3000/user/francis.gagne+test-keycloak@sct.gouv.qc.ca HTTP/1.1
 
 ###
-
 POST http://127.0.0.1:3000/user HTTP/1.1
 content-type: application/json
 
 {
-    "name": "sample",
-    "time": "Wed, 21 Oct 2015 18:27:50 GMT"
+    "email": "francis.gagne+test-keycloak@sct.gouv.qc.ca",
+    "firstname": "Frank",
+    "lastname": "The Test",
+    "organisation": "CQEN",
+    "infrarole": "Developer"
 }
 
 ###
-POST http://127.0.0.1:3000/user HTTP/1.1
+
+PUT http://127.0.0.1:3000/user/francis.gagne+test-keycloak@sct.gouv.qc.ca HTTP/1.1
 content-type: application/json
 
-    {
-        "email": "test@example.com",
-        "firstname": "Bobby",
-        "lastname": "Test",
-        "organisation": "OPE",
-        "infrarole": "Developer"
-    }
+{
+    "firstname": "Francis",
+    "lastname": "Le Test",
+    "organisation": "CQEN",
+    "infrarole": "Developer"
+}

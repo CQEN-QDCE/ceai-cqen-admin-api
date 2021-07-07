@@ -37,3 +37,22 @@ func Parallelize(functions ...func()) {
 		}(function)
 	}
 }
+
+func RemoveStringElementFromArray(array []string, element string) []string {
+	index := -1
+
+	for i, e := range array {
+		if e == element {
+			index = i
+			break
+		}
+	}
+
+	if index != -1 {
+		ret := make([]string, 0)
+		ret = append(ret, array[:index]...)
+		return append(ret, array[index+1:]...)
+	} else {
+		return array
+	}
+}
