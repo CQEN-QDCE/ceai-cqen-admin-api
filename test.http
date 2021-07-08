@@ -9,8 +9,8 @@ POST http://127.0.0.1:3000/user HTTP/1.1
 content-type: application/json
 
 {
-    "email": "francis.gagne+test-keycloak@sct.gouv.qc.ca",
-    "firstname": "Frank",
+    "email": "user@example.com",
+    "firstname": "Bobby",
     "lastname": "The Test",
     "organisation": "CQEN",
     "infrarole": "Developer"
@@ -18,12 +18,17 @@ content-type: application/json
 
 ###
 
-PUT http://127.0.0.1:3000/user/francis.gagne+test-keycloak@sct.gouv.qc.ca HTTP/1.1
+PUT http://127.0.0.1:3000/user/user@example.com HTTP/1.1
 content-type: application/json
 
 {
-    "firstname": "Francis",
+    "firstname": "Bobbie",
     "lastname": "Le Test",
-    "organisation": "CQEN",
-    "infrarole": "Developer"
+    "organisation": "OPQ",
+    "infrarole": "Admin",
+    "disabled": true
 }
+
+###
+
+DELETE http://127.0.0.1:3000/user/user@example.com HTTP/1.1

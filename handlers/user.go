@@ -177,7 +177,7 @@ func CreateUserKeycloak(user *User) (string, error) {
 	return keycloak.CreateUser(&kuser)
 }
 
-func CreateUserScim(user *User) (*scim.User, error) {
+func CreateUserAws(user *User) (*scim.User, error) {
 	auser := scim.NewUser(user.Firstname, user.Lastname, user.Email, !gocloak.PBool(user.Disabled))
 
 	newuser, err := aws.CreateUser(auser)
@@ -209,53 +209,6 @@ func CreateUserOpenshift(user *User) (*userv1.User, error) {
 	}
 
 	return newOuser, err
-}
-
-// GetAllUsers
-func (s ServerHandlers) GetUsers(response *apifirst.Response, request *http.Request) error {
-	//Extract all users
-	kusers, err := keycloak.GetUsers()
-	if err != nil {
-		response.SetStatus(http.StatusInternalServerError)
-		log.Println(err)
-		return err
-	}
-
-	//getUsers do not provide roles and groups
-	//For performance extract all users of the admin group and assume the rest has the user role
-	kAdminGroup, err := GetKeycloakAdminGroup()
-	if err != nil {
-		response.SetStatus(http.StatusInternalServerError)
-		log.Println(err)
-		return err
-	}
-
-	kadmins, err := keycloak.GetGroupMembers(*kAdminGroup.ID)
-	//Create a dictionary of admin for easy search
-	adminsDict := make(map[string]*gocloak.User, len(kadmins))
-
-	for _, kadmin := range kadmins {
-
-		adminsDict[*kadmin.Username] = kadmin
-	}
-
-	//Build user list
-	usersList := make([]User, 0, len(kusers))
-
-	for _, kuser := range kusers {
-		//Add admin role to kuser if he is in the list
-		if _, ok := adminsDict[*kuser.Username]; ok {
-			reamlRole := []string{ADMIN_ROLE_NAME}
-			kuser.RealmRoles = &reamlRole
-		}
-
-		usersList = append(usersList, *mapKeycloakUser(kuser))
-	}
-
-	response.SetStatus(http.StatusOK)
-	response.SetBody(usersList)
-
-	return nil
 }
 
 func UpdateUserKeycloak(userState *UserState, pUser *UserUpdate) error {
@@ -299,7 +252,7 @@ func UpdateUserKeycloak(userState *UserState, pUser *UserUpdate) error {
 	return err
 }
 
-func UpdateUserScim(userState *UserState, pUser *UserUpdate) error {
+func UpdateUserAws(userState *UserState, pUser *UserUpdate) error {
 	auser := userState.Aws
 
 	if pUser.Firstname != nil {
@@ -358,6 +311,76 @@ func UpdateUserOpenshift(userState *UserState, pUser *UserUpdate) error {
 	return oerr
 }
 
+func DeleteUserKeycloak(userState *UserState) error {
+	kuser := userState.Keycloak
+
+	return keycloak.DeleteUser(*kuser.ID)
+}
+
+func DeleteUserOpenshift(userState *UserState) error {
+	//Groups and users in Openshift are loosely coupled so we have to remove the username from the group.
+	err := openshift.RemoveUserFromGroup(userState.Email, userState.Infrarole)
+
+	//TODO handle laboratories groups
+
+	if err == nil {
+		err = openshift.DeleteUser(userState.Openshift)
+	}
+
+	return err
+}
+
+func DeleteUserAws(userState *UserState) error {
+	return aws.DeleteUser(userState.Aws)
+}
+
+// GetAllUsers
+func (s ServerHandlers) GetUsers(response *apifirst.Response, request *http.Request) error {
+	//Extract all users
+	kusers, err := keycloak.GetUsers()
+	if err != nil {
+		response.SetStatus(http.StatusInternalServerError)
+		log.Println(err)
+		return err
+	}
+
+	//getUsers do not provide roles and groups
+	//For performance extract all users of the admin group and assume the rest has the user role
+	kAdminGroup, err := GetKeycloakAdminGroup()
+	if err != nil {
+		response.SetStatus(http.StatusInternalServerError)
+		log.Println(err)
+		return err
+	}
+
+	kadmins, err := keycloak.GetGroupMembers(*kAdminGroup.ID)
+	//Create a dictionary of admin for easy search
+	adminsDict := make(map[string]*gocloak.User, len(kadmins))
+
+	for _, kadmin := range kadmins {
+
+		adminsDict[*kadmin.Username] = kadmin
+	}
+
+	//Build user list
+	usersList := make([]User, 0, len(kusers))
+
+	for _, kuser := range kusers {
+		//Add admin role to kuser if he is in the list
+		if _, ok := adminsDict[*kuser.Username]; ok {
+			reamlRole := []string{ADMIN_ROLE_NAME}
+			kuser.RealmRoles = &reamlRole
+		}
+
+		usersList = append(usersList, *mapKeycloakUser(kuser))
+	}
+
+	response.SetStatus(http.StatusOK)
+	response.SetBody(usersList)
+
+	return nil
+}
+
 func (s ServerHandlers) GetUserFromUsername(response *apifirst.Response, request *http.Request) error {
 	params := mux.Vars(request)
 	username := params["username"]
@@ -397,7 +420,7 @@ func (s ServerHandlers) CreateUser(response *apifirst.Response, request *http.Re
 	}
 
 	afunc := func() {
-		_, aerr = CreateUserScim(&puser)
+		_, aerr = CreateUserAws(&puser)
 	}
 
 	Parallelize(kfunc, ofunc, afunc)
@@ -462,7 +485,54 @@ func (s ServerHandlers) UpdateUser(response *apifirst.Response, request *http.Re
 	}
 
 	afunc := func() {
-		aerr = UpdateUserScim(userState, &pUser)
+		aerr = UpdateUserAws(userState, &pUser)
+	}
+
+	Parallelize(kfunc, ofunc, afunc)
+
+	//TODO Error map
+	if kerr != nil {
+		log.Println("Keycloak error: " + kerr.Error())
+		response.SetStatus(http.StatusConflict)
+		return kerr
+	}
+
+	if oerr != nil {
+		log.Println("Openshift error: " + oerr.Error())
+		response.SetStatus(http.StatusConflict)
+		return oerr
+	}
+
+	if aerr != nil {
+		log.Println("AWS error: " + aerr.Error())
+		response.SetStatus(http.StatusConflict)
+		return aerr
+	}
+
+	response.SetStatus(http.StatusOK)
+
+	return nil
+}
+
+func (s ServerHandlers) DeleteUser(response *apifirst.Response, request *http.Request) error {
+	//Path params
+	params := mux.Vars(request)
+	username := params["username"]
+
+	userState := GetUserState(username)
+
+	var kerr, oerr, aerr error
+
+	kfunc := func() {
+		kerr = DeleteUserKeycloak(userState)
+	}
+
+	ofunc := func() {
+		oerr = DeleteUserOpenshift(userState)
+	}
+
+	afunc := func() {
+		aerr = DeleteUserAws(userState)
 	}
 
 	Parallelize(kfunc, ofunc, afunc)
