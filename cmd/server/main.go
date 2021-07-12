@@ -19,13 +19,15 @@ var OpenAPIDoc *openapi3.T
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file: " + err.Error())
+		log.Println(".env file not found")
+	} else {
+		log.Println(".env file found. Loading environment variables.")
 	}
 
 	ctx := context.Background()
 	loader := &openapi3.Loader{Context: ctx, IsExternalRefsAllowed: true}
 
-	OpenAPIDoc, err := loader.LoadFromFile("./api/openapi-v1.yaml")
+	OpenAPIDoc, err := loader.LoadFromFile(os.Getenv("OPENAPI_PATH"))
 	if err != nil {
 		log.Fatal("Error loading OpenAPI Spec file: " + err.Error())
 	}

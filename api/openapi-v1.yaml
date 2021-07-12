@@ -34,6 +34,22 @@ components:
         disabled: 
           type: boolean
           default: false
+    UserUpdate:
+      type: object
+      properties:
+        firstname:
+          type: string
+        lastname:
+          type: string
+        organisation: 
+          type: string
+        infrarole:
+          type: string
+          enum:
+            - Admin
+            - Developer
+        disabled: 
+          type: boolean
     UserWithLabs:
       allOf:
       - $ref: '#/components/schemas/User'
@@ -130,8 +146,8 @@ paths:
             schema:
               $ref: '#/components/schemas/User'
       responses:
-        '200':
-          description: OK
+        '201':
+          description: Created
   /user/{username}:
     get:
       operationId: GetUserFromUsername
@@ -166,14 +182,10 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/User'
+              $ref: '#/components/schemas/UserUpdate'
       responses:
         '200':
           description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
     delete:
       operationId: DeleteUser
       description: >-
