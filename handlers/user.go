@@ -169,15 +169,23 @@ func CreateUserKeycloak(user *User) (string, error) {
 		FirstName:  &user.Firstname,
 		LastName:   &user.Lastname,
 		Email:      &user.Email,
-		Enabled:    gocloak.BoolP(!gocloak.PBool(user.Disabled)),
 		Groups:     &groups,
 		Attributes: &attributes,
+	}
+
+	if user.Disabled != nil {
+		kuser.Enabled = gocloak.BoolP(!gocloak.PBool(user.Disabled))
 	}
 
 	return keycloak.CreateUser(&kuser)
 }
 
 func CreateUserAws(user *User) (*scim.User, error) {
+	if user.Disabled == nil {
+		//TODO Default value on unmarshall ?
+		user.Disabled = gocloak.BoolP(false)
+	}
+
 	auser := scim.NewUser(user.Firstname, user.Lastname, user.Email, !gocloak.PBool(user.Disabled))
 
 	newuser, err := aws.CreateUser(auser)
