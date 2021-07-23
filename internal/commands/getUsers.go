@@ -11,10 +11,12 @@ import (
 )
 
 type User struct {
-	Email     string `json:"email,omitempty"`
-	Firstname string `json:"firstname,omitempty"`
-	Lastname  string `json:"lastname,omitempty"`
-	Username  string `json:"username,omitempty"`
+	Disabled     *bool  `json:"disabled,omitempty"`
+	Email        string `json:"email"`
+	Firstname    string `json:"firstname"`
+	Infrarole    string `json:"infrarole"`
+	Lastname     string `json:"lastname"`
+	Organisation string `json:"organisation"`
 }
 
 // getUsersCmd represents the getUsers command
@@ -33,31 +35,33 @@ func init() {
 
 func GetUsers() {
 
+	// Create an HTTP request
 	url := os.Getenv("SERVER_URL")
-	resp, err := http.Get(url + "/" + "user")
-
-	defer resp.Body.Close()
+	res, err := http.Get(url + "/user")
 
 	if err != nil {
 		panic(err)
 	}
 
-	// read json http response
-	jsonDataFromHttp, err := ioutil.ReadAll(resp.Body)
+	// Make sure to close after reading
+	defer res.Body.Close()
+
+	// read json http response and turn the JSON array into a Go array
+	var jsonDataUser []User
+	jsonDataFromHttp, err := ioutil.ReadAll(res.Body)
+
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal([]byte(jsonDataFromHttp), &jsonDataUser)
 
 	if err != nil {
 		panic(err)
 	}
 
-	var jsonData []User
-
-	err = json.Unmarshal([]byte(jsonDataFromHttp), &jsonData)
-
-	if err != nil {
-		panic(err)
+	// Loop over array and print the data of users
+	for _, e := range jsonDataUser {
+		fmt.Printf("Email: %v, Role: %v \n", e.Email, e.Infrarole)
 	}
-
-	// test struct data
-	fmt.Println(jsonData)
 
 }
