@@ -46,7 +46,7 @@ func DeleteUser(Email string) {
 		defer res.Body.Close()
 
 		// Display an error or success message
-		if res.Status == "200 OK" {
+		if res.StatusCode == 200 {
 			fmt.Println("Vous avez bien supprimé l'usager", Email)
 		} else {
 			fmt.Println("L'exécution du traitement a échoué")

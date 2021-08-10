@@ -47,9 +47,9 @@ func GetUser(Email string) {
 		defer res.Body.Close()
 
 		// Check for error
-		if res.Status == "404 Not Found" {
+		if res.StatusCode == 404 {
 			fmt.Println("L'usager", Email, "n'existe pas")
-		} else if res.Status != "200 OK" {
+		} else if res.StatusCode != 200 {
 			fmt.Println("L'exécution du traitement a échoué")
 		}
 

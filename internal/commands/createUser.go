@@ -83,9 +83,9 @@ func CreateUsers(Email string, Firstname string, Lastname string, Organisation s
 		defer res.Body.Close()
 
 		// Display an error or success message
-		if res.Status == "201 Created" {
+		if res.StatusCode == 201 {
 			fmt.Println("Vous avez bien créé l'usager", Email)
-		} else if res.Status == "409 Conflict" {
+		} else if res.StatusCode == 409 {
 			fmt.Println("L'utilisateur existe déjà")
 		} else {
 			fmt.Println("L'exécution du traitement a échoué")
