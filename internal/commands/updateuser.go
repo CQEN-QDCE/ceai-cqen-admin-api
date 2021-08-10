@@ -65,22 +65,22 @@ func UpdateUser(email string, firstname string, lastname string, organisation st
 		client := &http.Client{}
 
 		// Send the request
-		resp, err := client.Do(req)
+		res, err := client.Do(req)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		// Make sure to close after reading
-		defer resp.Body.Close()
+		defer res.Body.Close()
 
-		if resp.Status == "200 OK" {
+		if res.StatusCode == 200 {
 			fmt.Println("l'usager", email, "a été mis à jour")
 		} else {
 			fmt.Println("L'exécution du traitement a échoué")
 		}
 
 		// Print the body to the stdout
-		io.Copy(os.Stdout, resp.Body)
+		io.Copy(os.Stdout, res.Body)
 	}
 
 }
