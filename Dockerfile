@@ -50,4 +50,3 @@ ENV KUBECONFIG_PATH="/go/bin/kubeconfig"
 
 # Document that the service listens on port 8080.
 EXPOSE 8080
-
