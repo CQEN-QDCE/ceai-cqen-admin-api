@@ -2,8 +2,7 @@ name: SonarQube
 on:
   push:
     branches:
-      - ${{ github.event.repository.default_branch }}
-      #- main # or the name of your main branch
+      - main # or the name of your main branch
 jobs:
   build:
     name: SonarQube
