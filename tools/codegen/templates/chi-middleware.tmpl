@@ -6,7 +6,7 @@ type ServerInterfaceWrapper struct {
 {{range .}}{{$opid := .OperationId}}
 
 // {{$opid}} operation middleware
-func (siw *ServerInterfaceWrapper) {{$opid}}(response *apifirst.Response, r *http.Request) error {
+func (s ServerHandlers) {{$opid}}(response *apifirst.Response, request *http.Request) error {
   {{if .PathParams}}
   params := mux.Vars(request)
   {{end}}

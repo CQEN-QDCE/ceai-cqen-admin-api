@@ -8,20 +8,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/organizations"
+	organizationstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
-	"github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
+	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 )
 
-const SSO_CLIENT_TOKEN_TTL = 60
+const AWS_REGION = "ca-central-1"
+const AWS_CLIENT_TOKEN_TTL = 60
 
 var ssoClient *ssoadmin.Client
 var ssoClientTime int64
 
-func GetSsoClient() (*ssoadmin.Client, error) {
-	if ssoClient != nil && (time.Now().Unix()-ssoClientTime < SSO_CLIENT_TOKEN_TTL) {
-		return ssoClient, nil
-	}
+var orgClient *organizations.Client
+var orgClientTime int64
 
+func GetClientConfig() (*aws.Config, error) {
 	awsAccessKey := os.Getenv("AWS_ACCESS_KEY")
 	awsSecret := os.Getenv("AWS_SECRET")
 
@@ -33,17 +35,50 @@ func GetSsoClient() (*ssoadmin.Client, error) {
 			},
 		}))
 
+	cfg.Region = AWS_REGION
+
 	if err != nil {
 		return nil, err
 	}
 
-	ssoClient = ssoadmin.NewFromConfig(cfg)
+	return &cfg, nil
+}
+
+func GetSsoClient() (*ssoadmin.Client, error) {
+	if ssoClient != nil && (time.Now().Unix()-ssoClientTime < AWS_CLIENT_TOKEN_TTL) {
+		return ssoClient, nil
+	}
+
+	cfg, err := GetClientConfig()
+
+	if err != nil {
+		return nil, err
+	}
+
+	ssoClient = ssoadmin.NewFromConfig(*cfg)
 	ssoClientTime = time.Now().Unix()
 
 	return ssoClient, nil
 }
 
-func DescribePermissionSet(instanceArn string, permissionSetArn string) (*types.PermissionSet, error) {
+func GetOrganizationsClient() (*organizations.Client, error) {
+	if orgClient != nil && (time.Now().Unix()-orgClientTime < AWS_CLIENT_TOKEN_TTL) {
+		return orgClient, nil
+	}
+
+	cfg, err := GetClientConfig()
+
+	if err != nil {
+		return nil, err
+	}
+
+	orgClient = organizations.NewFromConfig(*cfg)
+	orgClientTime = time.Now().Unix()
+
+	return orgClient, nil
+}
+
+func DescribePermissionSet(instanceArn string, permissionSetArn string) (*ssoadmintypes.PermissionSet, error) {
 	c, err := GetSsoClient()
 	if err != nil {
 		return nil, err
@@ -58,4 +93,21 @@ func DescribePermissionSet(instanceArn string, permissionSetArn string) (*types.
 	}
 
 	return permDescription.PermissionSet, nil
+}
+
+func DescribeAccount(accountId string) (*organizationstypes.Account, error) {
+	c, err := GetOrganizationsClient()
+	if err != nil {
+		return nil, err
+	}
+
+	accountOutput, err := c.DescribeAccount(context.TODO(), &organizations.DescribeAccountInput{
+		AccountId: &accountId,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return accountOutput.Account, nil
 }

@@ -119,7 +119,7 @@ func mapKeycloakUserWithLabs(kuser *gocloak.User) *UserWithLabs {
 	//For now, role assigned on a lab is the same a user has on the whole infra
 	if kuser.Groups != nil {
 		for _, group := range *kuser.Groups {
-			if strings.HasPrefix(group, LAB_TOP_GROUP) {
+			if strings.HasPrefix(group, "/"+KEYCLOAK_LAB_TOP_GROUP) {
 				laboratoryRoles = append(laboratoryRoles, LaboratoryRole{group, user.Infrarole})
 			}
 		}
@@ -361,7 +361,7 @@ func (s ServerHandlers) GetUsers(response *apifirst.Response, request *http.Requ
 		return err
 	}
 
-	kadmins, err := keycloak.GetGroupMembers(*kAdminGroup.ID)
+	kadmins, err := keycloak.GetGroupMembers(kAdminGroup)
 	//Create a dictionary of admin for easy search
 	adminsDict := make(map[string]*gocloak.User, len(kadmins))
 

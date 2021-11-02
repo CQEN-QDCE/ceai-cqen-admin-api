@@ -16,6 +16,10 @@ type ServerHandlers struct {
 
 const LAB_TOP_GROUP = "/Laboratories/"
 
+const KEYCLOAK_LAB_TOP_GROUP = "Laboratories"
+const AWS_LAB_GROUP_PREFIX = "Lab_"
+const OPENSHIFT_LAB_GROUP_PREFIX = "Lab_"
+
 const ADMIN_ROLE_NAME = "Admin"
 const DEV_ROLE_NAME = "Developer"
 

@@ -4,7 +4,9 @@ import (
 	"context"
 	"os"
 
+	projectv1 "github.com/openshift/api/project/v1"
 	userv1 "github.com/openshift/api/user/v1"
+	projectclientv1 "github.com/openshift/client-go/project/clientset/versioned/typed/project/v1"
 	userclientv1 "github.com/openshift/client-go/user/clientset/versioned/typed/user/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
@@ -36,6 +38,16 @@ func GetUserClient() (*userclientv1.UserV1Client, error) {
 	}
 
 	return userclientv1.NewForConfig(conf)
+}
+
+func GetProjectClient() (*projectclientv1.ProjectV1Client, error) {
+	conf, err := GetClientConfig()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return projectclientv1.NewForConfig(conf)
 }
 
 func GetUsers() (*[]userv1.User, error) {
@@ -89,6 +101,24 @@ func DeleteUser(user *userv1.User) error {
 	return userV1Client.Users().Delete(context.TODO(), user.Name, metav1.DeleteOptions{})
 }
 
+func CreateGroup(group *userv1.Group) (*userv1.Group, error) {
+	userV1Client, err := GetUserClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return userV1Client.Groups().Create(context.TODO(), group, metav1.CreateOptions{})
+}
+
+func DeleteGroup(group *userv1.Group) error {
+	userV1Client, err := GetUserClient()
+	if err != nil {
+		return err
+	}
+
+	return userV1Client.Groups().Delete(context.TODO(), group.Name, metav1.DeleteOptions{})
+}
+
 func AddUserInGroup(userName string, groupName string) error {
 	userV1Client, err := GetUserClient()
 	if err != nil {
@@ -139,4 +169,13 @@ func UserInGroup(username string, group *userv1.Group) (bool, int) {
 	}
 
 	return false, -1
+}
+
+func GetProject(projectName string) (*projectv1.Project, error) {
+	projectV1Client, err := GetProjectClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return projectV1Client.Projects().Get(context.TODO(), projectName, metav1.GetOptions{})
 }

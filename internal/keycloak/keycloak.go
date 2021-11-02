@@ -242,7 +242,7 @@ func GetGroup(groupName string) (*gocloak.Group, error) {
 		return nil, err
 	}
 
-	var briefRep = true
+	var briefRep = false
 	ctx := context.Background()
 
 	groups, err := (*c.client).GetGroups(
@@ -271,7 +271,22 @@ func GetGroup(groupName string) (*gocloak.Group, error) {
 	return groups[0], nil
 }
 
-func GetGroupMembers(groupName string) ([]*gocloak.User, error) {
+func GetGroups(parentGroupName *string) (*[]gocloak.Group, error) {
+	if parentGroupName == nil {
+		parentGroupName = gocloak.StringP("/")
+	}
+
+	group, err := GetGroup(*parentGroupName)
+
+	if group != nil {
+		return group.SubGroups, err
+	} else {
+		err := errors.New("Group name does not exist.")
+		return nil, err
+	}
+}
+
+func GetGroupMembers(group *gocloak.Group) ([]*gocloak.User, error) {
 	c, err := GetClient()
 
 	if err != nil {
@@ -285,7 +300,7 @@ func GetGroupMembers(groupName string) ([]*gocloak.User, error) {
 		ctx,
 		c.token.AccessToken,
 		c.realm,
-		groupName,
+		*group.ID,
 		gocloak.GetGroupsParams{
 			BriefRepresentation: &briefRep,
 		})
@@ -329,6 +344,42 @@ func DeleteUserFromGroup(user *gocloak.User, group *gocloak.Group) error {
 		c.token.AccessToken,
 		c.realm,
 		*user.ID,
+		*group.ID,
+	)
+}
+
+func CreateGroup(group *gocloak.Group) error {
+	c, err := GetClient()
+
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+
+	_, err = (*c.client).CreateGroup(
+		ctx,
+		c.token.AccessToken,
+		c.realm,
+		*group,
+	)
+
+	return err
+}
+
+func DeleteGroup(group *gocloak.Group) error {
+	c, err := GetClient()
+
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+
+	return (*c.client).DeleteGroup(
+		ctx,
+		c.token.AccessToken,
+		c.realm,
 		*group.ID,
 	)
 }
