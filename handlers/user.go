@@ -455,10 +455,10 @@ func (s ServerHandlers) CreateUser(response *apifirst.Response, request *http.Re
 	//Send account init email
 	err := keycloak.ExecuteCurrentActionEmail(puser.Email)
 
-	if aerr != nil {
+	if err != nil {
 		log.Println(err.Error())
 		response.SetStatus(http.StatusInternalServerError)
-		return aerr
+		return err
 	}
 
 	response.SetStatus(http.StatusCreated)

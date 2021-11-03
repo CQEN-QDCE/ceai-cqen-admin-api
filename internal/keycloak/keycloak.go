@@ -268,7 +268,20 @@ func GetGroup(groupName string) (*gocloak.Group, error) {
 		return nil, err
 	}
 
-	return groups[0], nil
+	//If group is a subgroup Keycloak will return the whole tree containing the group
+	var group *gocloak.Group
+
+	group = groups[0]
+
+	for *group.Name != groupName {
+		if group.SubGroups == nil {
+			return nil, errors.New("Group not found in tree.")
+		}
+
+		group = &(*group.SubGroups)[0]
+	}
+
+	return group, nil
 }
 
 func GetGroups(parentGroupName *string) (*[]gocloak.Group, error) {
@@ -361,6 +374,26 @@ func CreateGroup(group *gocloak.Group) error {
 		ctx,
 		c.token.AccessToken,
 		c.realm,
+		*group,
+	)
+
+	return err
+}
+
+func CreateChildGroup(parentGroup *gocloak.Group, group *gocloak.Group) error {
+	c, err := GetClient()
+
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+
+	_, err = (*c.client).CreateChildGroup(
+		ctx,
+		c.token.AccessToken,
+		c.realm,
+		*parentGroup.ID,
 		*group,
 	)
 

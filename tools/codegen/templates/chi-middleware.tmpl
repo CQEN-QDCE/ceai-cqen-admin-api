@@ -12,7 +12,7 @@ func (s ServerHandlers) {{$opid}}(response *apifirst.Response, request *http.Req
   {{end}}
   
   {{range .PathParams}}// ------------- Path parameter "{{.ParamName}}" -------------
-  {{$varName := .GoVariableName}}{{$varName}} := params["{{$varName}}}"]
+  {{$varName := .GoVariableName}}{{$varName}} := params["{{$varName}}"]
 
   {{end}}
 

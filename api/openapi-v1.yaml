@@ -281,13 +281,13 @@ paths:
     post:
       operationId: CreateLaboratory
       description: >-
-        Create the entire laboratory. That includes : users, Openshift projects, source code repository, etc.
+        Create a laboratory.
       requestBody:
         required: true
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/LaboratoryWithResources'
+              $ref: '#/components/schemas/Laboratory'
       responses:
         '201':
           description: Created

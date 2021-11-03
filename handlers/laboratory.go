@@ -1,20 +1,31 @@
 package handlers
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
+	scim "github.com/CQEN-QDCE/aws-sso-scim-goclient"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/aws"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/keycloak"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/openshift"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/pkg/apifirst"
 	"github.com/Nerzal/gocloak/v8"
+	"github.com/gorilla/mux"
+	userv1 "github.com/openshift/api/user/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type LaboratoryHandlersInterface interface {
 
 	// (GET /laboratory)
 	GetLaboratories(response *apifirst.Response, request *http.Request) error
+
+	// (GET /laboratory/{laboratoryid})
+	GetLaboratoryFromId(response *apifirst.Response, r *http.Request) error
+
+	// (POST /laboratory)
+	CreateLaboratory(response *apifirst.Response, r *http.Request) error
 }
 
 // AWSAccount defines model for AWSAccount.
@@ -169,7 +180,51 @@ func MapLaboratoryWithResources(kgroup gocloak.Group) (*LaboratoryWithResources,
 	return &lab, nil
 }
 
-// GetLaboratories operation middleware
+func CreateGroupKeycloak(plab *Laboratory) error {
+	labTopGroup, err := keycloak.GetGroup(KEYCLOAK_LAB_TOP_GROUP)
+
+	if err != nil {
+		return err
+	}
+
+	attributes := map[string][]string{
+		"description": {plab.Description},
+		"type":        {plab.Type},
+		"displayname": {plab.Displayname},
+	}
+
+	if plab.Gitrepo != nil {
+		attributes["gitrepo"] = []string{*plab.Gitrepo}
+	}
+
+	kgroup := gocloak.Group{
+		Name:       &plab.Id,
+		Attributes: &attributes,
+	}
+
+	return keycloak.CreateChildGroup(labTopGroup, &kgroup)
+}
+
+func CreateGroupAws(plab *Laboratory) error {
+	group := scim.NewGroup(AWS_LAB_GROUP_PREFIX + plab.Id)
+
+	_, err := aws.CreateGroup(group)
+
+	return err
+}
+
+func CreateGroupOpenshift(plab *Laboratory) error {
+	group := userv1.Group{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: OPENSHIFT_LAB_GROUP_PREFIX + plab.Id,
+		},
+	}
+
+	_, err := openshift.CreateGroup(&group)
+
+	return err
+}
+
 func (s ServerHandlers) GetLaboratories(response *apifirst.Response, request *http.Request) error {
 	labGroups, err := keycloak.GetGroups(gocloak.StringP(KEYCLOAK_LAB_TOP_GROUP))
 
@@ -189,11 +244,82 @@ func (s ServerHandlers) GetLaboratories(response *apifirst.Response, request *ht
 			if err == nil {
 				labsList = append(labsList, lab)
 			}
+			//TODO Log error?
 		}
 	}
 
 	response.SetStatus(http.StatusOK)
 	response.SetBody(labsList)
+
+	return nil
+}
+
+func (s ServerHandlers) GetLaboratoryFromId(response *apifirst.Response, request *http.Request) error {
+	params := mux.Vars(request)
+	laboratoryid := params["laboratoryid"]
+
+	labGroup, err := keycloak.GetGroup(laboratoryid)
+
+	if err != nil {
+		response.SetStatus(http.StatusNotFound)
+		log.Println(err)
+		return err
+	}
+
+	lab, err := MapLaboratoryWithResources(*labGroup)
+
+	if err == nil {
+		response.SetStatus(http.StatusOK)
+		response.SetBody(lab)
+	}
+
+	return err
+}
+
+func (s ServerHandlers) CreateLaboratory(response *apifirst.Response, request *http.Request) error {
+	plab := Laboratory{}
+	if err := json.NewDecoder(request.Body).Decode(&plab); err != nil {
+		response.SetStatus(http.StatusBadRequest)
+		log.Println(err)
+		return err
+	}
+
+	var kerr, oerr, aerr error
+
+	kfunc := func() {
+		kerr = CreateGroupKeycloak(&plab)
+	}
+
+	ofunc := func() {
+		oerr = CreateGroupOpenshift(&plab)
+	}
+
+	afunc := func() {
+		aerr = CreateGroupAws(&plab)
+	}
+
+	Parallelize(kfunc, ofunc, afunc)
+
+	//TODO Error map
+	if kerr != nil {
+		log.Println("Keycloak error: " + kerr.Error())
+		response.SetStatus(http.StatusConflict)
+		return kerr
+	}
+
+	if oerr != nil {
+		log.Println("Openshift error: " + oerr.Error())
+		response.SetStatus(http.StatusConflict)
+		return oerr
+	}
+
+	if aerr != nil {
+		log.Println("AWS error: " + aerr.Error())
+		response.SetStatus(http.StatusConflict)
+		return aerr
+	}
+
+	response.SetStatus(http.StatusCreated)
 
 	return nil
 }
