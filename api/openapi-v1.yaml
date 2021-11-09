@@ -79,6 +79,20 @@ components:
           enum:
             - projet
             - experimentation
+    LaboratoryUpdate:
+      type: object
+      properties:
+        displayname:
+          type: string
+        description:
+          type: string
+        gitrepo:
+          type: string
+        type:
+          type: string
+          enum:
+            - projet
+            - experimentation
     LaboratoryWithUsers:
       allOf:
         - $ref: '#/components/schemas/Laboratory'
@@ -221,6 +235,7 @@ paths:
           schema:
             type: string
       requestBody:
+        required: true
         content:
           'application/json':
             schema:
@@ -338,17 +353,14 @@ paths:
           schema:
             type: string
       requestBody:
+        required: true
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/Laboratory'
+              $ref: '#/components/schemas/LaboratoryUpdate'
       responses:
         '200':
           description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Laboratory'
         '404':
           description: Laboratory id does not exist
         '400':
@@ -392,6 +404,7 @@ paths:
           schema:
             type: string
       requestBody:
+        required: true
         content:
           'application/json':
             schema:
@@ -422,6 +435,7 @@ paths:
           schema:
             type: string
       requestBody:
+        required: true
         content:
           'application/json':
             schema:
@@ -628,6 +642,7 @@ paths:
           schema:
             type: string
       requestBody:
+        required: true
         content:
           'application/json':
             schema:

@@ -325,6 +325,7 @@ func GetGroupMembers(group *gocloak.Group) ([]*gocloak.User, error) {
 	return users, nil
 }
 
+//Idempotent
 func AddUserToGroup(user *gocloak.User, group *gocloak.Group) error {
 	c, err := GetClient()
 
@@ -398,6 +399,23 @@ func CreateChildGroup(parentGroup *gocloak.Group, group *gocloak.Group) error {
 	)
 
 	return err
+}
+
+func UpdateGroup(group *gocloak.Group) error {
+	c, err := GetClient()
+
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+
+	return (*c.client).UpdateGroup(
+		ctx,
+		c.token.AccessToken,
+		c.realm,
+		*group,
+	)
 }
 
 func DeleteGroup(group *gocloak.Group) error {

@@ -24,6 +24,21 @@ func TestGetUsers(t *testing.T) {
 	}
 }
 
+func TestGetUser(t *testing.T) {
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		t.Fatal("Error loading .env file: " + err.Error())
+	}
+
+	user, err := GetUser("test@example.com")
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	println(*user.ID)
+}
+
 func TestGetGroup(t *testing.T) {
 	err := godotenv.Load("../../.env")
 	if err != nil {
@@ -59,4 +74,29 @@ func TestGetGroups(t *testing.T) {
 		t.Log("No group found")
 	}
 
+}
+
+func TestAddUserToGroup(t *testing.T) {
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		t.Fatal("Error loading .env file: " + err.Error())
+	}
+
+	group, err := GetGroup("dev2")
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	user, err := GetUser("test@example.com")
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	err = AddUserToGroup(user, group)
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
 }

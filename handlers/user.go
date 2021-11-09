@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strings"
@@ -133,29 +134,46 @@ func mapKeycloakUserWithLabs(kuser *gocloak.User) *UserWithLabs {
 }
 
 //Gets current User state across all products: Keycloak|AWS|Openshift
-//TODO Errors
-func GetUserState(username string) *UserState {
+func GetUserState(username string) (*UserState, error) {
 	var state UserState
+	var kerr, aerr, oerr error
 
 	fKeycloak := func() {
-		state.Keycloak, _ = keycloak.GetUser(username)
+		state.Keycloak, kerr = keycloak.GetUser(username)
 	}
 
 	fAws := func() {
-		state.Aws, _ = aws.GetUser(username)
+		state.Aws, aerr = aws.GetUser(username)
 	}
 
 	fOpenshift := func() {
-		state.Openshift, _ = openshift.GetUser(username)
+		state.Openshift, oerr = openshift.GetUser(username)
 	}
 
 	Parallelize(fKeycloak, fAws, fOpenshift)
+
+	if kerr != nil {
+		log.Println("Error retreiving user state in Keycloak: " + oerr.Error())
+	}
+
+	if oerr != nil {
+		log.Println("Error retreiving user state in Openshift: " + oerr.Error())
+
+	}
+
+	if aerr != nil {
+		log.Println("Error retreiving user state in AWS: " + aerr.Error())
+	}
+
+	if kerr != nil || oerr != nil || aerr != nil {
+		return nil, errors.New("Incomplete state.")
+	}
 
 	if state.Keycloak != nil {
 		state.UserWithLabs = *mapKeycloakUserWithLabs(state.Keycloak)
 	}
 
-	return &state
+	return &state, nil
 }
 
 func CreateUserKeycloak(user *User) (string, error) {
@@ -480,7 +498,13 @@ func (s ServerHandlers) UpdateUser(response *apifirst.Response, request *http.Re
 		return err
 	}
 
-	userState := GetUserState(username)
+	userState, err := GetUserState(username)
+
+	if err != nil {
+		log.Println("Error retreiving user state: " + err.Error())
+		response.SetStatus(http.StatusInternalServerError)
+		return err
+	}
 
 	var kerr, oerr, aerr error
 
@@ -527,7 +551,13 @@ func (s ServerHandlers) DeleteUser(response *apifirst.Response, request *http.Re
 	params := mux.Vars(request)
 	username := params["username"]
 
-	userState := GetUserState(username)
+	userState, err := GetUserState(username)
+
+	if err != nil {
+		log.Println("Error retreiving user state: " + err.Error())
+		response.SetStatus(http.StatusInternalServerError)
+		return err
+	}
 
 	var kerr, oerr, aerr error
 

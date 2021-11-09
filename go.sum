@@ -53,8 +53,8 @@ github.com/Azure/go-autorest/tracing v0.6.0/go.mod h1:+vhtPC754Xsa23ID7GlGsrdKBp
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/CQEN-QDCE/aws-sso-scim-goclient v0.0.0-20210521203653-a530d9ef05e1 h1:TaV1DavLz19WMICTfQ10meczqpQlaxmZ9gFjx7YFSv0=
-github.com/CQEN-QDCE/aws-sso-scim-goclient v0.0.0-20210521203653-a530d9ef05e1/go.mod h1:WGbo+N4YMWZqmtxatb4u3cPlztnBdsJkh046z45f9ZE=
+github.com/CQEN-QDCE/aws-sso-scim-goclient v0.0.0-20211104172753-bbc5320ac3f9 h1:XZpNmR5oyNY7+daAQ8acEzJKRD3LpCxOjyMi9ZhSHtc=
+github.com/CQEN-QDCE/aws-sso-scim-goclient v0.0.0-20211104172753-bbc5320ac3f9/go.mod h1:WGbo+N4YMWZqmtxatb4u3cPlztnBdsJkh046z45f9ZE=
 github.com/NYTimes/gziphandler v0.0.0-20170623195520-56545f4a5d46/go.mod h1:3wb06e3pkSAbeQ52E9H9iFoQsEEwGN64994WTCIhntQ=
 github.com/Nerzal/gocloak/v8 v8.5.0 h1:sk84BrGnmFyqie+KcBtg13RrVCC3Skx8LnST8/gxqpY=
 github.com/Nerzal/gocloak/v8 v8.5.0/go.mod h1:Zzuv9uk+6drd8VrFT0ihxvIicMv7+umQKtKfnp5jCAs=

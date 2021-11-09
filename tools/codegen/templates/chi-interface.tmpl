@@ -2,6 +2,6 @@
 type ServerInterface interface {
 {{range .}}{{.SummaryAsComment }}
 // ({{.Method}} {{.Path}})
-{{.OperationId}}(response *apifirst.Response, r *http.Request) error
+{{.OperationId}}(response *apifirst.Response, request *http.Request) error
 {{end}}
 }

@@ -29,7 +29,28 @@ func TestAddUserInGroup(t *testing.T) {
 		t.Fatal("Error loading .env file: " + err.Error())
 	}
 
-	err = AddUserInGroup("francis.gagne@sct.gouv.qc.ca", "Developer")
+	err = AddUserInGroup("test@example.com", "Developer")
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+}
+
+func TestUpdateGroup(t *testing.T) {
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		t.Fatal("Error loading .env file: " + err.Error())
+	}
+
+	group, err := GetGroup("Lab_dev2")
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	group.SetName("Lab_dev2b")
+
+	_, err = UpdateGroup(group)
 
 	if err != nil {
 		t.Fatal(err.Error())

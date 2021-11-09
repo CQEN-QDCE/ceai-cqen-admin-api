@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 
@@ -22,10 +23,19 @@ type LaboratoryHandlersInterface interface {
 	GetLaboratories(response *apifirst.Response, request *http.Request) error
 
 	// (GET /laboratory/{laboratoryid})
-	GetLaboratoryFromId(response *apifirst.Response, r *http.Request) error
+	GetLaboratoryFromId(response *apifirst.Response, request *http.Request) error
 
 	// (POST /laboratory)
-	CreateLaboratory(response *apifirst.Response, r *http.Request) error
+	CreateLaboratory(response *apifirst.Response, request *http.Request) error
+
+	// (PUT /laboratory/{laboratoryid})
+	UpdateLaboratory(response *apifirst.Response, request *http.Request) error
+
+	// (DELETE /laboratory/{laboratoryid}/user)
+	RemoveLaboratoryUsers(response *apifirst.Response, request *http.Request) error
+
+	// (PUT /laboratory/{laboratoryid}/user)
+	AddLaboratoryUsers(response *apifirst.Response, request *http.Request) error
 }
 
 // AWSAccount defines model for AWSAccount.
@@ -41,6 +51,13 @@ type Laboratory struct {
 	Description string  `json:"description"`
 	Displayname string  `json:"displayname"`
 	Type        string  `json:"type"`
+	Gitrepo     *string `json:"gitrepo,omitempty"`
+}
+
+type LaboratoryUpdate struct {
+	Description *string `json:"description,omitempty"`
+	Displayname *string `json:"displayname,omitempty"`
+	Type        *string `json:"type,omitempty"`
 	Gitrepo     *string `json:"gitrepo,omitempty"`
 }
 
@@ -74,6 +91,12 @@ type OpenshiftProjectWithLab struct {
 	OpenshiftProject `yaml:",inline"`
 	// Embedded fields due to inline allOf schema
 	IdLab *string `json:"idLab,omitempty"`
+}
+
+type LaboratoryState struct {
+	Keycloak  *gocloak.Group
+	Aws       *scim.Group
+	Openshift *userv1.Group
 }
 
 func MapLaboratory(kgroup gocloak.Group) (*Laboratory, error) {
@@ -225,6 +248,164 @@ func CreateGroupOpenshift(plab *Laboratory) error {
 	return err
 }
 
+//Gets current User state across all products: Keycloak|AWS|Openshift
+//TODO Errors
+func GetLaboratoryState(idLab string) (*LaboratoryState, error) {
+	var state LaboratoryState
+	var kerr, aerr, oerr error
+
+	fKeycloak := func() {
+		state.Keycloak, kerr = keycloak.GetGroup(idLab)
+	}
+
+	fAws := func() {
+		state.Aws, aerr = aws.GetGroup(AWS_LAB_GROUP_PREFIX + idLab)
+	}
+
+	fOpenshift := func() {
+		state.Openshift, oerr = openshift.GetGroup(OPENSHIFT_LAB_GROUP_PREFIX + idLab)
+	}
+
+	Parallelize(fKeycloak, fAws, fOpenshift)
+
+	if kerr != nil {
+		log.Println("Error retreiving laboratory state in Keycloak: " + oerr.Error())
+	}
+
+	if oerr != nil {
+		log.Println("Error retreiving laboratory state in Openshift: " + oerr.Error())
+
+	}
+
+	if aerr != nil {
+		log.Println("Error retreiving laboratory state in AWS: " + aerr.Error())
+	}
+
+	if kerr != nil || oerr != nil || aerr != nil {
+		return nil, errors.New("Incomplete state.")
+	}
+
+	return &state, nil
+}
+
+func AddUsersToGroupKeycloak(labState *LaboratoryState, newUsersList []*UserState) error {
+	group := labState.Keycloak
+
+	for _, userState := range newUsersList {
+
+		kuser := userState.Keycloak
+
+		err := keycloak.AddUserToGroup(kuser, group)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func AddUsersToGroupAws(labState *LaboratoryState, newUsersList []*UserState) error {
+	group := labState.Aws
+
+	for _, userState := range newUsersList {
+
+		user := userState.Aws
+
+		err := aws.AddUserToGroup(user, group)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func AddUsersToGroupOpenshift(labState *LaboratoryState, newUsersList []*UserState) error {
+	group := labState.Openshift
+
+	for _, userState := range newUsersList {
+
+		user := userState.Openshift
+
+		err := openshift.AddUserInGroup(user.Name, group.Name)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func RemoveUsersFromGroupKeycloak(labState *LaboratoryState, newUsersList []*UserState) error {
+	group := labState.Keycloak
+
+	for _, userState := range newUsersList {
+
+		kuser := userState.Keycloak
+
+		err := keycloak.DeleteUserFromGroup(kuser, group)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func RemoveUsersFromGroupAws(labState *LaboratoryState, newUsersList []*UserState) error {
+	group := labState.Aws
+
+	for _, userState := range newUsersList {
+
+		user := userState.Aws
+
+		err := aws.RemoveUserFromGroup(user, group)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func RemoveUsersFromGroupOpenshift(labState *LaboratoryState, newUsersList []*UserState) error {
+	group := labState.Openshift
+
+	for _, userState := range newUsersList {
+
+		user := userState.Openshift
+
+		err := openshift.RemoveUserFromGroup(user.Name, group.Name)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func GetKeycloakUserList(userList *[]string) (*[]gocloak.User, error) {
+	var users []gocloak.User
+
+	for _, username := range *userList {
+		user, err := keycloak.GetUser(username)
+
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, *user)
+	}
+
+	return &users, nil
+}
+
 func (s ServerHandlers) GetLaboratories(response *apifirst.Response, request *http.Request) error {
 	labGroups, err := keycloak.GetGroups(gocloak.StringP(KEYCLOAK_LAB_TOP_GROUP))
 
@@ -320,6 +501,215 @@ func (s ServerHandlers) CreateLaboratory(response *apifirst.Response, request *h
 	}
 
 	response.SetStatus(http.StatusCreated)
+
+	return nil
+}
+
+func (s ServerHandlers) UpdateLaboratory(response *apifirst.Response, request *http.Request) error {
+	//Path params
+	params := mux.Vars(request)
+	idLab := params["laboratoryid"]
+
+	//Body param
+	plab := LaboratoryUpdate{}
+	if err := json.NewDecoder(request.Body).Decode(&plab); err != nil {
+		response.SetStatus(http.StatusBadRequest)
+		log.Println(err)
+		return err
+	}
+
+	//change info in keycloak group only as groups in AWS and Openshift only has id in them
+	group, err := keycloak.GetGroup(idLab)
+
+	if err != nil {
+		response.SetStatus(http.StatusNotFound)
+		log.Println(err)
+		return err
+	}
+
+	if plab.Description != nil {
+		(*group.Attributes)["description"][0] = *plab.Description
+	}
+
+	if plab.Displayname != nil {
+		(*group.Attributes)["displayname"][0] = *plab.Displayname
+
+	}
+
+	if plab.Gitrepo != nil {
+		(*group.Attributes)["gitrepo"][0] = *plab.Gitrepo
+	}
+
+	if plab.Type != nil {
+		(*group.Attributes)["type"][0] = *plab.Type
+	}
+
+	err = keycloak.UpdateGroup(group)
+
+	if err != nil {
+		response.SetStatus(http.StatusInternalServerError)
+		log.Println(err)
+		return err
+	}
+
+	response.SetStatus(http.StatusOK)
+
+	return nil
+}
+
+func (s ServerHandlers) AddLaboratoryUsers(response *apifirst.Response, request *http.Request) error {
+	//Path param
+	params := mux.Vars(request)
+	laboratoryid := params["laboratoryid"]
+
+	//Body param
+	var usernameList []string
+	if err := json.NewDecoder(request.Body).Decode(&usernameList); err != nil {
+		response.SetStatus(http.StatusBadRequest)
+		log.Println(err)
+		return err
+	}
+
+	labState, err := GetLaboratoryState(laboratoryid)
+
+	if err != nil {
+		response.SetStatus(http.StatusNotFound)
+		log.Println(err)
+		return err
+	}
+
+	var userStates []*UserState
+
+	//Validate and gather user states
+	for _, username := range usernameList {
+
+		userState, err := GetUserState(username)
+
+		if err != nil {
+			response.SetStatus(http.StatusBadRequest)
+			log.Println(err)
+			return err
+		}
+
+		userStates = append(userStates, userState)
+	}
+
+	//Add users to group in each resources
+	var kerr, oerr, aerr error
+
+	kfunc := func() {
+		kerr = AddUsersToGroupKeycloak(labState, userStates)
+	}
+
+	ofunc := func() {
+		oerr = AddUsersToGroupOpenshift(labState, userStates)
+	}
+
+	afunc := func() {
+		aerr = AddUsersToGroupAws(labState, userStates)
+	}
+
+	Parallelize(kfunc, ofunc, afunc)
+
+	//TODO Error map
+	if kerr != nil {
+		log.Println("Keycloak error: " + kerr.Error())
+		response.SetStatus(http.StatusConflict)
+		return kerr
+	}
+
+	if oerr != nil {
+		log.Println("Openshift error: " + oerr.Error())
+		response.SetStatus(http.StatusConflict)
+		return oerr
+	}
+
+	if aerr != nil {
+		log.Println("AWS error: " + aerr.Error())
+		response.SetStatus(http.StatusConflict)
+		return aerr
+	}
+
+	response.SetStatus(http.StatusCreated)
+
+	return nil
+
+}
+
+func (s ServerHandlers) RemoveLaboratoryUsers(response *apifirst.Response, request *http.Request) error {
+	//Path param
+	params := mux.Vars(request)
+	laboratoryid := params["laboratoryid"]
+
+	//Body param
+	var usernameList []string
+	if err := json.NewDecoder(request.Body).Decode(&usernameList); err != nil {
+		response.SetStatus(http.StatusBadRequest)
+		log.Println(err)
+		return err
+	}
+
+	labState, err := GetLaboratoryState(laboratoryid)
+
+	if err != nil {
+		response.SetStatus(http.StatusNotFound)
+		log.Println(err)
+		return err
+	}
+
+	var userStates []*UserState
+
+	//Validate and gather user states
+	for _, username := range usernameList {
+
+		userState, err := GetUserState(username)
+
+		if err != nil {
+			response.SetStatus(http.StatusBadRequest)
+			log.Println(err)
+			return err
+		}
+
+		userStates = append(userStates, userState)
+	}
+
+	//Add users to group in each resources
+	var kerr, oerr, aerr error
+
+	kfunc := func() {
+		kerr = RemoveUsersFromGroupKeycloak(labState, userStates)
+	}
+
+	ofunc := func() {
+		oerr = RemoveUsersFromGroupOpenshift(labState, userStates)
+	}
+
+	afunc := func() {
+		aerr = RemoveUsersFromGroupAws(labState, userStates)
+	}
+
+	Parallelize(kfunc, ofunc, afunc)
+
+	//TODO Error map
+	if kerr != nil {
+		log.Println("Keycloak error: " + kerr.Error())
+		response.SetStatus(http.StatusConflict)
+		return kerr
+	}
+
+	if oerr != nil {
+		log.Println("Openshift error: " + oerr.Error())
+		response.SetStatus(http.StatusConflict)
+		return oerr
+	}
+
+	if aerr != nil {
+		log.Println("AWS error: " + aerr.Error())
+		response.SetStatus(http.StatusConflict)
+		return aerr
+	}
+
+	response.SetStatus(http.StatusOK)
 
 	return nil
 }
