@@ -12,10 +12,12 @@ require (
 	github.com/getkin/kin-openapi v0.63.0
 	github.com/gorilla/mux v1.8.0
 	github.com/joho/godotenv v1.3.0
+	github.com/mitchellh/go-homedir v1.1.0
 	github.com/openshift/api v0.0.0-20210610130314-a6ac319a7eed
 	github.com/openshift/client-go v0.0.0-20210521082421-73d9475a9142
 	github.com/rakyll/statik v0.1.7
-	golang.org/x/text v0.3.5 // indirect
+	github.com/spf13/cobra v1.2.1
+	github.com/spf13/viper v1.9.0
 	k8s.io/apimachinery v0.21.1
 	k8s.io/client-go v0.21.1
 )

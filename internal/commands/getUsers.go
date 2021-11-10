@@ -1,11 +1,14 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
+	"unicode/utf8"
 
 	"github.com/spf13/cobra"
 )
@@ -25,15 +28,17 @@ var getUsersCmd = &cobra.Command{
 	Short: "Get Users",
 	Long:  `This command fetches users from the ceai api`,
 	Run: func(cmd *cobra.Command, args []string) {
-		GetUsers()
+		Format, _ := cmd.Flags().GetString("out")
+		GetUsers(Format)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(getUsersCmd)
+	getUsersCmd.PersistentFlags().StringP("out", "o", "none", "Ouputs result in specified format [none, csv, json, jsonpretty]")
 }
 
-func GetUsers() {
+func GetUsers(format string) {
 
 	// Create an HTTP request
 	url := os.Getenv("SERVER_URL")
@@ -53,15 +58,45 @@ func GetUsers() {
 	if err != nil {
 		panic(err)
 	}
-	err = json.Unmarshal([]byte(jsonDataFromHttp), &jsonDataUser)
 
-	if err != nil {
-		panic(err)
-	}
+	if format == "json" {
 
-	// Loop over array and print the data of users
-	for _, e := range jsonDataUser {
-		fmt.Printf("Email: %v, Role: %v \n", e.Email, e.Infrarole)
+		fmt.Println(string(jsonDataFromHttp))
+
+	} else if format == "jsonpretty" {
+
+		var jsonPretty bytes.Buffer
+		err := json.Indent(&jsonPretty, jsonDataFromHttp, "", "\t")
+
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println(jsonPretty.String())
+
+	} else {
+
+		err = json.Unmarshal([]byte(jsonDataFromHttp), &jsonDataUser)
+
+		if err != nil {
+			panic(err)
+		}
+
+		// Loop over array and print the data of users
+		if format == "csv" {
+			fmt.Printf("email,role\n")
+			for _, e := range jsonDataUser {
+				fmt.Printf("%v,%v\n", e.Email, e.Infrarole)
+			}
+		} else {
+			var TABULATION = 55
+			for _, e := range jsonDataUser {
+				fmt.Printf("Email: %v,%v Role: %v \n",
+					e.Email,
+					strings.Repeat(" ", TABULATION-(utf8.RuneCountInString("Email: ,"+e.Email))),
+					e.Infrarole)
+			}
+		}
 	}
 
 }
