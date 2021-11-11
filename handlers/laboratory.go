@@ -13,8 +13,10 @@ import (
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/pkg/apifirst"
 	"github.com/Nerzal/gocloak/v8"
 	"github.com/gorilla/mux"
-	userv1 "github.com/openshift/api/user/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	openshiftauthorization "github.com/openshift/api/authorization/v1"
+	openshiftuser "github.com/openshift/api/user/v1"
+	openshiftcore "k8s.io/api/core/v1"
+	openshiftmeta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type LaboratoryHandlersInterface interface {
@@ -36,6 +38,12 @@ type LaboratoryHandlersInterface interface {
 
 	// (PUT /laboratory/{laboratoryid}/user)
 	AddLaboratoryUsers(response *apifirst.Response, request *http.Request) error
+
+	// (PUT /laboratory/{laboratoryid}/openshift/{projectid})
+	AttachOpenshiftProjectToLaboratory(response *apifirst.Response, request *http.Request) error
+
+	// (DELETE /laboratory/{laboratoryid}/openshift/{projectid})
+	DetachOpenshiftProjectFromLaboratory(response *apifirst.Response, request *http.Request) error
 }
 
 // AWSAccount defines model for AWSAccount.
@@ -96,7 +104,7 @@ type OpenshiftProjectWithLab struct {
 type LaboratoryState struct {
 	Keycloak  *gocloak.Group
 	Aws       *scim.Group
-	Openshift *userv1.Group
+	Openshift *openshiftuser.Group
 }
 
 func MapLaboratory(kgroup gocloak.Group) (*Laboratory, error) {
@@ -237,8 +245,8 @@ func CreateGroupAws(plab *Laboratory) error {
 }
 
 func CreateGroupOpenshift(plab *Laboratory) error {
-	group := userv1.Group{
-		ObjectMeta: metav1.ObjectMeta{
+	group := openshiftuser.Group{
+		ObjectMeta: openshiftmeta.ObjectMeta{
 			Name: OPENSHIFT_LAB_GROUP_PREFIX + plab.Id,
 		},
 	}
@@ -707,6 +715,182 @@ func (s ServerHandlers) RemoveLaboratoryUsers(response *apifirst.Response, reque
 		log.Println("AWS error: " + aerr.Error())
 		response.SetStatus(http.StatusConflict)
 		return aerr
+	}
+
+	response.SetStatus(http.StatusOK)
+
+	return nil
+}
+
+func (s ServerHandlers) AttachOpenshiftProjectToLaboratory(response *apifirst.Response, request *http.Request) error {
+	//Path param
+	params := mux.Vars(request)
+	laboratoryid := params["laboratoryid"]
+	projectid := params["projectid"]
+
+	kgroup, err := keycloak.GetGroup(laboratoryid)
+
+	if err != nil {
+		response.SetStatus(http.StatusNotFound)
+		log.Println(err)
+		return err
+	}
+
+	openshiftGroupName := OPENSHIFT_LAB_GROUP_PREFIX + laboratoryid
+
+	//Add lab label to namespace
+	namespace, err := openshift.GetNamespace(projectid)
+
+	if err != nil {
+		response.SetStatus(http.StatusNotFound)
+		log.Println(err)
+		return err
+	}
+
+	if namespace.Labels == nil {
+		namespace.Labels = map[string]string{}
+	} else if idLab, ok := namespace.Labels["ceai-laboratory"]; ok {
+		//project already assigned to a lab
+		err = errors.New("Project is already attached to laboratory " + idLab)
+		response.SetStatus(http.StatusConflict)
+		log.Println(err)
+		return err
+	}
+
+	namespace.Labels["ceai-laboratory"] = laboratoryid
+
+	_, err = openshift.UpdateNamespace(namespace)
+
+	if err != nil {
+		response.SetStatus(http.StatusInternalServerError)
+		log.Println(err)
+		return err
+	}
+
+	//Add Rolebinding between group and project namespace
+	rolebinding := openshiftauthorization.RoleBinding{
+		ObjectMeta: openshiftmeta.ObjectMeta{
+			Name: openshiftGroupName + "_" + projectid,
+		},
+		Subjects: []openshiftcore.ObjectReference{
+			{
+				Kind: "Group",
+				Name: openshiftGroupName,
+			},
+		},
+		RoleRef: openshiftcore.ObjectReference{
+			Kind: "ClusterRole",
+			Name: "edit",
+		},
+	}
+
+	_, err = openshift.CreateRoleBinding(projectid, &rolebinding)
+
+	if err != nil {
+		response.SetStatus(http.StatusInternalServerError)
+		log.Println(err)
+		return err
+	}
+
+	//Add project to keycloak openshift_projects attribute
+	var openshiftProjects []string
+
+	if _, ok := (*kgroup.Attributes)["openshift_projects"]; ok {
+		openshiftProjects = []string{projectid}
+	} else {
+		openshiftProjects = (*kgroup.Attributes)["openshift_projects"]
+		openshiftProjects = append(openshiftProjects, projectid)
+	}
+
+	(*kgroup.Attributes)["openshift_projects"] = openshiftProjects
+
+	err = keycloak.UpdateGroup(kgroup)
+
+	if err != nil {
+		response.SetStatus(http.StatusInternalServerError)
+		log.Println(err)
+		return err
+	}
+
+	response.SetStatus(http.StatusOK)
+
+	return nil
+}
+
+func (s ServerHandlers) DetachOpenshiftProjectFromLaboratory(response *apifirst.Response, request *http.Request) error {
+	//Path param
+	params := mux.Vars(request)
+	laboratoryid := params["laboratoryid"]
+	projectid := params["projectid"]
+
+	kgroup, err := keycloak.GetGroup(laboratoryid)
+
+	if err != nil {
+		response.SetStatus(http.StatusNotFound)
+		log.Println(err)
+		return err
+	}
+
+	openshiftGroupName := OPENSHIFT_LAB_GROUP_PREFIX + laboratoryid
+
+	//Remove lab label to namespace
+	namespace, err := openshift.GetNamespace(projectid)
+
+	if err != nil {
+		response.SetStatus(http.StatusNotFound)
+		log.Println(err)
+		return err
+	}
+
+	if _, ok := namespace.Labels["ceai-laboratory"]; ok {
+		delete(namespace.Labels, "ceai-laboratory")
+
+		_, err = openshift.UpdateNamespace(namespace)
+
+		if err != nil {
+			response.SetStatus(http.StatusInternalServerError)
+			log.Println(err)
+			return err
+		}
+	}
+
+	//Remove Rolebinding between group and project namespace
+	roleBindings, err := openshift.GetNamespaceRoleBindings(projectid)
+
+	if err != nil {
+		response.SetStatus(http.StatusInternalServerError)
+		log.Println(err)
+		return err
+	}
+
+	for _, roleBinding := range *roleBindings {
+		for _, subject := range roleBinding.Subjects {
+			if subject.Kind == "Group" && subject.Name == openshiftGroupName {
+				err = openshift.DeleteRoleBinding(projectid, &roleBinding)
+
+				if err != nil {
+					response.SetStatus(http.StatusInternalServerError)
+					log.Println(err)
+					return err
+				}
+			}
+		}
+	}
+
+	//Remove project to keycloak openshift_projects attribute
+	openshiftProjects := (*kgroup.Attributes)["openshift_projects"]
+	if len(openshiftProjects) > 0 {
+		openshiftProjects = RemoveStringElementFromArray(openshiftProjects, projectid)
+
+		(*kgroup.Attributes)["openshift_projects"] = openshiftProjects
+
+		err = keycloak.UpdateGroup(kgroup)
+
+		if err != nil {
+			response.SetStatus(http.StatusInternalServerError)
+			log.Println(err)
+			return err
+		}
 	}
 
 	response.SetStatus(http.StatusOK)

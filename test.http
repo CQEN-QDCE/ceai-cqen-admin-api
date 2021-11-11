@@ -69,3 +69,9 @@ DELETE http://127.0.0.1:3000/laboratory/dev2/user HTTP/1.1
 content-type: application/json
 
 ["test@example.com"]
+
+### 
+PUT http://127.0.0.1:3000/laboratory/dev2/openshift/dev1-project1 HTTP/1.1
+
+### 
+DELETE http://127.0.0.1:3000/laboratory/dev2/openshift/dev1-project1 HTTP/1.1

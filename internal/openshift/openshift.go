@@ -10,7 +10,9 @@ import (
 	authorizationclient "github.com/openshift/client-go/authorization/clientset/versioned/typed/authorization/v1"
 	projectclient "github.com/openshift/client-go/project/clientset/versioned/typed/project/v1"
 	userclient "github.com/openshift/client-go/user/clientset/versioned/typed/user/v1"
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8sclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -60,6 +62,16 @@ func GetAuthorizationClient() (*authorizationclient.AuthorizationV1Client, error
 	}
 
 	return authorizationclient.NewForConfig(conf)
+}
+
+func GetK8sClient() (*k8sclient.Clientset, error) {
+	conf, err := GetClientConfig()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return k8sclient.NewForConfig(conf)
 }
 
 func GetUsers() (*[]user.User, error) {
@@ -210,6 +222,42 @@ func GetProject(projectName string) (*project.Project, error) {
 	return projectClient.Projects().Get(context.TODO(), projectName, meta.GetOptions{})
 }
 
+func CreateProject(project *project.Project) (*project.Project, error) {
+	projectClient, err := GetProjectClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return projectClient.Projects().Create(context.TODO(), project, meta.CreateOptions{})
+}
+
+func UpdateProject(project *project.Project) (*project.Project, error) {
+	projectClient, err := GetProjectClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return projectClient.Projects().Update(context.TODO(), project, meta.UpdateOptions{})
+}
+
+func GetNamespace(projectName string) (*core.Namespace, error) {
+	k8sClient, err := GetK8sClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return k8sClient.CoreV1().Namespaces().Get(context.TODO(), projectName, meta.GetOptions{})
+}
+
+func UpdateNamespace(namespace *core.Namespace) (*core.Namespace, error) {
+	k8sClient, err := GetK8sClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return k8sClient.CoreV1().Namespaces().Update(context.TODO(), namespace, meta.UpdateOptions{})
+}
+
 func GetNamespaceRoleBindings(namespace string) (*[]authorization.RoleBinding, error) {
 	authorizationClient, err := GetAuthorizationClient()
 	if err != nil {
@@ -219,4 +267,22 @@ func GetNamespaceRoleBindings(namespace string) (*[]authorization.RoleBinding, e
 	roleList, err := authorizationClient.RoleBindings(namespace).List(context.TODO(), meta.ListOptions{FieldSelector: ""})
 
 	return &roleList.Items, nil
+}
+
+func CreateRoleBinding(namespace string, roleBinding *authorization.RoleBinding) (*authorization.RoleBinding, error) {
+	authorizationClient, err := GetAuthorizationClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return authorizationClient.RoleBindings(namespace).Create(context.TODO(), roleBinding, meta.CreateOptions{})
+}
+
+func DeleteRoleBinding(namespace string, roleBinding *authorization.RoleBinding) error {
+	authorizationClient, err := GetAuthorizationClient()
+	if err != nil {
+		return err
+	}
+
+	return authorizationClient.RoleBindings(namespace).Delete(context.TODO(), roleBinding.Name, meta.DeleteOptions{})
 }
