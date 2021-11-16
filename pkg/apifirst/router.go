@@ -192,7 +192,7 @@ func (r *Router) CallRouteFunc(operation *openapi3.Operation, w http.ResponseWri
 	}
 
 	if err := openapi3filter.ValidateResponse(context.Background(), responseValidationInput); err != nil {
-		response.SetStatus(http.StatusInternalServerError)
+		response.SetStatus(http.StatusBadGateway)
 
 		//TODO Add switch in .env to output validation error or not
 		//response.SetContentType("text/plain")

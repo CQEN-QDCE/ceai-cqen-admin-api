@@ -41,3 +41,22 @@ func TestCreateGroups(t *testing.T) {
 
 	t.Log(grp.DisplayName)
 }
+
+func TestUpdateGroup(t *testing.T) {
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		t.Fatal("Error loading .env file: " + err.Error())
+	}
+
+	grp, err := GetGroup("Lab_dev2")
+
+	grp.DisplayName = "Lab_dev2b"
+
+	err = UpdateGroup(grp)
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	t.Log(grp.DisplayName)
+}

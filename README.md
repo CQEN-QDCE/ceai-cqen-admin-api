@@ -13,3 +13,25 @@
 ## test.http
 
 * ext install humao.rest-client
+
+## Installation environnement Go
+
+### Fedora Linux
+
+Installer les dépendances Golang:
+```
+sudo dnf install golang
+```
+
+Ajouter dans $HOME/.bashrc:
+
+```
+export GOPATH="$HOME/go"
+export PATH=$PATH:$GOPATH/bin
+```
+
+### MacOS
+
+```
+#TODO
+```

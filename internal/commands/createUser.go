@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/CQEN-QDCE/ceai-cqen-admin-api/handlers"
+	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/models"
 	"github.com/spf13/cobra"
 )
 
@@ -53,7 +53,7 @@ func CreateUsers(Email string, Firstname string, Lastname string, Organisation s
 	} else if Infrarole == "" {
 		fmt.Println("Veuillez saisir le role")
 	} else {
-		body := &handlers.User{
+		body := &models.User{
 			Email:        Email,
 			Firstname:    Firstname,
 			Lastname:     Lastname,

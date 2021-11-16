@@ -109,6 +109,26 @@ func CreateGroup(group *scim.Group) (*scim.Group, error) {
 	return (*c).CreateGroup(group)
 }
 
+func UpdateGroup(group *scim.Group) error {
+	c, err := GetScimClient()
+
+	if err != nil {
+		return err
+	}
+
+	return (*c).UpdateGroup(group)
+}
+
+func DeleteGroup(group *scim.Group) error {
+	c, err := GetScimClient()
+
+	if err != nil {
+		return err
+	}
+
+	return (*c).DeleteGroup(group)
+}
+
 func AddUserToGroup(user *scim.User, group *scim.Group) error {
 	c, err := GetScimClient()
 
