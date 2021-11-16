@@ -12,7 +12,7 @@ type OpenshiftProjectWithLab struct {
 	// Embedded struct due to allOf(#/components/schemas/OpenshiftProject)
 	*OpenshiftProject `yaml:",inline"`
 	// Embedded fields due to inline allOf schema
-	IdLab string `json:"idLab,omitempty"`
+	IdLab string `json:"idLab"`
 }
 
 type OpenshiftProjectWithMeta struct {
