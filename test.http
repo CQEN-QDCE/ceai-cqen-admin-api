@@ -2,33 +2,93 @@ GET http://127.0.0.1:3000/user HTTP/1.1
 
 ###
 
-GET http://127.0.0.1:3000/user/francis.gagne+test-keycloak@sct.gouv.qc.ca HTTP/1.1
+GET http://127.0.0.1:3000/user/afrancis.gagne@sct.gouv.qc.ca HTTP/1.1
 
 ###
 POST http://127.0.0.1:3000/user HTTP/1.1
 content-type: application/json
 
 {
-    "email": "user@example.com",
+    "email": "test@example.com",
     "firstname": "Bobby",
-    "lastname": "The Test",
-    "organisation": "CQEN",
+    "lastname": "Test",
+    "organisation": "ORGP",
     "infrarole": "Developer"
 }
 
 ###
-
-PUT http://127.0.0.1:3000/user/user@example.com HTTP/1.1
+PUT http://127.0.0.1:3000/user/bobby@example.com HTTP/1.1
 content-type: application/json
 
 {
-    "firstname": "Bobbie",
-    "lastname": "Le Test",
-    "organisation": "OPQ",
-    "infrarole": "Admin",
-    "disabled": true
+    "firstname": "Bobby",
+    "lastname": "Test",
+    "organisation": "ORGP"
 }
 
 ###
+DELETE http://127.0.0.1:3000/user/test@example.com HTTP/1.1
 
-DELETE http://127.0.0.1:3000/user/user@example.com HTTP/1.1
+###
+GET http://127.0.0.1:3000/laboratory HTTP/1.1
+
+###
+GET http://127.0.0.1:3000/laboratory/dev1 HTTP/1.1
+
+###
+POST http://127.0.0.1:3000/laboratory HTTP/1.1
+content-type: application/json
+
+{
+    "id": "dev2",
+    "type": "experimentation",
+    "displayname":"Lab dev2 test",
+    "description":"Description de Lab dev2 test",
+    "gitrepo":"https://github.com/CQEN-QDCE/ceai-cqen-admin-api"
+}
+
+###
+PUT http://127.0.0.1:3000/laboratory/dev2 HTTP/1.1
+content-type: application/json
+
+{
+    "type": "experimentation",
+    "displayname":"Lab dev2 test",
+    "description":"Description de Lab dev2 test",
+    "gitrepo":"https://github.com/CQEN-QDCE/ceai-cqen-admin-api"
+}
+
+###
+PUT http://127.0.0.1:3000/laboratory/dev2/user HTTP/1.1
+content-type: application/json
+
+["test@example.com"]
+
+###
+DELETE http://127.0.0.1:3000/laboratory/dev2/user HTTP/1.1
+content-type: application/json
+
+["test@example.com"]
+
+### 
+PUT http://127.0.0.1:3000/laboratory/dev2/openshift/dev1-project1 HTTP/1.1
+
+### 
+DELETE http://127.0.0.1:3000/laboratory/dev2/openshift/dev1-project1 HTTP/1.1
+
+###
+GET http://127.0.0.1:3000/openshift/project HTTP/1.1
+
+###
+GET http://127.0.0.1:3000/openshift/project/dev1-project1 HTTP/1.1
+
+###
+POST http://127.0.0.1:3000/openshift/project HTTP/1.1
+content-type: application/json
+
+{
+    "id": "dev2-project-1",
+    "displayname": "Dev2 app 1",
+    "description": "Application 1 du laboratoire dev2",
+    "idLab": "dev2"
+}

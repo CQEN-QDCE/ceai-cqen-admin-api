@@ -1,0 +1,124 @@
+package handlers
+
+import (
+	"encoding/json"
+	"log"
+	"net/http"
+
+	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/services"
+	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/models"
+	"github.com/CQEN-QDCE/ceai-cqen-admin-api/pkg/apifirst"
+	"github.com/gorilla/mux"
+)
+
+type OpenshiftHandlersInterface interface {
+	// (GET /openshift/project)
+	GetOpenshiftProjects(response *apifirst.Response, request *http.Request) error
+
+	// (POST /openshift/project)
+	CreateOpenshiftProject(response *apifirst.Response, request *http.Request) error
+
+	// (DELETE /openshift/project/{projectid})
+	DeleteOpenshiftProject(response *apifirst.Response, request *http.Request) error
+
+	// (GET /openshift/project/{projectid})
+	GetOpenshiftProjectFromId(response *apifirst.Response, request *http.Request) error
+
+	// (PUT /openshift/project/{projectid})
+	UpdateOpenshiftProject(response *apifirst.Response, request *http.Request) error
+}
+
+func (s ServerHandlers) GetOpenshiftProjects(response *apifirst.Response, request *http.Request) error {
+	projectList, err := services.GetOpenshiftProjects()
+
+	if err != nil {
+		if e, ok := err.(services.ErrorExternalServerError); ok {
+			log.Println(e.Error())
+			response.SetStatus(http.StatusInternalServerError)
+			return err
+		}
+	}
+
+	response.SetStatus(http.StatusOK)
+	response.SetBody(projectList)
+
+	return nil
+}
+
+func (s ServerHandlers) GetOpenshiftProjectFromId(response *apifirst.Response, request *http.Request) error {
+	//Path param
+	params := mux.Vars(request)
+	projectId := params["projectid"]
+
+	project, err := services.GetOpenshiftProjectFromId(projectId)
+
+	if err != nil {
+		if e, ok := err.(services.ErrorExternalServerError); ok {
+			log.Println(e.Error())
+			response.SetStatus(http.StatusInternalServerError)
+			return err
+		}
+
+		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
+			log.Println(e.Error())
+			response.SetStatus(http.StatusNotFound)
+			return err
+		}
+	}
+
+	response.SetStatus(http.StatusOK)
+	response.SetBody(project)
+
+	return nil
+}
+
+func (s ServerHandlers) CreateOpenshiftProject(response *apifirst.Response, request *http.Request) error {
+	createParam := models.OpenshiftProjectWithLab{}
+	if err := json.NewDecoder(request.Body).Decode(&createParam); err != nil {
+		response.SetStatus(http.StatusBadRequest)
+		log.Println(err)
+		return err
+	}
+
+	err := services.CreateOpenshiftProject(&createParam)
+
+	if err != nil {
+		if e, ok := err.(services.ErrorExternalServerError); ok {
+			log.Println(e.Error())
+			response.SetStatus(http.StatusInternalServerError)
+			return err
+		}
+
+		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
+			log.Println(e.Error())
+			response.SetStatus(http.StatusNotFound)
+			return err
+		}
+	}
+
+	response.SetStatus(http.StatusCreated)
+
+	return nil
+}
+
+/*
+// DeleteOpenshiftProject operation middleware
+func (s ServerHandlers) DeleteOpenshiftProject(response *apifirst.Response, request *http.Request) error {
+
+	params := mux.Vars(request)
+
+	// ------------- Path parameter "projectid" -------------
+	projectid := params["projectid"]
+
+}
+
+// UpdateOpenshiftProject operation middleware
+func (s ServerHandlers) UpdateOpenshiftProject(response *apifirst.Response, request *http.Request) error {
+
+	params := mux.Vars(request)
+
+	// ------------- Path parameter "projectid" -------------
+	projectid := params["projectid"]
+
+}
+*/

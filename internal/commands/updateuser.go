@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/CQEN-QDCE/ceai-cqen-admin-api/handlers"
+	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/models"
 	"github.com/spf13/cobra"
 )
 
@@ -45,7 +45,7 @@ func UpdateUser(email string, firstname string, lastname string, organisation st
 	if email == "" {
 		fmt.Println("Veuillez saisir le courriel")
 	} else {
-		body := &handlers.UserUpdate{
+		body := &models.UserUpdate{
 			Firstname:    &firstname,
 			Lastname:     &lastname,
 			Organisation: &organisation,
