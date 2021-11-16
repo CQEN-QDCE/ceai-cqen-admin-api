@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/Nerzal/gocloak/v8"
+	"github.com/Nerzal/gocloak/v9"
 )
 
 const CLIENT_TOKEN_TTL = 60
@@ -235,6 +235,23 @@ func GetUserGroups(user *gocloak.User) ([]*gocloak.Group, error) {
 	return groups, nil
 }
 
+//Recursive
+func FindSubgroup(group *gocloak.Group, subgroupName string) *gocloak.Group {
+	if group != nil {
+		if *group.Name == subgroupName {
+			return group
+		} else if group.SubGroups != nil {
+			for _, subgroup := range *group.SubGroups {
+				if foundGroup := FindSubgroup(&subgroup, subgroupName); foundGroup != nil {
+					return foundGroup
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 func GetGroup(groupName string) (*gocloak.Group, error) {
 	c, err := GetClient()
 
@@ -269,16 +286,10 @@ func GetGroup(groupName string) (*gocloak.Group, error) {
 	}
 
 	//If group is a subgroup Keycloak will return the whole tree containing the group
-	var group *gocloak.Group
+	group := FindSubgroup(groups[0], groupName)
 
-	group = groups[0]
-
-	for *group.Name != groupName {
-		if group.SubGroups == nil {
-			return nil, errors.New("Group not found in tree.")
-		}
-
-		group = &(*group.SubGroups)[0]
+	if group == nil {
+		return nil, errors.New("Group not found in tree.")
 	}
 
 	return group, nil

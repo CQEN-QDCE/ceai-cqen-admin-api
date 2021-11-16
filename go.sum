@@ -59,8 +59,8 @@ github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym
 github.com/CQEN-QDCE/aws-sso-scim-goclient v0.0.0-20211104172753-bbc5320ac3f9 h1:XZpNmR5oyNY7+daAQ8acEzJKRD3LpCxOjyMi9ZhSHtc=
 github.com/CQEN-QDCE/aws-sso-scim-goclient v0.0.0-20211104172753-bbc5320ac3f9/go.mod h1:WGbo+N4YMWZqmtxatb4u3cPlztnBdsJkh046z45f9ZE=
 github.com/NYTimes/gziphandler v0.0.0-20170623195520-56545f4a5d46/go.mod h1:3wb06e3pkSAbeQ52E9H9iFoQsEEwGN64994WTCIhntQ=
-github.com/Nerzal/gocloak/v8 v8.5.0 h1:sk84BrGnmFyqie+KcBtg13RrVCC3Skx8LnST8/gxqpY=
-github.com/Nerzal/gocloak/v8 v8.5.0/go.mod h1:Zzuv9uk+6drd8VrFT0ihxvIicMv7+umQKtKfnp5jCAs=
+github.com/Nerzal/gocloak/v9 v9.0.4 h1:ggUV+PRYQ7A66R5F3KLv0V8DEfwKMRTl1F8c5YxFUu8=
+github.com/Nerzal/gocloak/v9 v9.0.4/go.mod h1:AmXlpCliq31R1r/18ei7/ML5mfJDmJ1pTBoFU79DDZg=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
@@ -378,6 +378,8 @@ github.com/openshift/build-machinery-go v0.0.0-20210423112049-9415d7ebd33e/go.mo
 github.com/openshift/build-machinery-go v0.0.0-20210712174854-1bb7fd1518d3/go.mod h1:b1BuldmJlbA/xYtdZvKi+7j5YGB44qJUJDZ9zwiNCfE=
 github.com/openshift/client-go v0.0.0-20210521082421-73d9475a9142 h1:ZHRIMCFIJN1p9LsJt4HQ+akDrys4PrYnXzOWI5LK03I=
 github.com/openshift/client-go v0.0.0-20210521082421-73d9475a9142/go.mod h1:fjS8r9mqDVsPb5td3NehsNOAWa4uiFkYEfVZioQ2gH0=
+github.com/opentracing/opentracing-go v1.2.0 h1:uEJPy/1a5RIPAJ0Ov+OIO8OxWu77jEv+1B0VhjKrZUs=
+github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pelletier/go-toml v1.9.3/go.mod h1:u1nR/EPcESfeI/szUZKdtJ0xRNbUoANCkoOuaOx1Y+c=
 github.com/pelletier/go-toml v1.9.4 h1:tjENF6MfZAg8e4ZmZTeWaWiT2vXtsoO6+iuOjFhECwM=

@@ -3,7 +3,7 @@ package keycloak
 import (
 	"testing"
 
-	"github.com/Nerzal/gocloak/v8"
+	"github.com/Nerzal/gocloak/v9"
 	"github.com/joho/godotenv"
 )
 

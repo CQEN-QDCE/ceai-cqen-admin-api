@@ -213,6 +213,21 @@ func UserInGroup(username string, group *user.Group) (bool, int) {
 	return false, -1
 }
 
+func GetProjects() (*[]project.Project, error) {
+	projectClient, err := GetProjectClient()
+	if err != nil {
+		return nil, err
+	}
+
+	projects, err := projectClient.Projects().List(context.TODO(), meta.ListOptions{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &projects.Items, nil
+}
+
 func GetProject(projectName string) (*project.Project, error) {
 	projectClient, err := GetProjectClient()
 	if err != nil {
@@ -222,13 +237,13 @@ func GetProject(projectName string) (*project.Project, error) {
 	return projectClient.Projects().Get(context.TODO(), projectName, meta.GetOptions{})
 }
 
-func CreateProject(project *project.Project) (*project.Project, error) {
+func CreateProject(project *project.ProjectRequest) (*project.Project, error) {
 	projectClient, err := GetProjectClient()
 	if err != nil {
 		return nil, err
 	}
 
-	return projectClient.Projects().Create(context.TODO(), project, meta.CreateOptions{})
+	return projectClient.ProjectRequests().Create(context.TODO(), project, meta.CreateOptions{})
 }
 
 func UpdateProject(project *project.Project) (*project.Project, error) {
@@ -238,6 +253,15 @@ func UpdateProject(project *project.Project) (*project.Project, error) {
 	}
 
 	return projectClient.Projects().Update(context.TODO(), project, meta.UpdateOptions{})
+}
+
+func DeleteProject(project *project.Project) error {
+	projectClient, err := GetProjectClient()
+	if err != nil {
+		return err
+	}
+
+	return projectClient.Projects().Delete(context.TODO(), project.Name, meta.DeleteOptions{})
 }
 
 func GetNamespace(projectName string) (*core.Namespace, error) {

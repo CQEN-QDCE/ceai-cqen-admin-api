@@ -2,7 +2,7 @@ GET http://127.0.0.1:3000/user HTTP/1.1
 
 ###
 
-GET http://127.0.0.1:3000/user/francis.gagne@sct.gouv.qc.ca HTTP/1.1
+GET http://127.0.0.1:3000/user/afrancis.gagne@sct.gouv.qc.ca HTTP/1.1
 
 ###
 POST http://127.0.0.1:3000/user HTTP/1.1
@@ -75,3 +75,20 @@ PUT http://127.0.0.1:3000/laboratory/dev2/openshift/dev1-project1 HTTP/1.1
 
 ### 
 DELETE http://127.0.0.1:3000/laboratory/dev2/openshift/dev1-project1 HTTP/1.1
+
+###
+GET http://127.0.0.1:3000/openshift/project HTTP/1.1
+
+###
+GET http://127.0.0.1:3000/openshift/project/dev1-project1 HTTP/1.1
+
+###
+POST http://127.0.0.1:3000/openshift/project HTTP/1.1
+content-type: application/json
+
+{
+    "id": "dev2-project-1",
+    "displayname": "Dev2 app 1",
+    "description": "Application 1 du laboratoire dev2",
+    "idLab": "dev2"
+}

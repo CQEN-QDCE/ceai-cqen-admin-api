@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/CQEN-QDCE/aws-sso-scim-goclient v0.0.0-20211104172753-bbc5320ac3f9
-	github.com/Nerzal/gocloak/v8 v8.5.0
+	github.com/Nerzal/gocloak/v9 v9.0.4
 	github.com/aws/aws-sdk-go-v2 v1.11.0
 	github.com/aws/aws-sdk-go-v2/config v1.10.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.6.0
