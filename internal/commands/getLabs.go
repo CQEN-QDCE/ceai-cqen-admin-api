@@ -82,14 +82,20 @@ func GetLabs(format string) {
 		if format == "csv" {
 			fmt.Printf("id,displayname,description,gitrepo\n")
 			for _, e := range jsonDataLabs {
+				if len(e.Gitrepo) == 0 {
+					e.Gitrepo = "none"
+				}
 				fmt.Printf("%v,%v,%v,%v\n", e.Id, e.Displayname, e.Description, e.Gitrepo)
 			}
 		} else {
 			for _, e := range jsonDataLabs {
+				if len(e.Gitrepo) == 0 {
+					e.Gitrepo = "none"
+				}
 				fmt.Printf("Displayname: %v, Gitrepo: %v,\nDescription: %v\n\n",
 					e.Displayname,
-					e.Description,
-					e.Gitrepo)
+					e.Gitrepo,
+					e.Description)
 			}
 		}
 	}
