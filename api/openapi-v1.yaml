@@ -148,6 +148,15 @@ components:
           creationDate:
             type: string
             format: date-time
+    OpenshiftProjectUpdate:
+      type: object
+      properties:
+        displayname:
+          type: string
+        description:
+          type: string
+        idLab:
+          type: string
     AWSAccount:
       type: object
       properties:
@@ -658,14 +667,10 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/OpenshiftProject'
+              $ref: '#/components/schemas/OpenshiftProjectUpdate'
       responses:
         '200':
           description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpenshiftProject'
         '404':
           description: Openshift project id does not exist
         '400':

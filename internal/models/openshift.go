@@ -22,3 +22,9 @@ type OpenshiftProjectWithMeta struct {
 	CreationDate *time.Time `json:"creationDate,omitempty"`
 	Requester    *string    `json:"requester,omitempty"`
 }
+
+type OpenshiftProjectUpdate struct {
+	Description *string `json:"description,omitempty"`
+	Displayname *string `json:"displayname,omitempty"`
+	IdLab       *string `json:"idLab,omitempty"`
+}

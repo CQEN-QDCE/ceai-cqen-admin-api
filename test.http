@@ -92,3 +92,13 @@ content-type: application/json
     "description": "Application 1 du laboratoire dev2",
     "idLab": "dev2"
 }
+
+###
+PUT http://127.0.0.1:3000/openshift/project/dev2-project-1 HTTP/1.1
+content-type: application/json
+
+{
+    "displayname": "Dev2 app 1",
+    "description": "Application 1 du laboratoire dev2",
+    "idLab": "dev2"
+}
