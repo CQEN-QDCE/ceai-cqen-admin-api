@@ -27,7 +27,7 @@ var CreateUserCmd = &cobra.Command{
 	},
 }
 
-func CreateFlags() {
+func CreateUserFlags() {
 	CreateUserCmd.PersistentFlags().StringP("email", "e", "", "The email")
 	CreateUserCmd.PersistentFlags().StringP("firstname", "f", "", "The First name")
 	CreateUserCmd.PersistentFlags().StringP("lastname", "l", "", "The last name")
@@ -37,7 +37,7 @@ func CreateFlags() {
 
 func init() {
 	rootCmd.AddCommand(CreateUserCmd)
-	CreateFlags()
+	CreateUserFlags()
 }
 
 func CreateUsers(Email string, Firstname string, Lastname string, Organisation string, Infrarole string) {
