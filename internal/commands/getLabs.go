@@ -92,7 +92,8 @@ func GetLabs(format string) {
 				if len(e.Gitrepo) == 0 {
 					e.Gitrepo = "none"
 				}
-				fmt.Printf("Displayname: %v, Gitrepo: %v,\nDescription: %v\n\n",
+				fmt.Printf("ID: %v\nDisplayname: %v\nGitrepo: %v\nDescription: %v\n\n",
+					e.Id,
 					e.Displayname,
 					e.Gitrepo,
 					e.Description)
