@@ -36,6 +36,12 @@ type LaboratoryHandlersInterface interface {
 
 	// (DELETE /laboratory/{laboratoryid}/openshift/{projectid})
 	DetachOpenshiftProjectFromLaboratory(response *apifirst.Response, request *http.Request) error
+
+	// (DELETE /laboratory/{laboratoryid}/aws/{accountid})
+	DetachAwsAccountFromLaboratory(response *apifirst.Response, request *http.Request) error
+
+	// (PUT /laboratory/{laboratoryid}/aws/{accountid})
+	AttachAwsAccountToLaboratory(response *apifirst.Response, request *http.Request) error
 }
 
 func (s ServerHandlers) GetLaboratories(response *apifirst.Response, request *http.Request) error {
@@ -242,6 +248,58 @@ func (s ServerHandlers) DetachOpenshiftProjectFromLaboratory(response *apifirst.
 	projectId := params["projectid"]
 
 	err := services.DetachOpenshiftProjectFromLaboratory(laboratoryId, projectId)
+
+	if err != nil {
+		if e, ok := err.(services.ErrorExternalServerError); ok {
+			log.Println(e.Error())
+			response.SetStatus(http.StatusInternalServerError)
+			return err
+		}
+
+		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
+			log.Println(e.Error())
+			response.SetStatus(http.StatusNotFound)
+			return err
+		}
+	}
+
+	response.SetStatus(http.StatusOK)
+
+	return nil
+}
+
+func (s ServerHandlers) AttachAwsAccountToLaboratory(response *apifirst.Response, request *http.Request) error {
+	params := mux.Vars(request)
+	laboratoryId := params["laboratoryid"]
+	accountId := params["accountid"]
+
+	err := services.AttachAwsAccountToLaboratory(laboratoryId, accountId)
+
+	if err != nil {
+		if e, ok := err.(services.ErrorExternalServerError); ok {
+			log.Println(e.Error())
+			response.SetStatus(http.StatusInternalServerError)
+			return err
+		}
+
+		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
+			log.Println(e.Error())
+			response.SetStatus(http.StatusNotFound)
+			return err
+		}
+	}
+
+	response.SetStatus(http.StatusOK)
+
+	return nil
+}
+
+func (s ServerHandlers) DetachAwsAccountFromLaboratory(response *apifirst.Response, request *http.Request) error {
+	params := mux.Vars(request)
+	laboratoryId := params["laboratoryid"]
+	accountId := params["accountid"]
+
+	err := services.DetachAwsAccountFromLaboratory(laboratoryId, accountId)
 
 	if err != nil {
 		if e, ok := err.(services.ErrorExternalServerError); ok {

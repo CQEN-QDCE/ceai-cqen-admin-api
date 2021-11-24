@@ -705,7 +705,7 @@ paths:
     get:
       operationId: GetAwsAccounts
       description: >-
-       Get the list of all laboratories AWS accounts 
+        Get the list of all laboratories AWS accounts 
       responses:
         '200':
           description: OK
@@ -742,3 +742,30 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+  /aws/account/{accountid}:
+    get:
+      operationId: GetAwsAccount
+      description: >-
+        Get infos of an AWS accounts
+      parameters:
+        - name: accountid
+          in: path
+          description: The identifier of the targetted account.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AWSAccount'
+        '404':
+          description: AWS account id does not exist
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+        '502':
+          $ref: '#/components/responses/502BadGateway'

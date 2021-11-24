@@ -9,18 +9,13 @@ import (
 )
 
 func TestDescribePermissionSet(t *testing.T) {
-	err := godotenv.Load("../../.env")
+	err := godotenv.Load("../../../.env")
 	if err != nil {
 		t.Fatal("Error loading .env file: " + err.Error())
 	}
 
-	err = godotenv.Load("../../test.env")
-	if err != nil {
-		t.Fatal("Error loading test.env file (This test requires test values): " + err.Error())
-	}
-
-	instanceArn := os.Getenv("AWS_INSTANCE_ARN")
-	permissionSetArn := os.Getenv("AWS_PERMISSION_SET_ARN")
+	instanceArn := os.Getenv("AWS_SSO_INSTANCE_ARN")
+	permissionSetArn := os.Getenv("AWS_DEV_PERMISSION_SET_ARN")
 
 	ps, err := DescribePermissionSet(instanceArn, permissionSetArn)
 

@@ -2,6 +2,7 @@ package aws
 
 import (
 	"context"
+	"errors"
 	"os"
 	"time"
 
@@ -22,6 +23,18 @@ var ssoClientTime int64
 
 var orgClient *organizations.Client
 var orgClientTime int64
+
+func GetSsoInstanceArn() string {
+	return os.Getenv("AWS_SSO_INSTANCE_ARN")
+}
+
+func GetAdminPermissionSetArn() string {
+	return os.Getenv("AWS_ADMIN_PERMISSION_SET_ARN")
+}
+
+func GetDevPermissionSetArn() string {
+	return os.Getenv("AWS_DEV_PERMISSION_SET_ARN")
+}
 
 func GetClientConfig() (*aws.Config, error) {
 	awsAccessKey := os.Getenv("AWS_ACCESS_KEY")
@@ -95,6 +108,23 @@ func DescribePermissionSet(instanceArn string, permissionSetArn string) (*ssoadm
 	return permDescription.PermissionSet, nil
 }
 
+func ListAccounts() (*[]organizationstypes.Account, error) {
+	c, err := GetOrganizationsClient()
+	if err != nil {
+		return nil, err
+	}
+
+	accountsOutput, err := c.ListAccounts(context.TODO(), &organizations.ListAccountsInput{})
+
+	//TODO check NextToken
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &accountsOutput.Accounts, nil
+}
+
 func DescribeAccount(accountId string) (*organizationstypes.Account, error) {
 	c, err := GetOrganizationsClient()
 	if err != nil {
@@ -110,4 +140,59 @@ func DescribeAccount(accountId string) (*organizationstypes.Account, error) {
 	}
 
 	return accountOutput.Account, nil
+}
+
+func GetIdentityStoreId() (*string, error) {
+	c, err := GetSsoClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ssoInstancesList, err := c.ListInstances(context.TODO(), &ssoadmin.ListInstancesInput{})
+
+	if len(ssoInstancesList.Instances) < 1 {
+		err := errors.New("No SSO identity store found on AWS account.")
+		return nil, err
+	}
+
+	if len(ssoInstancesList.Instances) > 1 {
+		err := errors.New("More than one SSO identity store found on AWS account.")
+		return nil, err
+	}
+
+	return ssoInstancesList.Instances[0].IdentityStoreId, nil
+}
+
+func CreateAccountAssigment(accountAssignment *ssoadmin.CreateAccountAssignmentInput) error {
+	c, err := GetSsoClient()
+	if err != nil {
+		return err
+	}
+
+	_, err = c.CreateAccountAssignment(context.TODO(), accountAssignment)
+
+	//TODO analyse output
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeleteAccountAssigment(accountAssignment *ssoadmin.DeleteAccountAssignmentInput) error {
+	c, err := GetSsoClient()
+	if err != nil {
+		return err
+	}
+
+	_, err = c.DeleteAccountAssignment(context.TODO(), accountAssignment)
+
+	//TODO analyse output
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
