@@ -10,12 +10,17 @@ import (
 	openshiftmeta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const OPENSHIFT_LABORATORY_LABEL string = "ceai-laboratory"
+const OPENSHIFT_DESCRIPTION_ANNOTATION string = "openshift.io/description"
+const OPENSHIFT_DISPLAY_NAME_ANNOTATION string = "openshift.io/display-name"
+const OPENSHIFT_REQUESTER_ANNOTATION string = "openshift.io/requester"
+
 func MapOpenshiftProject(project *openshiftproject.Project) *models.OpenshiftProject {
 	var openshiftProject models.OpenshiftProject
 
 	openshiftProject.Id = project.Name
-	openshiftProject.Description = project.Annotations["openshift.io/description"]
-	openshiftProject.Displayname = project.Annotations["openshift.io/display-name"]
+	openshiftProject.Description = project.Annotations[OPENSHIFT_DESCRIPTION_ANNOTATION]
+	openshiftProject.Displayname = project.Annotations[OPENSHIFT_DISPLAY_NAME_ANNOTATION]
 
 	return &openshiftProject
 }
@@ -25,7 +30,7 @@ func MapOpenshiftProjectWithLab(project *openshiftproject.Project) *models.Opens
 
 	openshiftProject.OpenshiftProject = MapOpenshiftProject(project)
 
-	if idLab, ok := project.Labels["ceai-laboratory"]; ok {
+	if idLab, ok := project.Labels[OPENSHIFT_LABORATORY_LABEL]; ok {
 		openshiftProject.IdLab = idLab
 	} else {
 		openshiftProject.IdLab = "none"
@@ -39,7 +44,7 @@ func MapOpenshiftProjectWithMeta(project *openshiftproject.Project) *models.Open
 
 	openshiftProject.OpenshiftProjectWithLab = MapOpenshiftProjectWithLab(project)
 
-	if requester, ok := project.Annotations["openshift.io/requester"]; ok {
+	if requester, ok := project.Annotations[OPENSHIFT_REQUESTER_ANNOTATION]; ok {
 		openshiftProject.Requester = &requester
 	}
 
@@ -80,7 +85,7 @@ func GetOpenshiftProjects() ([]*models.OpenshiftProjectWithMeta, error) {
 	if projects != nil {
 
 		for _, project := range *projects {
-			if _, ok := project.Annotations["openshift.io/requester"]; ok {
+			if _, ok := project.Annotations[OPENSHIFT_REQUESTER_ANNOTATION]; ok {
 				projectList = append(projectList, MapOpenshiftProjectWithMeta(&project))
 			}
 		}
@@ -123,4 +128,51 @@ func CreateOpenshiftProject(createParam *models.OpenshiftProjectWithLab) error {
 	}
 
 	return AttachOpenshiftProjectToLaboratory(createParam.IdLab, createParam.Id)
+}
+
+func UpdateOpenshiftProject(projectId string, updateParam *models.OpenshiftProjectUpdate) error {
+	project, err := openshift.GetProject(projectId)
+
+	if err != nil {
+		return NewErrorExternalRessourceNotFound(err, ERROR_SERVER_OPENSHIFT)
+	}
+
+	//If lab is changed detach project and attach to new lab
+	if updateParam.IdLab != nil {
+		if currentIdLab, ok := project.Labels[OPENSHIFT_LABORATORY_LABEL]; ok {
+			if currentIdLab != *updateParam.IdLab {
+
+				err = DetachOpenshiftProjectFromLaboratory(currentIdLab, projectId)
+
+				if err != nil {
+					return err
+				}
+
+				err = AttachOpenshiftProjectToLaboratory(*updateParam.IdLab, projectId)
+
+				if err != nil {
+					return err
+				}
+
+				//Obtain updated project
+				project, err = openshift.GetProject(projectId)
+			}
+		}
+	}
+
+	if updateParam.Description != nil {
+		project.Annotations[OPENSHIFT_DESCRIPTION_ANNOTATION] = *updateParam.Description
+	}
+
+	if updateParam.Displayname != nil {
+		project.Annotations[OPENSHIFT_DISPLAY_NAME_ANNOTATION] = *updateParam.Displayname
+	}
+
+	_, err = openshift.UpdateProject(project)
+
+	if err != nil {
+		return NewErrorExternalServerError(err, ERROR_SERVER_OPENSHIFT)
+	}
+
+	return nil
 }

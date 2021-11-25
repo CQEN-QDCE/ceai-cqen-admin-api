@@ -8,7 +8,7 @@ import (
 )
 
 func TestGetUsers(t *testing.T) {
-	err := godotenv.Load("../../.env")
+	err := godotenv.Load("../../../.env")
 	if err != nil {
 		t.Fatal("Error loading .env file: " + err.Error())
 	}
@@ -27,8 +27,27 @@ func TestGetUsers(t *testing.T) {
 	}
 }
 
+func TestGetUser(t *testing.T) {
+	err := godotenv.Load("../../../.env")
+	if err != nil {
+		t.Fatal("Error loading .env file: " + err.Error())
+	}
+
+	user, err := GetUser("francis.gagne@sct.gouv.qc.ca")
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	println(user.ID)
+	println(user.Username)
+	println(user.DisplayName)
+	println(user.Name.FamilyName)
+	println(user.Name.GivenName)
+}
+
 func TestCreateGroups(t *testing.T) {
-	err := godotenv.Load("../../.env")
+	err := godotenv.Load("../../../.env")
 	if err != nil {
 		t.Fatal("Error loading .env file: " + err.Error())
 	}
@@ -43,7 +62,7 @@ func TestCreateGroups(t *testing.T) {
 }
 
 func TestUpdateGroup(t *testing.T) {
-	err := godotenv.Load("../../.env")
+	err := godotenv.Load("../../../.env")
 	if err != nil {
 		t.Fatal("Error loading .env file: " + err.Error())
 	}

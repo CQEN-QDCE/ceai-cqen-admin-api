@@ -1,6 +1,5 @@
 package models
 
-// User defines model for User.
 type User struct {
 	Disabled     *bool  `json:"disabled,omitempty"`
 	Email        string `json:"email"`
@@ -18,7 +17,6 @@ type UserUpdate struct {
 	Organisation *string `json:"organisation,omitempty"`
 }
 
-// UserWithLabs defines model for UserWithLabs.
 type UserWithLabs struct {
 	// Embedded struct due to allOf(#/components/schemas/User)
 	User `yaml:",inline"`
@@ -26,7 +24,6 @@ type UserWithLabs struct {
 	Laboratories *[]LaboratoryRole `json:"laboratories,omitempty"`
 }
 
-// LaboratoryRole defines model for LaboratoryRole.
 type LaboratoryRole struct {
 	Laboratory string `json:"laboratory"`
 	Role       string `json:"role"`

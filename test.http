@@ -9,10 +9,10 @@ POST http://127.0.0.1:3000/user HTTP/1.1
 content-type: application/json
 
 {
-    "email": "test@example.com",
+    "email": "bobby@example.com",
     "firstname": "Bobby",
-    "lastname": "Test",
-    "organisation": "ORGP",
+    "lastname": "Example",
+    "organisation": "CQEN",
     "infrarole": "Developer"
 }
 
@@ -62,7 +62,7 @@ content-type: application/json
 PUT http://127.0.0.1:3000/laboratory/dev2/user HTTP/1.1
 content-type: application/json
 
-["test@example.com"]
+["bobby@example.com"]
 
 ###
 DELETE http://127.0.0.1:3000/laboratory/dev2/user HTTP/1.1
@@ -92,3 +92,26 @@ content-type: application/json
     "description": "Application 1 du laboratoire dev2",
     "idLab": "dev2"
 }
+
+###
+PUT http://127.0.0.1:3000/openshift/project/dev2-project-1 HTTP/1.1
+content-type: application/json
+
+{
+    "displayname": "Dev2 app 1",
+    "description": "Application 1 du laboratoire dev2",
+    "idLab": "dev2"
+}
+
+###
+GET http://127.0.0.1:3000/aws/account HTTP/1.1
+
+
+###
+GET http://127.0.0.1:3000/aws/account/111111111111 HTTP/1.1
+
+###
+PUT http://127.0.0.1:3000/laboratory/dev2/aws/111111111111 HTTP/1.1
+
+###
+DELETE http://127.0.0.1:3000/laboratory/dev2/aws/111111111111 HTTP/1.1
