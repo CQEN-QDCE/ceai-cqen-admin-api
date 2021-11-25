@@ -18,9 +18,6 @@ type OpenshiftHandlersInterface interface {
 	// (POST /openshift/project)
 	CreateOpenshiftProject(response *apifirst.Response, request *http.Request) error
 
-	// (DELETE /openshift/project/{projectid})
-	DeleteOpenshiftProject(response *apifirst.Response, request *http.Request) error
-
 	// (GET /openshift/project/{projectid})
 	GetOpenshiftProjectFromId(response *apifirst.Response, request *http.Request) error
 
@@ -89,9 +86,9 @@ func (s ServerHandlers) CreateOpenshiftProject(response *apifirst.Response, requ
 			return err
 		}
 
-		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
+		if e, ok := err.(services.ErrorExternalRessourceExist); ok {
 			log.Println(e.Error())
-			response.SetStatus(http.StatusNotFound)
+			response.SetStatus(http.StatusConflict)
 			return err
 		}
 	}
@@ -101,24 +98,34 @@ func (s ServerHandlers) CreateOpenshiftProject(response *apifirst.Response, requ
 	return nil
 }
 
-/*
-// DeleteOpenshiftProject operation middleware
-func (s ServerHandlers) DeleteOpenshiftProject(response *apifirst.Response, request *http.Request) error {
-
-	params := mux.Vars(request)
-
-	// ------------- Path parameter "projectid" -------------
-	projectid := params["projectid"]
-
-}
-
-// UpdateOpenshiftProject operation middleware
 func (s ServerHandlers) UpdateOpenshiftProject(response *apifirst.Response, request *http.Request) error {
-
 	params := mux.Vars(request)
+	projectId := params["projectid"]
 
-	// ------------- Path parameter "projectid" -------------
-	projectid := params["projectid"]
+	updateParam := models.OpenshiftProjectUpdate{}
+	if err := json.NewDecoder(request.Body).Decode(&updateParam); err != nil {
+		response.SetStatus(http.StatusBadRequest)
+		log.Println(err)
+		return err
+	}
 
+	err := services.UpdateOpenshiftProject(projectId, &updateParam)
+
+	if err != nil {
+		if e, ok := err.(services.ErrorExternalServerError); ok {
+			log.Println(e.Error())
+			response.SetStatus(http.StatusInternalServerError)
+			return err
+		}
+
+		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
+			log.Println(e.Error())
+			response.SetStatus(http.StatusNotFound)
+			return err
+		}
+	}
+
+	response.SetStatus(http.StatusOK)
+
+	return nil
 }
-*/

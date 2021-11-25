@@ -1,12 +1,5 @@
 package models
 
-type AWSAccount struct {
-	Email *string `json:"email,omitempty"`
-	Name  *string `json:"name,omitempty"`
-	Id    *string `json:"number,omitempty"`
-}
-
-// Laboratory defines model for Laboratory.
 type Laboratory struct {
 	Id          string  `json:"id"`
 	Description string  `json:"description"`
@@ -22,7 +15,6 @@ type LaboratoryUpdate struct {
 	Gitrepo     *string `json:"gitrepo,omitempty"`
 }
 
-// LaboratoryWithResources defines model for LaboratoryWithResources.
 type LaboratoryWithResources struct {
 	// Embedded struct due to allOf(#/components/schemas/LaboratoryWithUsers)
 	*LaboratoryWithUsers `yaml:",inline"`
@@ -31,7 +23,6 @@ type LaboratoryWithResources struct {
 	Openshiftprojects *[]OpenshiftProject `json:"openshiftprojects,omitempty"`
 }
 
-// LaboratoryWithUsers defines model for LaboratoryWithUsers.
 type LaboratoryWithUsers struct {
 	// Embedded struct due to allOf(#/components/schemas/Laboratory)
 	*Laboratory `yaml:",inline"`

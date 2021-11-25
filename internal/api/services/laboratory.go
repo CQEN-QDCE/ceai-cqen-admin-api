@@ -9,6 +9,8 @@ import (
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/openshift"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/models"
 	"github.com/Nerzal/gocloak/v9"
+	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
+	"github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	openshiftuser "github.com/openshift/api/user/v1"
 	openshiftmeta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -16,7 +18,6 @@ import (
 const LAB_TOP_GROUP = "/Laboratories/"
 
 const KEYCLOAK_LAB_TOP_GROUP = "Laboratories"
-const AWS_LAB_GROUP_PREFIX = "Lab_"
 const OPENSHIFT_LAB_GROUP_PREFIX = "Lab_"
 
 type LaboratoryState struct {
@@ -111,6 +112,7 @@ func MapLaboratoryWithResources(kgroup gocloak.Group) (*models.LaboratoryWithRes
 		for _, accountId := range attributes["aws_accounts"] {
 			var account models.AWSAccount
 
+			//TODO service function
 			accountInfo, err := aws.DescribeAccount(accountId)
 
 			if err == nil {
@@ -666,6 +668,62 @@ func DetachOpenshiftProjectFromLaboratory(laboratoryId string, projectId string)
 		if err != nil {
 			return NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
 		}
+	}
+
+	return nil
+}
+
+func AttachAwsAccountToLaboratory(laboratoryId string, accountId string) error {
+	awsGroup, err := aws.GetGroup(GetAwsLabGroupName(laboratoryId))
+
+	if err != nil {
+		return NewErrorExternalRessourceNotFound(err, ERROR_SERVER_AWS)
+	}
+
+	ssoInstanceArn := aws.GetSsoInstanceArn()
+	devPermissionSetArn := aws.GetDevPermissionSetArn()
+
+	accountAssigmnent := ssoadmin.CreateAccountAssignmentInput{
+		InstanceArn:      &ssoInstanceArn,
+		PermissionSetArn: &devPermissionSetArn,
+		TargetId:         &accountId,
+		TargetType:       types.TargetTypeAwsAccount,
+		PrincipalId:      &awsGroup.ID,
+		PrincipalType:    types.PrincipalTypeGroup,
+	}
+
+	err = aws.CreateAccountAssigment(&accountAssigmnent)
+
+	if err != nil {
+		return NewErrorExternalRessourceExist(err, ERROR_SERVER_AWS)
+	}
+
+	return nil
+}
+
+func DetachAwsAccountFromLaboratory(laboratoryId string, accountId string) error {
+	awsGroup, err := aws.GetGroup(GetAwsLabGroupName(laboratoryId))
+
+	if err != nil {
+		return NewErrorExternalRessourceNotFound(err, ERROR_SERVER_AWS)
+	}
+
+	ssoInstanceArn := aws.GetSsoInstanceArn()
+	devPermissionSetArn := aws.GetDevPermissionSetArn()
+
+	accountAssigmnent := ssoadmin.DeleteAccountAssignmentInput{
+		InstanceArn:      &ssoInstanceArn,
+		PermissionSetArn: &devPermissionSetArn,
+		TargetId:         &accountId,
+		TargetType:       types.TargetTypeAwsAccount,
+		PrincipalId:      &awsGroup.ID,
+		PrincipalType:    types.PrincipalTypeGroup,
+	}
+
+	err = aws.DeleteAccountAssigment(&accountAssigmnent)
+
+	if err != nil {
+		return NewErrorExternalRessourceNotFound(err, ERROR_SERVER_AWS)
 	}
 
 	return nil
