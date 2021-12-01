@@ -13,34 +13,32 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var CreateLabCmd = &cobra.Command{
-	Use:   "createlab",
-	Short: "Create Lab",
-	Long:  `This command create a laboratory from the ceai api`,
+var CreateOpenshiftCmd = &cobra.Command{
+	Use:   "createshift",
+	Short: "Create Openshift Project",
+	Long:  `This command creates an Openshift Project from the ceai api`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Id, _ := cmd.Flags().GetString("id")
 		Description, _ := cmd.Flags().GetString("description")
 		Displayname, _ := cmd.Flags().GetString("displayname")
-		Type, _ := cmd.Flags().GetString("type")
-		Gitrepo, _ := cmd.Flags().GetString("gitrepo")
-		CreateLabs(Id, Description, Displayname, Type, &Gitrepo)
+		IdLab, _ := cmd.Flags().GetString("idlab")
+		CreateOpenshift(Id, Description, Displayname, IdLab)
 	},
 }
 
-func CreateLabFlags() {
-	CreateLabCmd.PersistentFlags().StringP("id", "i", "", "The id")
-	CreateLabCmd.PersistentFlags().StringP("description", "d", "", "The lab description")
-	CreateLabCmd.PersistentFlags().StringP("displayname", "n", "", "The lab displayed name")
-	CreateLabCmd.PersistentFlags().StringP("type", "t", "", "The type of lab")
-	CreateLabCmd.PersistentFlags().StringP("gitrepo", "g", "", "The lab's gitrepo url (optional)")
+func CreateOpenshiftFlags() {
+	CreateOpenshiftCmd.PersistentFlags().StringP("id", "i", "", "The project's id")
+	CreateOpenshiftCmd.PersistentFlags().StringP("idlab", "l", "", "The project's associated lab id")
+	CreateOpenshiftCmd.PersistentFlags().StringP("description", "d", "", "The project description")
+	CreateOpenshiftCmd.PersistentFlags().StringP("displayname", "n", "", "The project displayed name")
 }
 
 func init() {
-	rootCmd.AddCommand(CreateLabCmd)
-	CreateLabFlags()
+	rootCmd.AddCommand(CreateOpenshiftCmd)
+	CreateOpenshiftFlags()
 }
 
-func CreateLabs(Id string, Description string, Displayname string, Type string, Gitrepo *string) {
+func CreateOpenshift(Id string, Description string, Displayname string, IdLab string) {
 
 	if Id == "" {
 		fmt.Println("Veuillez saisir l'Id (-i)")
@@ -48,22 +46,23 @@ func CreateLabs(Id string, Description string, Displayname string, Type string, 
 		fmt.Println("Veuillez saisir la Description (-d)")
 	} else if Displayname == "" {
 		fmt.Println("Veuillez saisir le Displayname (-n)")
-	} else if Type == "" {
-		fmt.Println("Veuillez saisir le type du lab (-t)")
+	} else if IdLab == "" {
+		fmt.Println("Veuillez saisir le IdLab (-l)")
 	} else {
-		body := &models.Laboratory{
-			Id:          Id,
-			Description: Description,
-			Displayname: Displayname,
-			Type:        Type,
-			Gitrepo:     Gitrepo,
+		body := &models.OpenshiftProjectWithLab{
+			OpenshiftProject: &models.OpenshiftProject{
+				Id:          Id,
+				Description: Description,
+				Displayname: Displayname,
+			},
+			IdLab: IdLab,
 		}
 
 		// Create an HTTP request
 		buf := new(bytes.Buffer)
 		json.NewEncoder(buf).Encode(body)
 		url := os.Getenv("SERVER_URL")
-		req, _ := http.NewRequest("POST", url+"/laboratory", buf)
+		req, _ := http.NewRequest("POST", url+"/openshift/project", buf)
 
 		// Add any defined headers
 		req.Header.Set("content-type", "application/json")
@@ -82,9 +81,9 @@ func CreateLabs(Id string, Description string, Displayname string, Type string, 
 
 		// Display an error or success message
 		if res.StatusCode == 201 {
-			fmt.Println("Vous avez bien créé le lab", Id)
+			fmt.Println("Vous avez bien créé le projet openshift", Id)
 		} else if res.StatusCode == 409 {
-			fmt.Println("Le lab existe déjà")
+			fmt.Println("Le projet openshift existe déjà")
 		} else {
 			fmt.Println("L'exécution du traitement a échoué")
 		}
