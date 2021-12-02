@@ -47,7 +47,7 @@ func AddUsersToLab(Id string, Ids []string) {
 		buf := new(bytes.Buffer)
 		json.NewEncoder(buf).Encode(Ids)
 		url := os.Getenv("SERVER_URL")
-		req, _ := http.NewRequest("PUT", url+"/laboratory/"+Id+"user", buf)
+		req, _ := http.NewRequest("PUT", url+"/laboratory/"+Id+"/user", buf)
 
 		// Add any defined headers
 		req.Header.Set("content-type", "application/json")
@@ -64,7 +64,7 @@ func AddUsersToLab(Id string, Ids []string) {
 		// Make sure to close after reading
 		defer res.Body.Close()
 
-		if res.StatusCode == 200 {
+		if res.StatusCode == 201 {
 			fmt.Println("the lab", Id, "has been updated")
 		} else {
 			fmt.Println("the execution has failed")
