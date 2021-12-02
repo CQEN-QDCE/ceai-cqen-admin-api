@@ -8,15 +8,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/models"
 	"github.com/spf13/cobra"
 )
-
-type Lab struct {
-	Id          string `json:"id"`
-	Displayname string `json:"displayname"`
-	Description string `json:"description"`
-	Gitrepo     string `json:"gitrepo"`
-}
 
 // getLabsCmd represents the getLabs command
 var getLabsCmd = &cobra.Command{
@@ -48,7 +42,7 @@ func GetLabs(format string) {
 	defer res.Body.Close()
 
 	// read json http response and turn the JSON array into a Go array
-	var jsonDataLabs []Lab
+	var jsonDataLabs []models.Laboratory
 	jsonDataFromHttp, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
@@ -82,20 +76,21 @@ func GetLabs(format string) {
 		if format == "csv" {
 			fmt.Printf("id,displayname,description,gitrepo\n")
 			for _, e := range jsonDataLabs {
-				if len(e.Gitrepo) == 0 {
-					e.Gitrepo = "none"
+				if len(*e.Gitrepo) == 0 {
+					*e.Gitrepo = "none"
 				}
-				fmt.Printf("%v,%v,%v,%v\n", e.Id, e.Displayname, e.Description, e.Gitrepo)
+				fmt.Printf("%v,%v,%v,%v\n", e.Id, e.Displayname, e.Description, *e.Gitrepo)
 			}
 		} else {
 			for _, e := range jsonDataLabs {
-				if len(e.Gitrepo) == 0 {
-					e.Gitrepo = "none"
+				if e.Gitrepo == nil || len(*e.Gitrepo) == 0 {
+					e.Gitrepo = new(string)
+					*e.Gitrepo = "none"
 				}
 				fmt.Printf("ID: %v\nDisplayname: %v\nGitrepo: %v\nDescription: %v\n\n",
 					e.Id,
 					e.Displayname,
-					e.Gitrepo,
+					*e.Gitrepo,
 					e.Description)
 			}
 		}

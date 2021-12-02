@@ -10,20 +10,12 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/models"
 	"github.com/spf13/cobra"
 )
 
-type User struct {
-	Disabled     *bool  `json:"disabled,omitempty"`
-	Email        string `json:"email"`
-	Firstname    string `json:"firstname"`
-	Infrarole    string `json:"infrarole"`
-	Lastname     string `json:"lastname"`
-	Organisation string `json:"organisation"`
-}
-
 // getUsersCmd represents the getUsers command
-var getUsersCmd = &cobra.Command{
+var GetUsersCmd = &cobra.Command{
 	Use:   "getusers",
 	Short: "Get Users",
 	Long:  `This command fetches users from the ceai api`,
@@ -34,8 +26,8 @@ var getUsersCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(getUsersCmd)
-	getUsersCmd.PersistentFlags().StringP("out", "o", "none", "Ouputs result in specified format [none, csv, json, jsonpretty]")
+	rootCmd.AddCommand(GetUsersCmd)
+	GetUsersCmd.PersistentFlags().StringP("out", "o", "none", "Ouputs result in specified format [none, csv, json, jsonpretty]")
 }
 
 func GetUsers(format string) {
@@ -52,7 +44,7 @@ func GetUsers(format string) {
 	defer res.Body.Close()
 
 	// read json http response and turn the JSON array into a Go array
-	var jsonDataUser []User
+	var jsonDataUser []models.User
 	jsonDataFromHttp, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {

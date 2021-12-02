@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/models"
 	"github.com/spf13/cobra"
 )
 
@@ -52,9 +53,9 @@ func GetLab(Id string, Format string) {
 
 		// Check for error
 		if res.StatusCode == 404 {
-			fmt.Println("Le lab", Id, "n'existe pas")
+			fmt.Println("The lab", Id, "does not exist")
 		} else if res.StatusCode != 200 {
-			fmt.Println("L'exécution du traitement a échoué")
+			fmt.Println("The execution has failed")
 		}
 
 		// OUTPUTTING FORMATS
@@ -76,7 +77,7 @@ func GetLab(Id string, Format string) {
 
 			fmt.Println(jsonPretty.String())
 		} else {
-			var jsonDataLab Lab
+			var jsonDataLab models.Laboratory
 			err = json.Unmarshal([]byte(body), &jsonDataLab)
 
 			if err != nil {
@@ -86,19 +87,19 @@ func GetLab(Id string, Format string) {
 			// Loop over array and print the data of labs
 			if Format == "csv" {
 				fmt.Printf("id,displayname,description,gitrepo\n")
-				if len(jsonDataLab.Gitrepo) == 0 {
-					jsonDataLab.Gitrepo = "none"
+				if len(*jsonDataLab.Gitrepo) == 0 {
+					*jsonDataLab.Gitrepo = "none"
 				}
-				fmt.Printf("%v,%v,%v,%v\n", jsonDataLab.Id, jsonDataLab.Displayname, jsonDataLab.Description, jsonDataLab.Gitrepo)
+				fmt.Printf("%v,%v,%v,%v\n", jsonDataLab.Id, jsonDataLab.Displayname, jsonDataLab.Description, *jsonDataLab.Gitrepo)
 
 			} else {
-				if len(jsonDataLab.Gitrepo) == 0 {
-					jsonDataLab.Gitrepo = "none"
+				if len(*jsonDataLab.Gitrepo) == 0 {
+					*jsonDataLab.Gitrepo = "none"
 				}
 				fmt.Printf("ID: %v\nDisplayname: %v\nGitrepo: %v\nDescription: %v\n",
 					jsonDataLab.Id,
 					jsonDataLab.Displayname,
-					jsonDataLab.Gitrepo,
+					*jsonDataLab.Gitrepo,
 					jsonDataLab.Description)
 			}
 		}
