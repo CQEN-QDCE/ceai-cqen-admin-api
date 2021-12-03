@@ -56,51 +56,51 @@ func GetLab(Id string, Format string) {
 			fmt.Println("The lab", Id, "does not exist")
 		} else if res.StatusCode != 200 {
 			fmt.Println("The execution has failed")
-		}
-
-		// OUTPUTTING FORMATS
-		body, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			panic(err)
-		}
-
-		if Format == "json" {
-			print(string(body))
-
-		} else if Format == "jsonpretty" {
-			var jsonPretty bytes.Buffer
-			err := json.Indent(&jsonPretty, body, "", "\t")
-
-			if err != nil {
-				panic(err)
-			}
-
-			fmt.Println(jsonPretty.String())
 		} else {
-			var jsonDataLab models.Laboratory
-			err = json.Unmarshal([]byte(body), &jsonDataLab)
-
+			// OUTPUTTING FORMATS
+			body, err := ioutil.ReadAll(res.Body)
 			if err != nil {
 				panic(err)
 			}
 
-			// Loop over array and print the data of labs
-			if Format == "csv" {
-				fmt.Printf("id,displayname,description,gitrepo\n")
-				if len(*jsonDataLab.Gitrepo) == 0 {
-					*jsonDataLab.Gitrepo = "none"
-				}
-				fmt.Printf("%v,%v,%v,%v\n", jsonDataLab.Id, jsonDataLab.Displayname, jsonDataLab.Description, *jsonDataLab.Gitrepo)
+			if Format == "json" {
+				print(string(body))
 
-			} else {
-				if len(*jsonDataLab.Gitrepo) == 0 {
-					*jsonDataLab.Gitrepo = "none"
+			} else if Format == "jsonpretty" {
+				var jsonPretty bytes.Buffer
+				err := json.Indent(&jsonPretty, body, "", "\t")
+
+				if err != nil {
+					panic(err)
 				}
-				fmt.Printf("ID: %v\nDisplayname: %v\nGitrepo: %v\nDescription: %v\n",
-					jsonDataLab.Id,
-					jsonDataLab.Displayname,
-					*jsonDataLab.Gitrepo,
-					jsonDataLab.Description)
+
+				fmt.Println(jsonPretty.String())
+			} else {
+				var jsonDataLab models.Laboratory
+				err = json.Unmarshal([]byte(body), &jsonDataLab)
+
+				if err != nil {
+					panic(err)
+				}
+
+				// Loop over array and print the data of labs
+				if Format == "csv" {
+					fmt.Printf("id,displayname,description,gitrepo\n")
+					if len(*jsonDataLab.Gitrepo) == 0 {
+						*jsonDataLab.Gitrepo = "none"
+					}
+					fmt.Printf("%v,%v,%v,%v\n", jsonDataLab.Id, jsonDataLab.Displayname, jsonDataLab.Description, *jsonDataLab.Gitrepo)
+
+				} else {
+					if len(*jsonDataLab.Gitrepo) == 0 {
+						*jsonDataLab.Gitrepo = "none"
+					}
+					fmt.Printf("ID: %v\nDisplayname: %v\nGitrepo: %v\nDescription: %v\n",
+						jsonDataLab.Id,
+						jsonDataLab.Displayname,
+						*jsonDataLab.Gitrepo,
+						jsonDataLab.Description)
+				}
 			}
 		}
 
