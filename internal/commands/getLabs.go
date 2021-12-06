@@ -37,63 +37,66 @@ func GetLabs(format string) {
 	if err != nil {
 		panic(err)
 	}
-
-	// Make sure to close after reading
-	defer res.Body.Close()
-
-	// read json http response and turn the JSON array into a Go array
-	var jsonDataLabs []models.Laboratory
-	jsonDataFromHttp, err := ioutil.ReadAll(res.Body)
-
-	if err != nil {
-		panic(err)
-	}
-
-	if format == "json" {
-
-		fmt.Println(string(jsonDataFromHttp))
-
-	} else if format == "jsonpretty" {
-
-		var jsonPretty bytes.Buffer
-		err := json.Indent(&jsonPretty, jsonDataFromHttp, "", "\t")
-
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Println(jsonPretty.String())
-
+	if res.StatusCode != 200 {
+		fmt.Println("The execution has failed")
 	} else {
 
-		err = json.Unmarshal([]byte(jsonDataFromHttp), &jsonDataLabs)
+		// Make sure to close after reading
+		defer res.Body.Close()
+
+		// read json http response and turn the JSON array into a Go array
+		var jsonDataLabs []models.Laboratory
+		jsonDataFromHttp, err := ioutil.ReadAll(res.Body)
 
 		if err != nil {
 			panic(err)
 		}
 
-		// Loop over array and print the data of labs
-		if format == "csv" {
-			fmt.Printf("id,displayname,description,gitrepo\n")
-			for _, e := range jsonDataLabs {
-				if len(*e.Gitrepo) == 0 {
-					*e.Gitrepo = "none"
-				}
-				fmt.Printf("%v,%v,%v,%v\n", e.Id, e.Displayname, e.Description, *e.Gitrepo)
+		if format == "json" {
+
+			fmt.Println(string(jsonDataFromHttp))
+
+		} else if format == "jsonpretty" {
+
+			var jsonPretty bytes.Buffer
+			err := json.Indent(&jsonPretty, jsonDataFromHttp, "", "\t")
+
+			if err != nil {
+				panic(err)
 			}
+
+			fmt.Println(jsonPretty.String())
+
 		} else {
-			for _, e := range jsonDataLabs {
-				if e.Gitrepo == nil || len(*e.Gitrepo) == 0 {
-					e.Gitrepo = new(string)
-					*e.Gitrepo = "none"
+
+			err = json.Unmarshal([]byte(jsonDataFromHttp), &jsonDataLabs)
+
+			if err != nil {
+				panic(err)
+			}
+
+			// Loop over array and print the data of labs
+			if format == "csv" {
+				fmt.Printf("id,displayname,description,gitrepo\n")
+				for _, e := range jsonDataLabs {
+					if len(*e.Gitrepo) == 0 {
+						*e.Gitrepo = "none"
+					}
+					fmt.Printf("%v,%v,%v,%v\n", e.Id, e.Displayname, e.Description, *e.Gitrepo)
 				}
-				fmt.Printf("ID: %v\nDisplayname: %v\nGitrepo: %v\nDescription: %v\n\n",
-					e.Id,
-					e.Displayname,
-					*e.Gitrepo,
-					e.Description)
+			} else {
+				for _, e := range jsonDataLabs {
+					if e.Gitrepo == nil || len(*e.Gitrepo) == 0 {
+						e.Gitrepo = new(string)
+						*e.Gitrepo = "none"
+					}
+					fmt.Printf("ID: %v\nDisplayname: %v\nGitrepo: %v\nDescription: %v\n\n",
+						e.Id,
+						e.Displayname,
+						*e.Gitrepo,
+						e.Description)
+				}
 			}
 		}
 	}
-
 }

@@ -86,7 +86,8 @@ func GetLab(Id string, Format string) {
 				// Loop over array and print the data of labs
 				if Format == "csv" {
 					fmt.Printf("id,displayname,description,gitrepo\n")
-					if len(*jsonDataLab.Gitrepo) == 0 {
+					if jsonDataLab.Gitrepo == nil || len(*jsonDataLab.Gitrepo) == 0 {
+						jsonDataLab.Gitrepo = new(string)
 						*jsonDataLab.Gitrepo = "none"
 					}
 					fmt.Printf("%v,%v,%v,%v\n", jsonDataLab.Id, jsonDataLab.Displayname, jsonDataLab.Description, *jsonDataLab.Gitrepo)
