@@ -175,6 +175,19 @@ components:
       description: Invalid Request Parameter
     502BadGateway:
       description: Server Sent an Invalid Response
+  securitySchemes:
+    Username:
+      type: apiKey
+      in: header
+      name: X-CEAI-Username
+    UserRoles:
+      type: apiKey
+      in: header
+      name: X-CEAI-UserRoles
+    GatewaySecret:
+      type: apiKey
+      in: header
+      name: X-CEAI-Gateway-Secret
 paths:
   /user:
     get:
@@ -769,3 +782,7 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
         '502':
           $ref: '#/components/responses/502BadGateway'
+security:
+  - Username: []
+    UserRoles: []
+    GatewaySecret: []

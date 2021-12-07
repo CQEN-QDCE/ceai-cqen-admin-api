@@ -1,12 +1,17 @@
 GET http://127.0.0.1:3000/user HTTP/1.1
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
 
 ###
-
-GET http://127.0.0.1:3000/user/afrancis.gagne@sct.gouv.qc.ca HTTP/1.1
+GET http://127.0.0.1:3000/user/test@example.com HTTP/1.1
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
 
 ###
 POST http://127.0.0.1:3000/user HTTP/1.1
 content-type: application/json
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
 
 {
     "email": "bobby@example.com",
@@ -19,6 +24,8 @@ content-type: application/json
 ###
 PUT http://127.0.0.1:3000/user/bobby@example.com HTTP/1.1
 content-type: application/json
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
 
 {
     "firstname": "Bobby",
@@ -28,16 +35,24 @@ content-type: application/json
 
 ###
 DELETE http://127.0.0.1:3000/user/test@example.com HTTP/1.1
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
 
 ###
 GET http://127.0.0.1:3000/laboratory HTTP/1.1
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
 
 ###
 GET http://127.0.0.1:3000/laboratory/dev1 HTTP/1.1
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
 
 ###
 POST http://127.0.0.1:3000/laboratory HTTP/1.1
 content-type: application/json
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
 
 {
     "id": "dev2",
@@ -50,6 +65,8 @@ content-type: application/json
 ###
 PUT http://127.0.0.1:3000/laboratory/dev2 HTTP/1.1
 content-type: application/json
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
 
 {
     "type": "experimentation",
@@ -61,30 +78,44 @@ content-type: application/json
 ###
 PUT http://127.0.0.1:3000/laboratory/dev2/user HTTP/1.1
 content-type: application/json
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
 
 ["bobby@example.com"]
 
 ###
 DELETE http://127.0.0.1:3000/laboratory/dev2/user HTTP/1.1
 content-type: application/json
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
 
 ["test@example.com"]
 
 ### 
 PUT http://127.0.0.1:3000/laboratory/dev2/openshift/dev1-project1 HTTP/1.1
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
 
 ### 
 DELETE http://127.0.0.1:3000/laboratory/dev2/openshift/dev1-project1 HTTP/1.1
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
 
 ###
 GET http://127.0.0.1:3000/openshift/project HTTP/1.1
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
 
 ###
 GET http://127.0.0.1:3000/openshift/project/dev1-project1 HTTP/1.1
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
 
 ###
 POST http://127.0.0.1:3000/openshift/project HTTP/1.1
 content-type: application/json
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
 
 {
     "id": "dev2-project-1",
@@ -96,6 +127,8 @@ content-type: application/json
 ###
 PUT http://127.0.0.1:3000/openshift/project/dev2-project-1 HTTP/1.1
 content-type: application/json
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
 
 {
     "displayname": "Dev2 app 1",
@@ -105,13 +138,20 @@ content-type: application/json
 
 ###
 GET http://127.0.0.1:3000/aws/account HTTP/1.1
-
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
 
 ###
 GET http://127.0.0.1:3000/aws/account/111111111111 HTTP/1.1
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
 
 ###
 PUT http://127.0.0.1:3000/laboratory/dev2/aws/111111111111 HTTP/1.1
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
 
 ###
 DELETE http://127.0.0.1:3000/laboratory/dev2/aws/111111111111 HTTP/1.1
+X-CEAI-Username: test@example.com
+X-CEAI-UserRoles : Admin
