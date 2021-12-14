@@ -13,7 +13,7 @@ import (
 var DeleteUserCmd = &cobra.Command{
 	Use:   "deleteuser",
 	Short: "Delete User",
-	Long:  `This command delete user from the ceai api`,
+	Long:  `Cette commande supprime un utilisateur avec l'API du CEAI`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Email, _ := cmd.Flags().GetString("email")
 		DeleteUser(Email)

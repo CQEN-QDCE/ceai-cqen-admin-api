@@ -15,8 +15,8 @@ import (
 
 var GetLabCmd = &cobra.Command{
 	Use:   "getlab",
-	Short: "Get a Lab",
-	Long:  `This command fetches a lab from the ceai api`,
+	Short: "Retourne info Lab",
+	Long:  `Cette commande retourne l'info d'un lab avec l'API du CEAI`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Id, _ := cmd.Flags().GetString("id")
 		Format, _ := cmd.Flags().GetString("out")
@@ -26,8 +26,8 @@ var GetLabCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(GetLabCmd)
-	GetLabCmd.PersistentFlags().StringP("id", "i", "", "The lab's ID")
-	GetLabCmd.PersistentFlags().StringP("out", "o", "none", "Ouputs result in specified format [none, csv, json, jsonpretty]")
+	GetLabCmd.PersistentFlags().StringP("id", "i", "", "L'id du lab")
+	GetLabCmd.PersistentFlags().StringP("out", "o", "none", "Retourne le résultat de la requête selon un format [none, csv, json, jsonpretty]")
 }
 
 func GetLab(Id string, Format string) {
@@ -53,9 +53,9 @@ func GetLab(Id string, Format string) {
 
 		// Check for error
 		if res.StatusCode == 404 {
-			fmt.Println("The lab", Id, "does not exist")
+			fmt.Println("Le lab", Id, "n'existe pas")
 		} else if res.StatusCode != 200 {
-			fmt.Println("The execution has failed")
+			fmt.Println("L'exécution du traitement a échoué")
 		} else {
 			// OUTPUTTING FORMATS
 			body, err := ioutil.ReadAll(res.Body)

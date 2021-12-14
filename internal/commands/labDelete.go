@@ -12,8 +12,8 @@ import (
 
 var DeleteLabCmd = &cobra.Command{
 	Use:   "deletelab",
-	Short: "Delete Lab",
-	Long:  `This command deletes a lab from the ceai api`,
+	Short: "Supprimer Lab",
+	Long:  `Cette commande supprime un lab avc l'API du CEAI`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Id, _ := cmd.Flags().GetString("id")
 		DeleteLab(Id)
@@ -22,7 +22,7 @@ var DeleteLabCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(DeleteLabCmd)
-	DeleteLabCmd.PersistentFlags().StringP("id", "i", "", "The lab's id")
+	DeleteLabCmd.PersistentFlags().StringP("id", "i", "", "L'ID du lab")
 }
 
 func DeleteLab(Id string) {

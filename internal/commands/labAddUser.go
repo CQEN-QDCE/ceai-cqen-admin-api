@@ -67,7 +67,7 @@ func AddUsersToLab(Id string, Ids []string) {
 		if res.StatusCode == 201 {
 			fmt.Println("Le lab", Id, "a été mis à jour")
 		} else {
-			fmt.Println("Un problème est survenu dur côté serveur")
+			fmt.Println("L'exécution du traitement a échoué")
 		}
 
 		// Print the body to the stdout

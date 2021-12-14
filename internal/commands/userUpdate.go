@@ -17,7 +17,7 @@ var UpdateUserCmd = &cobra.Command{
 
 	Use:   "updateuser",
 	Short: "Update User",
-	Long:  `This command update user from the ceai api`,
+	Long:  `Cette commande met à jour un lab à l'aide de l'API du CEAI`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Email, _ := cmd.Flags().GetString("email")
 		Firstname, _ := cmd.Flags().GetString("firstname")
@@ -29,11 +29,11 @@ var UpdateUserCmd = &cobra.Command{
 }
 
 func UpdateFlags() {
-	UpdateUserCmd.PersistentFlags().StringP("email", "e", "", "The email")
-	UpdateUserCmd.PersistentFlags().StringP("firstname", "f", "", "The First name")
-	UpdateUserCmd.PersistentFlags().StringP("lastname", "l", "", "The last name")
-	UpdateUserCmd.PersistentFlags().StringP("organisation", "o", "", "The name of organisation")
-	UpdateUserCmd.PersistentFlags().StringP("role", "r", "", "The infra role Developer/Admin")
+	UpdateUserCmd.PersistentFlags().StringP("email", "e", "", "L'email")
+	UpdateUserCmd.PersistentFlags().StringP("firstname", "f", "", "Le prénom")
+	UpdateUserCmd.PersistentFlags().StringP("lastname", "l", "", "Le nom")
+	UpdateUserCmd.PersistentFlags().StringP("organisation", "o", "", "Le nom de l'organisation")
+	UpdateUserCmd.PersistentFlags().StringP("role", "r", "", "Le rôle infra Developer/Admin")
 }
 
 func init() {

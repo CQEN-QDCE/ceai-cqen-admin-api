@@ -16,7 +16,7 @@ import (
 var UpdateLabCmd = &cobra.Command{
 	Use:   "updatelab",
 	Short: "Update Lab",
-	Long:  `This command updates a laboratory from the ceai api`,
+	Long:  `Cette commande met à jour un lab à l'aide de l'API du CEAI`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Id, _ := cmd.Flags().GetString("id")
 		Description, _ := cmd.Flags().GetString("description")
@@ -28,11 +28,11 @@ var UpdateLabCmd = &cobra.Command{
 }
 
 func UpdateLabFlags() {
-	UpdateLabCmd.PersistentFlags().StringP("id", "i", "", "The id")
-	UpdateLabCmd.PersistentFlags().StringP("description", "d", "", "The lab description")
-	UpdateLabCmd.PersistentFlags().StringP("displayname", "n", "", "The lab displayed name")
-	UpdateLabCmd.PersistentFlags().StringP("type", "t", "", "The type of lab")
-	UpdateLabCmd.PersistentFlags().StringP("gitrepo", "g", "", "The lab's gitrepo url (optional)")
+	UpdateLabCmd.PersistentFlags().StringP("id", "i", "", "L'id")
+	UpdateLabCmd.PersistentFlags().StringP("description", "d", "", "Desciption du lab")
+	UpdateLabCmd.PersistentFlags().StringP("displayname", "n", "", "DisplayName du lab")
+	UpdateLabCmd.PersistentFlags().StringP("type", "t", "", "Type du lab")
+	UpdateLabCmd.PersistentFlags().StringP("gitrepo", "g", "", "L'url du dépôt github (optionnel)")
 }
 
 func init() {
@@ -42,9 +42,9 @@ func init() {
 
 func UpdateLab(Id string, Description string, Displayname string, Type string, Gitrepo string) {
 	if Id == "" {
-		fmt.Println("Please specify the Id of the lab to modify with flag [-i <id>]")
+		fmt.Println("Veuillez spécifier l'ID du lab à modifier avec le flag [-i <id>]")
 	} else if Description == "" && Displayname == "" && Type == "" && Gitrepo == "" {
-		fmt.Println("Please specify at least one attribute to update about the lab (see --help for options)")
+		fmt.Println("Veuillez spécifier au moins un attribut à modifier du lab (--help pour voir options)")
 	} else {
 		body := &models.LaboratoryUpdate{
 			Description: &Description,
@@ -75,9 +75,9 @@ func UpdateLab(Id string, Description string, Displayname string, Type string, G
 		defer res.Body.Close()
 
 		if res.StatusCode == 200 {
-			fmt.Println("the lab", Id, "has been updated")
+			fmt.Println("Le lab", Id, "a été mis à jour")
 		} else {
-			fmt.Println("the execution has failed")
+			fmt.Println("L'exécution du traitement a échoué")
 		}
 
 		// Print the body to the stdout

@@ -18,7 +18,7 @@ import (
 var GetUserCmd = &cobra.Command{
 	Use:   "getuser",
 	Short: "Get User",
-	Long:  `This command fetches a user from the ceai api`,
+	Long:  `Cette commande retourne l'info sur un utilisateur avec l'API du CEAI`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Email, _ := cmd.Flags().GetString("email")
 		Format, _ := cmd.Flags().GetString("out")
@@ -28,8 +28,8 @@ var GetUserCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(GetUserCmd)
-	GetUserCmd.PersistentFlags().StringP("out", "o", "none", "Ouputs result in specified format [none, csv, json, jsonpretty]")
-	GetUserCmd.PersistentFlags().StringP("email", "e", "", "The email")
+	GetUserCmd.PersistentFlags().StringP("out", "o", "none", "Retourne le résultat de la requête selon un format [none, csv, json, jsonpretty]")
+	GetUserCmd.PersistentFlags().StringP("email", "e", "", "L'email")
 }
 
 func GetUser(Email string, format string) {
@@ -54,9 +54,9 @@ func GetUser(Email string, format string) {
 		defer res.Body.Close()
 
 		if res.StatusCode == 404 {
-			fmt.Println("The user", Email, "does not exist")
+			fmt.Println("L'utilisateur ", Email, "n'existe pas")
 		} else if res.StatusCode != 200 {
-			fmt.Println("The execution has failed")
+			fmt.Println("L'execution a échoué")
 		} else {
 			// read json http response and turn the JSON array into a Go array
 			var jsonDataUser models.User

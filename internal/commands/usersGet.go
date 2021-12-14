@@ -18,7 +18,7 @@ import (
 var GetUsersCmd = &cobra.Command{
 	Use:   "getusers",
 	Short: "Get Users",
-	Long:  `This command fetches users from the ceai api`,
+	Long:  `Cette commande retourne tous les utilisateurs avec l'API du CEAI`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Format, _ := cmd.Flags().GetString("out")
 		GetUsers(Format)
@@ -27,7 +27,7 @@ var GetUsersCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(GetUsersCmd)
-	GetUsersCmd.PersistentFlags().StringP("out", "o", "none", "Ouputs result in specified format [none, csv, json, jsonpretty]")
+	GetUsersCmd.PersistentFlags().StringP("out", "o", "none", "Retourne le résultat de la requête selon un format [none, csv, json, jsonpretty]")
 }
 
 func GetUsers(format string) {
