@@ -16,8 +16,8 @@ var _ids []string
 
 var AddUsersToLabCmd = &cobra.Command{
 	Use:   "addtolab",
-	Short: "Add Users to Lab",
-	Long:  `This command updates a laboratory from the ceai api to add users to it`,
+	Short: "Ajout utilisateur(s) à lab",
+	Long:  `Cette commande ajoute un ou des utilisateurs à un lab`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Id, _ := cmd.Flags().GetString("id")
 		AddUsersToLab(Id, _ids)
@@ -29,7 +29,7 @@ func AddUsersToLabFlags() {
 	// this makes the user to enter multiple values for a flag
 	// ref: https://github.com/spf13/cobra/issues/661
 	AddUsersToLabCmd.Flags().StringSliceVarP(&_ids, "ids", "s", []string{},
-		"The id(s) to add (can be repeated: -s <id> -s <id> -s ... or -s <id>,<id>,...)")
+		"L'id de l'utilisateur à ajouter (peut être répété: -s <id> -s <id> -s ... ou -s <id>,<id>,...)")
 }
 
 func init() {
@@ -39,9 +39,9 @@ func init() {
 
 func AddUsersToLab(Id string, Ids []string) {
 	if Id == "" {
-		fmt.Println("Please specify the lab's id to modify (-i)")
+		fmt.Println("Veuillez spécifier l'id du lab à modifier [-i]")
 	} else if len(Ids) == 0 {
-		fmt.Println("Please specify the Id of the user to add with flag [-i <id>]")
+		fmt.Println("Veuillez spécifier l'id du ou des membres à ajouter [-i <id>]")
 	} else {
 		// Create an HTTP request
 		buf := new(bytes.Buffer)
@@ -65,9 +65,9 @@ func AddUsersToLab(Id string, Ids []string) {
 		defer res.Body.Close()
 
 		if res.StatusCode == 201 {
-			fmt.Println("the lab", Id, "has been updated")
+			fmt.Println("Le lab", Id, "a été mis à jour")
 		} else {
-			fmt.Println("the execution has failed")
+			fmt.Println("Un problème est survenu dur côté serveur")
 		}
 
 		// Print the body to the stdout
