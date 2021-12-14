@@ -11,54 +11,87 @@ import (
 
 const CLIENT_TOKEN_TTL = 60
 
-var client *Client
-var clientTime int64
+var serviceAccountClient *ServiceAccountClient
+var serviceAccountClientTime int64
 
-type Client struct {
-	client *gocloak.GoCloak
-	token  *gocloak.JWT
-	realm  string
+type ClientCredentials struct {
+	Id     string
+	Secret string
+	Realm  string
 }
 
-func GetClient() (*Client, error) {
+type ServiceAccountClient struct {
+	GoCloakClient *gocloak.GoCloak
+	Token         *gocloak.JWT
+	Realm         string
+}
 
-	if client != nil && (time.Now().Unix()-clientTime) < CLIENT_TOKEN_TTL {
-		return client, nil
+func GetClientCredentials() *ClientCredentials {
+	creds := ClientCredentials{
+		Realm:  os.Getenv("KEYCLOAK_REALM"),
+		Id:     os.Getenv("KEYCLOAK_CLIENT_ID"),
+		Secret: os.Getenv("KEYCLOAK_CLIENT_SECRET"),
 	}
 
-	clientId := os.Getenv("KEYCLOAK_CLIENT_ID")
-	secret := os.Getenv("KEYCLOAK_CLIENT_SECRET")
-	realm := os.Getenv("KEYCLOAK_REALM")
+	return &creds
+}
 
+func GetGoCloakClient() *gocloak.GoCloak {
 	url := os.Getenv("KEYCLOAK_URL")
 
-	grantType := "client_credentials"
+	client := gocloak.NewClient(url)
 
-	kcclient := gocloak.NewClient(url)
+	return &client
+}
+
+func GetServiceAccountClient() (*ServiceAccountClient, error) {
+
+	if serviceAccountClient != nil && (time.Now().Unix()-serviceAccountClientTime) < CLIENT_TOKEN_TTL {
+		return serviceAccountClient, nil
+	}
+
+	goCloakClient := GetGoCloakClient()
+	clientCreds := GetClientCredentials()
+	grantType := "client_credentials"
 	ctx := context.Background()
 
-	token, err := kcclient.GetToken(ctx, realm, gocloak.TokenOptions{
-		ClientID:     &clientId,
-		ClientSecret: &secret,
+	token, err := (*goCloakClient).GetToken(ctx, clientCreds.Realm, gocloak.TokenOptions{
+		ClientID:     &clientCreds.Id,
+		ClientSecret: &clientCreds.Secret,
 		GrantType:    &grantType,
 	})
+
 	if err != nil {
 		return nil, err
 	}
 
-	client = &Client{
-		client: &kcclient,
-		token:  token,
-		realm:  realm,
+	serviceAccountClient = &ServiceAccountClient{
+		GoCloakClient: goCloakClient,
+		Token:         token,
+		Realm:         clientCreds.Realm,
 	}
 
-	clientTime = time.Now().Unix()
+	serviceAccountClientTime = time.Now().Unix()
 
-	return client, nil
+	return serviceAccountClient, nil
+}
+
+func LoginOtp(username string, password string, totp string) (*gocloak.JWT, error) {
+	goCloakClient := GetGoCloakClient()
+	clientCreds := GetClientCredentials()
+
+	return (*goCloakClient).LoginOtp(context.Background(), clientCreds.Id, clientCreds.Secret, clientCreds.Realm, username, password, totp)
+}
+
+func RefreshToken(refreshToken string) (*gocloak.JWT, error) {
+	goCloakClient := GetGoCloakClient()
+	clientCreds := GetClientCredentials()
+
+	return (*goCloakClient).RefreshToken(context.Background(), refreshToken, clientCreds.Id, clientCreds.Secret, clientCreds.Realm)
 }
 
 func GetUsers() ([]*gocloak.User, error) {
-	c, err := GetClient()
+	c, err := GetServiceAccountClient()
 
 	if err != nil {
 		return nil, err
@@ -67,10 +100,10 @@ func GetUsers() ([]*gocloak.User, error) {
 	var briefRep = false
 	ctx := context.Background()
 
-	users, err := (*c.client).GetUsers(
+	users, err := (*c.GoCloakClient).GetUsers(
 		ctx,
-		c.token.AccessToken,
-		c.realm,
+		c.Token.AccessToken,
+		c.Realm,
 		gocloak.GetUsersParams{
 			BriefRepresentation: &briefRep,
 		})
@@ -83,7 +116,7 @@ func GetUsers() ([]*gocloak.User, error) {
 }
 
 func GetUser(username string) (*gocloak.User, error) {
-	c, err := GetClient()
+	c, err := GetServiceAccountClient()
 
 	if err != nil {
 		return nil, err
@@ -91,10 +124,10 @@ func GetUser(username string) (*gocloak.User, error) {
 
 	var briefRep = false
 	ctx := context.Background()
-	users, err := (*c.client).GetUsers(
+	users, err := (*c.GoCloakClient).GetUsers(
 		ctx,
-		c.token.AccessToken,
-		c.realm,
+		c.Token.AccessToken,
+		c.Realm,
 		gocloak.GetUsersParams{
 			BriefRepresentation: &briefRep,
 			Username:            &username,
@@ -140,7 +173,7 @@ func GetUser(username string) (*gocloak.User, error) {
 
 //Create a new User, returns it's ID
 func CreateUser(user *gocloak.User) (string, error) {
-	c, err := GetClient()
+	c, err := GetServiceAccountClient()
 
 	if err != nil {
 		return "", err
@@ -148,15 +181,15 @@ func CreateUser(user *gocloak.User) (string, error) {
 
 	ctx := context.Background()
 
-	return (*c.client).CreateUser(
+	return (*c.GoCloakClient).CreateUser(
 		ctx,
-		c.token.AccessToken,
-		c.realm,
+		c.Token.AccessToken,
+		c.Realm,
 		*user)
 }
 
 func UpdateUser(user *gocloak.User) error {
-	c, err := GetClient()
+	c, err := GetServiceAccountClient()
 
 	if err != nil {
 		return err
@@ -164,15 +197,15 @@ func UpdateUser(user *gocloak.User) error {
 
 	ctx := context.Background()
 
-	return (*c.client).UpdateUser(
+	return (*c.GoCloakClient).UpdateUser(
 		ctx,
-		c.token.AccessToken,
-		c.realm,
+		c.Token.AccessToken,
+		c.Realm,
 		*user)
 }
 
 func DeleteUser(userID string) error {
-	c, err := GetClient()
+	c, err := GetServiceAccountClient()
 
 	if err != nil {
 		return err
@@ -180,15 +213,15 @@ func DeleteUser(userID string) error {
 
 	ctx := context.Background()
 
-	return (*c.client).DeleteUser(
+	return (*c.GoCloakClient).DeleteUser(
 		ctx,
-		c.token.AccessToken,
-		c.realm,
+		c.Token.AccessToken,
+		c.Realm,
 		userID)
 }
 
 func GetUserRoles(user *gocloak.User) ([]*gocloak.Role, error) {
-	c, err := GetClient()
+	c, err := GetServiceAccountClient()
 
 	if err != nil {
 		return nil, err
@@ -196,10 +229,10 @@ func GetUserRoles(user *gocloak.User) ([]*gocloak.Role, error) {
 
 	ctx := context.Background()
 
-	roles, err := (*c.client).GetCompositeRealmRolesByUserID(
+	roles, err := (*c.GoCloakClient).GetCompositeRealmRolesByUserID(
 		ctx,
-		c.token.AccessToken,
-		c.realm,
+		c.Token.AccessToken,
+		c.Realm,
 		*user.ID)
 
 	if err != nil {
@@ -210,7 +243,7 @@ func GetUserRoles(user *gocloak.User) ([]*gocloak.Role, error) {
 }
 
 func GetUserGroups(user *gocloak.User) ([]*gocloak.Group, error) {
-	c, err := GetClient()
+	c, err := GetServiceAccountClient()
 
 	if err != nil {
 		return nil, err
@@ -219,10 +252,10 @@ func GetUserGroups(user *gocloak.User) ([]*gocloak.Group, error) {
 	ctx := context.Background()
 	var briefRep = true
 
-	groups, err := (*c.client).GetUserGroups(
+	groups, err := (*c.GoCloakClient).GetUserGroups(
 		ctx,
-		c.token.AccessToken,
-		c.realm,
+		c.Token.AccessToken,
+		c.Realm,
 		*user.ID,
 		gocloak.GetGroupsParams{
 			BriefRepresentation: &briefRep,
@@ -253,7 +286,7 @@ func FindSubgroup(group *gocloak.Group, subgroupName string) *gocloak.Group {
 }
 
 func GetGroup(groupName string) (*gocloak.Group, error) {
-	c, err := GetClient()
+	c, err := GetServiceAccountClient()
 
 	if err != nil {
 		return nil, err
@@ -262,10 +295,10 @@ func GetGroup(groupName string) (*gocloak.Group, error) {
 	var briefRep = false
 	ctx := context.Background()
 
-	groups, err := (*c.client).GetGroups(
+	groups, err := (*c.GoCloakClient).GetGroups(
 		ctx,
-		c.token.AccessToken,
-		c.realm,
+		c.Token.AccessToken,
+		c.Realm,
 		gocloak.GetGroupsParams{
 			BriefRepresentation: &briefRep,
 			Search:              &groupName,
@@ -311,7 +344,7 @@ func GetGroups(parentGroupName *string) (*[]gocloak.Group, error) {
 }
 
 func GetGroupMembers(group *gocloak.Group) ([]*gocloak.User, error) {
-	c, err := GetClient()
+	c, err := GetServiceAccountClient()
 
 	if err != nil {
 		return nil, err
@@ -320,10 +353,10 @@ func GetGroupMembers(group *gocloak.Group) ([]*gocloak.User, error) {
 	var briefRep = true
 	ctx := context.Background()
 
-	users, err := (*c.client).GetGroupMembers(
+	users, err := (*c.GoCloakClient).GetGroupMembers(
 		ctx,
-		c.token.AccessToken,
-		c.realm,
+		c.Token.AccessToken,
+		c.Realm,
 		*group.ID,
 		gocloak.GetGroupsParams{
 			BriefRepresentation: &briefRep,
@@ -338,7 +371,7 @@ func GetGroupMembers(group *gocloak.Group) ([]*gocloak.User, error) {
 
 //Idempotent
 func AddUserToGroup(user *gocloak.User, group *gocloak.Group) error {
-	c, err := GetClient()
+	c, err := GetServiceAccountClient()
 
 	if err != nil {
 		return err
@@ -346,17 +379,17 @@ func AddUserToGroup(user *gocloak.User, group *gocloak.Group) error {
 
 	ctx := context.Background()
 
-	return (*c.client).AddUserToGroup(
+	return (*c.GoCloakClient).AddUserToGroup(
 		ctx,
-		c.token.AccessToken,
-		c.realm,
+		c.Token.AccessToken,
+		c.Realm,
 		*user.ID,
 		*group.ID,
 	)
 }
 
 func DeleteUserFromGroup(user *gocloak.User, group *gocloak.Group) error {
-	c, err := GetClient()
+	c, err := GetServiceAccountClient()
 
 	if err != nil {
 		return err
@@ -364,17 +397,17 @@ func DeleteUserFromGroup(user *gocloak.User, group *gocloak.Group) error {
 
 	ctx := context.Background()
 
-	return (*c.client).DeleteUserFromGroup(
+	return (*c.GoCloakClient).DeleteUserFromGroup(
 		ctx,
-		c.token.AccessToken,
-		c.realm,
+		c.Token.AccessToken,
+		c.Realm,
 		*user.ID,
 		*group.ID,
 	)
 }
 
 func CreateGroup(group *gocloak.Group) error {
-	c, err := GetClient()
+	c, err := GetServiceAccountClient()
 
 	if err != nil {
 		return err
@@ -382,10 +415,10 @@ func CreateGroup(group *gocloak.Group) error {
 
 	ctx := context.Background()
 
-	_, err = (*c.client).CreateGroup(
+	_, err = (*c.GoCloakClient).CreateGroup(
 		ctx,
-		c.token.AccessToken,
-		c.realm,
+		c.Token.AccessToken,
+		c.Realm,
 		*group,
 	)
 
@@ -393,7 +426,7 @@ func CreateGroup(group *gocloak.Group) error {
 }
 
 func CreateChildGroup(parentGroup *gocloak.Group, group *gocloak.Group) error {
-	c, err := GetClient()
+	c, err := GetServiceAccountClient()
 
 	if err != nil {
 		return err
@@ -401,10 +434,10 @@ func CreateChildGroup(parentGroup *gocloak.Group, group *gocloak.Group) error {
 
 	ctx := context.Background()
 
-	_, err = (*c.client).CreateChildGroup(
+	_, err = (*c.GoCloakClient).CreateChildGroup(
 		ctx,
-		c.token.AccessToken,
-		c.realm,
+		c.Token.AccessToken,
+		c.Realm,
 		*parentGroup.ID,
 		*group,
 	)
@@ -413,7 +446,7 @@ func CreateChildGroup(parentGroup *gocloak.Group, group *gocloak.Group) error {
 }
 
 func UpdateGroup(group *gocloak.Group) error {
-	c, err := GetClient()
+	c, err := GetServiceAccountClient()
 
 	if err != nil {
 		return err
@@ -421,16 +454,16 @@ func UpdateGroup(group *gocloak.Group) error {
 
 	ctx := context.Background()
 
-	return (*c.client).UpdateGroup(
+	return (*c.GoCloakClient).UpdateGroup(
 		ctx,
-		c.token.AccessToken,
-		c.realm,
+		c.Token.AccessToken,
+		c.Realm,
 		*group,
 	)
 }
 
 func DeleteGroup(group *gocloak.Group) error {
-	c, err := GetClient()
+	c, err := GetServiceAccountClient()
 
 	if err != nil {
 		return err
@@ -438,10 +471,10 @@ func DeleteGroup(group *gocloak.Group) error {
 
 	ctx := context.Background()
 
-	return (*c.client).DeleteGroup(
+	return (*c.GoCloakClient).DeleteGroup(
 		ctx,
-		c.token.AccessToken,
-		c.realm,
+		c.Token.AccessToken,
+		c.Realm,
 		*group.ID,
 	)
 }
@@ -458,17 +491,17 @@ func ExecuteCurrentActionEmail(username string) error {
 }
 
 func ExecuteActionEmail(userID string, actions []string) error {
-	c, err := GetClient()
+	c, err := GetServiceAccountClient()
 
 	if err != nil {
 		return err
 	}
 	ctx := context.Background()
 
-	return (*c.client).ExecuteActionsEmail(
+	return (*c.GoCloakClient).ExecuteActionsEmail(
 		ctx,
-		c.token.AccessToken,
-		c.realm,
+		c.Token.AccessToken,
+		c.Realm,
 		gocloak.ExecuteActionsEmail{
 			UserID:   &userID,
 			Lifespan: gocloak.IntP(86400), //24h

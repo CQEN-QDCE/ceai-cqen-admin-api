@@ -66,6 +66,11 @@ func main() {
 		log.Printf("SwaggerUI available at %v/ endpoint", swaggerPath)
 	}
 
+	//Healthcheck
+	r.Router.HandleFunc("/healthcheck", func(response http.ResponseWriter, request *http.Request) {
+		response.WriteHeader(http.StatusOK)
+	})
+
 	port := os.Getenv("PORT")
 
 	log.Fatal(r.Serve(port))
