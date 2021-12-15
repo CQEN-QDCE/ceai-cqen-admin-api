@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/models"
 	"github.com/spf13/cobra"
@@ -15,8 +16,8 @@ import (
 // getLabsCmd represents the getLabs command
 var getLabsCmd = &cobra.Command{
 	Use:   "getlabs",
-	Short: "Get Labs",
-	Long:  `This command fetches laboratories from the ceai api`,
+	Short: "Retourne Info Labs",
+	Long:  `Cette commande retourne tout les labs avec l'API du CEAI`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Format, _ := cmd.Flags().GetString("out")
 		GetLabs(Format)
@@ -25,7 +26,7 @@ var getLabsCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(getLabsCmd)
-	getLabsCmd.PersistentFlags().StringP("out", "o", "none", "Ouputs result in specified format [none, csv, json, jsonpretty]")
+	getLabsCmd.PersistentFlags().StringP("out", "o", "none", "Retourne le résultat de la requête selon un format [none, csv, json, jsonpretty]")
 }
 
 func GetLabs(format string) {
@@ -38,14 +39,14 @@ func GetLabs(format string) {
 		panic(err)
 	}
 	if res.StatusCode != 200 {
-		fmt.Println("The execution has failed")
+		fmt.Println("L'exécution du traitement a échoué")
 	} else {
 
 		// Make sure to close after reading
 		defer res.Body.Close()
 
 		// read json http response and turn the JSON array into a Go array
-		var jsonDataLabs []models.Laboratory
+		var jsonDataLabs []models.LaboratoryWithResources
 		jsonDataFromHttp, err := ioutil.ReadAll(res.Body)
 
 		if err != nil {
@@ -90,12 +91,20 @@ func GetLabs(format string) {
 						e.Gitrepo = new(string)
 						*e.Gitrepo = "none"
 					}
-					fmt.Printf("ID: %v\nDisplayname: %v\nGitrepo: %v\nDescription: %v\n\n",
+					if e.Users == nil {
+						users := make([]string, 1)
+						users[0] = "none"
+						e.Users = &users
+					}
+					fmt.Printf("ID: %v\nDisplayname: %v\nGitrepo: %v\nDescription: %v\nType: %v\nUsers: %v\n\n",
 						e.Id,
 						e.Displayname,
 						*e.Gitrepo,
-						e.Description)
+						e.Description,
+						e.Type,
+						strings.Join(*e.Users, ", "))
 				}
+				fmt.Printf("Resultat abrégé, pour avoir toute les informations des labs essayez [-o json] ou [-o jsonpretty]\n")
 			}
 		}
 	}

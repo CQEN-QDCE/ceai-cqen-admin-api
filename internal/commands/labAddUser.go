@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var _ids []string
+var _idsAddToLab []string
 
 var AddUsersToLabCmd = &cobra.Command{
 	Use:   "addtolab",
@@ -20,15 +20,15 @@ var AddUsersToLabCmd = &cobra.Command{
 	Long:  `Cette commande ajoute un ou des utilisateurs à un lab`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Id, _ := cmd.Flags().GetString("id")
-		AddUsersToLab(Id, _ids)
+		AddUsersToLab(Id, _idsAddToLab)
 	},
 }
 
 func AddUsersToLabFlags() {
-	AddUsersToLabCmd.PersistentFlags().StringP("id", "i", "", "The lab's id")
+	AddUsersToLabCmd.PersistentFlags().StringP("id", "i", "", "L'id du lab")
 	// this makes the user to enter multiple values for a flag
 	// ref: https://github.com/spf13/cobra/issues/661
-	AddUsersToLabCmd.Flags().StringSliceVarP(&_ids, "ids", "s", []string{},
+	AddUsersToLabCmd.Flags().StringSliceVarP(&_idsAddToLab, "ids", "s", []string{},
 		"L'id de l'utilisateur à ajouter (peut être répété: -s <id> -s <id> -s ... ou -s <id>,<id>,...)")
 }
 

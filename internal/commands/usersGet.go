@@ -88,6 +88,7 @@ func GetUsers(format string) {
 					strings.Repeat(" ", TABULATION-(utf8.RuneCountInString("Email: ,"+e.Email))),
 					e.Infrarole)
 			}
+			fmt.Printf("Resultat abrégé, pour avoir toute les informations des users essayez [-o json] ou [-o jsonpretty]\n")
 		}
 	}
 
