@@ -45,7 +45,7 @@ func GetShifts(format string) {
 		defer res.Body.Close()
 
 		// read json http response and turn the JSON array into a Go array
-		var jsonDataLabs []models.OpenshiftProjectWithMeta
+		var jsonDataShifts []models.OpenshiftProjectWithMeta
 		jsonDataFromHttp, err := ioutil.ReadAll(res.Body)
 
 		if err != nil {
@@ -69,7 +69,7 @@ func GetShifts(format string) {
 
 		} else {
 
-			err = json.Unmarshal([]byte(jsonDataFromHttp), &jsonDataLabs)
+			err = json.Unmarshal([]byte(jsonDataFromHttp), &jsonDataShifts)
 
 			if err != nil {
 				panic(err)
@@ -78,11 +78,13 @@ func GetShifts(format string) {
 			// Loop over array and print the data of labs
 			if format == "csv" {
 				fmt.Printf("id,displayname,description,creationDate,idlab,requester\n")
-				for _, e := range jsonDataLabs {
+				for _, e := range jsonDataShifts {
+					ReplaceEmptyFieldsShifts(&e)
 					fmt.Printf("%v,%v,%v,%v,%v,%v\n", e.Id, e.Displayname, e.Description, *e.CreationDate, e.IdLab, *e.Requester)
 				}
 			} else {
-				for _, e := range jsonDataLabs {
+				for _, e := range jsonDataShifts {
+					ReplaceEmptyFieldsShifts(&e)
 					fmt.Printf("ID: %v\nDisplayname: %v\nDescription: %v\nCreationDate: %v\nIdLab: %v\nRequester: %v\n\n",
 						e.Id,
 						e.Displayname,
