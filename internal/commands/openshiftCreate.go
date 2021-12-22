@@ -16,7 +16,7 @@ import (
 var CreateOpenshiftCmd = &cobra.Command{
 	Use:   "createshift",
 	Short: "Create Openshift Project",
-	Long:  `This command creates an Openshift Project from the ceai api`,
+	Long:  `Cette commande crée un projet openshift avec l'API du ceai`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Id, _ := cmd.Flags().GetString("id")
 		Description, _ := cmd.Flags().GetString("description")
@@ -27,10 +27,10 @@ var CreateOpenshiftCmd = &cobra.Command{
 }
 
 func CreateOpenshiftFlags() {
-	CreateOpenshiftCmd.PersistentFlags().StringP("id", "i", "", "The project's id")
-	CreateOpenshiftCmd.PersistentFlags().StringP("idlab", "l", "", "The project's associated lab id")
-	CreateOpenshiftCmd.PersistentFlags().StringP("description", "d", "", "The project description")
-	CreateOpenshiftCmd.PersistentFlags().StringP("displayname", "n", "", "The project displayed name")
+	CreateOpenshiftCmd.PersistentFlags().StringP("id", "i", "", "L'id du projet")
+	CreateOpenshiftCmd.PersistentFlags().StringP("idlab", "l", "", "Le lab associé au projet")
+	CreateOpenshiftCmd.PersistentFlags().StringP("description", "d", "", "La description du projet")
+	CreateOpenshiftCmd.PersistentFlags().StringP("displayname", "n", "", "Le displayname du projet")
 }
 
 func init() {
@@ -42,20 +42,14 @@ func CreateOpenshift(Id string, Description string, Displayname string, IdLab st
 
 	if Id == "" {
 		fmt.Println("Veuillez saisir l'Id (-i)")
-	} else if Description == "" {
-		fmt.Println("Veuillez saisir la Description (-d)")
-	} else if Displayname == "" {
-		fmt.Println("Veuillez saisir le Displayname (-n)")
-	} else if IdLab == "" {
-		fmt.Println("Veuillez saisir le IdLab (-l)")
 	} else {
 		body := &models.OpenshiftProjectWithLab{
+			IdLab: IdLab,
 			OpenshiftProject: &models.OpenshiftProject{
 				Id:          Id,
 				Description: Description,
 				Displayname: Displayname,
 			},
-			IdLab: IdLab,
 		}
 
 		// Create an HTTP request
