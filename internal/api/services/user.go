@@ -117,12 +117,18 @@ func mapKeycloakUserWithLabs(kuser *gocloak.User) *models.UserWithLabs {
 
 	//For now, role assigned on a lab is the same a user has on the whole infra
 	if kuser.Groups != nil {
-		for _, group := range *kuser.Groups {
-			if strings.HasPrefix(group, "/"+KEYCLOAK_LAB_TOP_GROUP) {
-				laboratoryRoles = append(laboratoryRoles, models.LaboratoryRole{
-					Laboratory: group,
-					Role:       user.Infrarole,
-				})
+		kGroups, _ := keycloak.GetUserGroups(kuser)
+
+		for _, kGroup := range kGroups {
+			if strings.HasPrefix(*kGroup.Path, "/"+KEYCLOAK_LAB_TOP_GROUP) {
+				lab, err := MapLaboratory(*kGroup)
+
+				if err == nil {
+					laboratoryRoles = append(laboratoryRoles, models.LaboratoryRole{
+						Laboratory: *lab,
+						Role:       user.Infrarole,
+					})
+				}
 			}
 		}
 

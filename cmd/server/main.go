@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -43,9 +44,11 @@ func main() {
 	//API Security validation to support OpenAPI security scheme
 	var fnAuth openapi3filter.AuthenticationFunc
 	fnAuth = Authenticate
+	fnCallLog := CustomCallLogFunction
 
 	options := &apifirst.RouterOptions{
 		AuthenticationFunc: &fnAuth,
+		CustomCallLogFunc:  &fnCallLog,
 	}
 
 	r := apifirst.NewRouter(OpenAPIDoc, Handlers, options)
@@ -88,15 +91,31 @@ func Authenticate(ctx context.Context, authenticationInput *openapi3filter.Authe
 			return errors.New("Gateway secrets does not match.")
 		}
 	case "Username", "UserRoles":
-		gatewaySecretHeaderName := authenticationInput.SecurityScheme.Name
-		gatewaySecretHeaderValue := authenticationInput.RequestValidationInput.Request.Header.Get(gatewaySecretHeaderName)
+		userInfoHeaderName := authenticationInput.SecurityScheme.Name
+		userInfoHeaderValue := authenticationInput.RequestValidationInput.Request.Header.Get(userInfoHeaderName)
 
-		if gatewaySecretHeaderValue == "" {
+		if userInfoHeaderValue == "" {
 			return errors.New(authenticationInput.SecuritySchemeName + " not supplied by Gateway.")
 		}
 	default:
 		return errors.New("Unimplemented security scheme.")
 	}
+
+	return nil
+}
+
+func CustomCallLogFunction(request *http.Request, response *apifirst.Response, err error) error {
+	output := fmt.Sprintf("%v | %v %v %v", request.Header.Get("X-CEAI-Username"), request.Method, request.RequestURI, response.Status)
+
+	if err != nil {
+		output = fmt.Sprintf("%v %v", output, err.Error())
+
+		if e, ok := err.(*openapi3filter.SecurityRequirementsError); ok {
+			output = fmt.Sprintf("%v %v", output, e.Errors)
+		}
+	}
+
+	log.Printf(output)
 
 	return nil
 }

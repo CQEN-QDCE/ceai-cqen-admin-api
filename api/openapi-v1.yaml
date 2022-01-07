@@ -248,6 +248,10 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
         '502':
           $ref: '#/components/responses/502BadGateway'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
     post:
       operationId: CreateUser
       description: >-
@@ -274,6 +278,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
   /user/{username}:
     get:
       operationId: GetUserFromUsername
@@ -304,6 +309,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
     put:
       operationId: UpdateUser
       description: >-
@@ -337,6 +343,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
     delete:
       operationId: DeleteUser
       description: >-
@@ -360,6 +367,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
   /laboratory:
     get:
       operationId: GetLaboratories
@@ -383,6 +391,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
     post:
       operationId: CreateLaboratory
       description: >-
@@ -407,6 +416,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
   /laboratory/{laboratoryid}:
     get:
       operationId: GetLaboratoryFromId
@@ -437,6 +447,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
     put:
       operationId: UpdateLaboratory
       description: >-
@@ -470,6 +481,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
     delete:
       operationId: DeleteLaboratory
       description: >-
@@ -493,6 +505,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
   /laboratory/{laboratoryid}/user:
     put:
       operationId: AddLaboratoryUsers
@@ -528,6 +541,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
     delete:
       operationId: RemoveLaboratoryUsers
       description: >-
@@ -560,6 +574,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
   /laboratory/{laboratoryid}/aws/{accountid}:
     put:
       operationId: AttachAwsAccountToLaboratory
@@ -592,6 +607,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
     delete:
       operationId: DetachAwsAccountFromLaboratory
       description: >-
@@ -621,6 +637,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
   /laboratory/{laboratoryid}/openshift/{projectid}:
     put:
       operationId: AttachOpenshiftProjectToLaboratory
@@ -653,6 +670,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
     delete:
       operationId: DetachOpenshiftProjectFromLaboratory
       description: >-
@@ -682,6 +700,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
   /openshift/project:
     get:
       operationId: GetOpenshiftProjects
@@ -705,6 +724,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
     post:
       operationId: CreateOpenshiftProject
       description: >-
@@ -729,6 +749,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
   /openshift/project/{projectid}:
     get:
       operationId: GetOpenshiftProjectFromId
@@ -759,6 +780,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
     put:
       operationId: UpdateOpenshiftProject
       description: >-
@@ -792,6 +814,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
     delete:
       operationId: DeleteOpenshiftProject
       description: >-
@@ -815,6 +838,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
   /aws/account:
     get:
       operationId: GetAwsAccounts
@@ -838,6 +862,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
     post:
       operationId: CreateAWSAccount
       description: >-
@@ -862,6 +887,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
   /aws/account/{accountid}:
     get:
       operationId: GetAwsAccount
@@ -892,6 +918,7 @@ paths:
       security:
         - Username: []
           UserRoles: []
+          GatewaySecret: []
   /keycloak/token:
     post:
       operationId: GetKeycloakAccessToken
@@ -918,6 +945,8 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
         '502':
           $ref: '#/components/responses/502BadGateway'
+      security:
+        - GatewaySecret: []
   /keycloak/token/refresh:
     post:
       operationId: RefreshKeycloakAccessToken
@@ -945,5 +974,5 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
         '502':
           $ref: '#/components/responses/502BadGateway'
-security:
-  - GatewaySecret: []
+      security:
+        - GatewaySecret: []

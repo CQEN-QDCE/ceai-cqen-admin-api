@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/keycloak"
@@ -23,14 +22,12 @@ func (s ServerHandlers) GetKeycloakAccessToken(response *apifirst.Response, requ
 	pCreds := models.KeycloakCredentials{}
 	if err := json.NewDecoder(request.Body).Decode(&pCreds); err != nil {
 		response.SetStatus(http.StatusBadRequest)
-		log.Println(err)
 		return err
 	}
 
 	jwt, err := keycloak.LoginOtp(pCreds.Username, pCreds.Password, pCreds.Totp)
 
 	if err != nil {
-		log.Println(err.Error())
 		response.SetStatus(http.StatusBadRequest)
 		return err
 	}
@@ -45,14 +42,12 @@ func (s ServerHandlers) RefreshKeycloakAccessToken(response *apifirst.Response, 
 	var pRefreshToken string
 	if err := json.NewDecoder(request.Body).Decode(&pRefreshToken); err != nil {
 		response.SetStatus(http.StatusBadRequest)
-		log.Println(err)
 		return err
 	}
 
 	jwt, err := keycloak.RefreshToken(pRefreshToken)
 
 	if err != nil {
-		log.Println(err.Error())
 		response.SetStatus(http.StatusBadRequest)
 		return err
 	}

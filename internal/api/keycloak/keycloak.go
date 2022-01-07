@@ -250,7 +250,7 @@ func GetUserGroups(user *gocloak.User) ([]*gocloak.Group, error) {
 	}
 
 	ctx := context.Background()
-	var briefRep = true
+	var briefRep = false
 
 	groups, err := (*c.GoCloakClient).GetUserGroups(
 		ctx,

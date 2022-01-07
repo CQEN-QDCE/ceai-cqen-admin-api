@@ -35,6 +35,7 @@ type Router struct {
 
 type RouterOptions struct {
 	AuthenticationFunc *openapi3filter.AuthenticationFunc
+	CustomCallLogFunc  *func(request *http.Request, response *Response, err error) error
 	//Add more options as needed
 }
 
@@ -61,9 +62,15 @@ func NewRouter(doc *openapi3.T, serverWrapper interface{}, options *RouterOption
 			op := operations[method]
 
 			muxRoute := muxRouter.HandleFunc(path, func(w http.ResponseWriter, request *http.Request) {
-				response := r.CallRouteFunc(op, w, request)
+				response, err := r.CallRouteFunc(op, w, request)
 				response.WriteResponse()
-				log.Printf("%v %v %v", request.Method, request.RequestURI, response.Status)
+
+				if options.CustomCallLogFunc != nil {
+					fnCustomCallLog := *options.CustomCallLogFunc
+					fnCustomCallLog(request, response, err)
+				} else {
+					log.Printf("%v %v %v %v", request.Method, request.RequestURI, response.Status, err.Error())
+				}
 			}).Methods(method)
 
 			r.Muxes = append(r.Muxes, muxRoute)
@@ -121,7 +128,7 @@ func (r *Router) Serve(port string) error {
 //
 // TODO: This method is way too huge. Need to split/use middlewares?
 //
-func (r *Router) CallRouteFunc(operation *openapi3.Operation, w http.ResponseWriter, request *http.Request) *Response {
+func (r *Router) CallRouteFunc(operation *openapi3.Operation, w http.ResponseWriter, request *http.Request) (*Response, error) {
 	//Convert ResponseWriter to apifirst.response
 	response := NewResponse(&w)
 
@@ -136,7 +143,7 @@ func (r *Router) CallRouteFunc(operation *openapi3.Operation, w http.ResponseWri
 	//test m, return unimplemented response if method is undefined
 	if !m.IsValid() {
 		response.SetStatus(http.StatusNotImplemented)
-		return response
+		return response, nil
 	}
 
 	//Find route in spec and extract path params
@@ -144,7 +151,7 @@ func (r *Router) CallRouteFunc(operation *openapi3.Operation, w http.ResponseWri
 	if err != nil {
 		//Could not match request with any route in the OpenAPI spec
 		response.SetStatus(http.StatusNotFound)
-		return response
+		return response, err
 	}
 
 	//Prepare request validation
@@ -164,21 +171,21 @@ func (r *Router) CallRouteFunc(operation *openapi3.Operation, w http.ResponseWri
 
 	if err := openapi3filter.ValidateRequest(context.Background(), requestValidationInput); err != nil {
 
-		if e, ok := err.(*openapi3filter.SecurityRequirementsError); ok {
-			log.Println(e.Error())
-			log.Println(e.Errors)
+		if _, ok := err.(*openapi3filter.SecurityRequirementsError); ok {
+			//log.Println(e.Error())
+			//log.Println(e.Errors)
 			response.SetStatus(http.StatusUnauthorized)
 		} else {
-			log.Println(e.Error())
+			//log.Println(e.Error())
 			response.SetStatus(http.StatusBadRequest)
 
 			//TODO Add switch in .env to output validation error or not
 			//TODO Seems I can't output text with this Content-Type...
 			//response.SetContentType("text/plain")
-			response.SetBody(err.Error())
+			//response.SetBody(err.Error())
 		}
 
-		return response
+		return response, err
 	}
 
 	//Call method
@@ -186,7 +193,14 @@ func (r *Router) CallRouteFunc(operation *openapi3.Operation, w http.ResponseWri
 	inputs[0] = reflect.ValueOf(response)
 	inputs[1] = reflect.ValueOf(request)
 
-	m.Call(inputs)
+	retValue := m.Call(inputs)
+
+	//All Handlers returns exactly one value: error
+	if v := retValue[0].Interface(); v != nil {
+		err = v.(error)
+		//Error happened in handler, do not validate response and return
+		return response, err
+	}
 
 	//TODO Writing Header at this moment could be problematic if response validation fails?
 	//response.WriteResponse()
@@ -208,12 +222,12 @@ func (r *Router) CallRouteFunc(operation *openapi3.Operation, w http.ResponseWri
 
 		//TODO Add switch in .env to output validation error or not
 		//response.SetContentType("text/plain")
-		response.SetBody(err.Error())
+		//response.SetBody(err.Error())
 
-		return response
+		return response, err
 	}
 
-	return response
+	return response, nil
 }
 
 func orderedPaths(paths map[string]*openapi3.PathItem) []string {

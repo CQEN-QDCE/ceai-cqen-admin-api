@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/services"
@@ -21,8 +20,7 @@ func (s ServerHandlers) GetAwsAccounts(response *apifirst.Response, request *htt
 	accounts, err := services.GetAwsAccounts()
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalServerError); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalServerError); ok {
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
@@ -42,8 +40,7 @@ func (s ServerHandlers) GetAwsAccount(response *apifirst.Response, request *http
 	account, err := services.GetAwsAccount(accountId)
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalRessourceNotFound); ok {
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
