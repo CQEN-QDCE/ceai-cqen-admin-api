@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/services"
@@ -28,8 +27,7 @@ func (s ServerHandlers) GetUsers(response *apifirst.Response, request *http.Requ
 	usersList, err := services.GetUsers()
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalServerError); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalServerError); ok {
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
@@ -49,8 +47,7 @@ func (s ServerHandlers) GetUserFromUsername(response *apifirst.Response, request
 	user, err := services.GetUserFromUsername(username)
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalRessourceNotFound); ok {
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
@@ -68,22 +65,19 @@ func (s ServerHandlers) CreateUser(response *apifirst.Response, request *http.Re
 	puser := models.User{}
 	if err := json.NewDecoder(request.Body).Decode(&puser); err != nil {
 		response.SetStatus(http.StatusBadRequest)
-		log.Println(err)
 		return err
 	}
 
 	err := services.CreateUser(puser)
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalRessourceExist); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalRessourceExist); ok {
 			response.SetStatus(http.StatusConflict)
 			return err
 		}
 
-		if e, ok := err.(services.ErrorExternalServerError); ok {
+		if _, ok := err.(services.ErrorExternalServerError); ok {
 			//TODO email not sent...
-			log.Println(e.Error())
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
@@ -104,21 +98,18 @@ func (s ServerHandlers) UpdateUser(response *apifirst.Response, request *http.Re
 	pUser := models.UserUpdate{}
 	if err := json.NewDecoder(request.Body).Decode(&pUser); err != nil {
 		response.SetStatus(http.StatusBadRequest)
-		log.Println(err)
 		return err
 	}
 
 	err := services.UpdateUser(username, pUser)
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalRessourceNotFound); ok {
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
 
-		if e, ok := err.(services.ErrorExternalServerError); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalServerError); ok {
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
@@ -137,14 +128,12 @@ func (s ServerHandlers) DeleteUser(response *apifirst.Response, request *http.Re
 	err := services.DeleteUser(username)
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalRessourceNotFound); ok {
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
 
-		if e, ok := err.(services.ErrorExternalServerError); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalServerError); ok {
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}

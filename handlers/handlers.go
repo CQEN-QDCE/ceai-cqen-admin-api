@@ -5,4 +5,5 @@ type ServerHandlers struct {
 	LaboratoryHandlersInterface
 	OpenshiftHandlersInterface
 	AwsHandlersInterface
+	KeycloakHandlersInterface
 }

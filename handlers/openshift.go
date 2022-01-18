@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/services"
@@ -29,8 +28,7 @@ func (s ServerHandlers) GetOpenshiftProjects(response *apifirst.Response, reques
 	projectList, err := services.GetOpenshiftProjects()
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalServerError); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalServerError); ok {
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
@@ -50,14 +48,12 @@ func (s ServerHandlers) GetOpenshiftProjectFromId(response *apifirst.Response, r
 	project, err := services.GetOpenshiftProjectFromId(projectId)
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalServerError); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalServerError); ok {
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
 
-		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalRessourceNotFound); ok {
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
@@ -73,21 +69,18 @@ func (s ServerHandlers) CreateOpenshiftProject(response *apifirst.Response, requ
 	createParam := models.OpenshiftProjectWithLab{}
 	if err := json.NewDecoder(request.Body).Decode(&createParam); err != nil {
 		response.SetStatus(http.StatusBadRequest)
-		log.Println(err)
 		return err
 	}
 
 	err := services.CreateOpenshiftProject(&createParam)
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalServerError); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalServerError); ok {
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
 
-		if e, ok := err.(services.ErrorExternalRessourceExist); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalRessourceExist); ok {
 			response.SetStatus(http.StatusConflict)
 			return err
 		}
@@ -105,21 +98,18 @@ func (s ServerHandlers) UpdateOpenshiftProject(response *apifirst.Response, requ
 	updateParam := models.OpenshiftProjectUpdate{}
 	if err := json.NewDecoder(request.Body).Decode(&updateParam); err != nil {
 		response.SetStatus(http.StatusBadRequest)
-		log.Println(err)
 		return err
 	}
 
 	err := services.UpdateOpenshiftProject(projectId, &updateParam)
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalServerError); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalServerError); ok {
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
 
-		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalRessourceNotFound); ok {
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}

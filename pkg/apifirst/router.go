@@ -22,23 +22,29 @@ import (
 	"github.com/gorilla/mux"
 
 	_ "github.com/CQEN-QDCE/ceai-cqen-admin-api/api"
-	"github.com/rakyll/statik/fs"
 )
 
 // Router helps link http.Request.s and an OpenAPIv3 spec
 type Router struct {
-	muxes    []*mux.Route
-	routes   []*routers.Route
-	router   *mux.Router
-	handlers interface{}
+	Muxes    []*mux.Route
+	Routes   []*routers.Route
+	Router   *mux.Router
+	Handlers interface{}
+	Options  *RouterOptions
+}
+
+type RouterOptions struct {
+	AuthenticationFunc *openapi3filter.AuthenticationFunc
+	CustomCallLogFunc  *func(request *http.Request, response *Response, err error) error
+	//Add more options as needed
 }
 
 // NewRouter creates a gorilla/mux router with handlers attached via the CallRouteFunc function
 // Assumes spec is .Validate()d
-func NewRouter(doc *openapi3.T, serverWrapper interface{}) *Router {
+func NewRouter(doc *openapi3.T, serverWrapper interface{}, options *RouterOptions) *Router {
 	r := &Router{}
 
-	r.handlers = serverWrapper
+	r.Handlers = serverWrapper
 
 	muxRouter := mux.NewRouter() /*.UseEncodedPath()?*/
 
@@ -56,14 +62,20 @@ func NewRouter(doc *openapi3.T, serverWrapper interface{}) *Router {
 			op := operations[method]
 
 			muxRoute := muxRouter.HandleFunc(path, func(w http.ResponseWriter, request *http.Request) {
-				response := r.CallRouteFunc(op, w, request)
+				response, err := r.CallRouteFunc(op, w, request)
 				response.WriteResponse()
-				log.Printf("%v %v %v", request.Method, request.RequestURI, response.Status)
+
+				if options.CustomCallLogFunc != nil {
+					fnCustomCallLog := *options.CustomCallLogFunc
+					fnCustomCallLog(request, response, err)
+				} else {
+					log.Printf("%v %v %v %v", request.Method, request.RequestURI, response.Status, err.Error())
+				}
 			}).Methods(method)
 
-			r.muxes = append(r.muxes, muxRoute)
+			r.Muxes = append(r.Muxes, muxRoute)
 
-			r.routes = append(r.routes, &routers.Route{
+			r.Routes = append(r.Routes, &routers.Route{
 				Spec:      doc,
 				Server:    nil,
 				Path:      path,
@@ -76,32 +88,23 @@ func NewRouter(doc *openapi3.T, serverWrapper interface{}) *Router {
 		}
 	}
 
-	//Swagger UI
-	//TODO Move this to main
-	statikFS, err := fs.New()
-	if err != nil {
-		panic(err)
-	}
-	staticServer := http.FileServer(statikFS)
+	r.Router = muxRouter
 
-	sh := http.StripPrefix("/doc", staticServer)
-	muxRouter.PathPrefix("/doc").Handler(sh)
-
-	r.router = muxRouter
+	r.Options = options
 
 	return r
 }
 
 // FindRoute extracts the route and parameters of an http.Request
 func (r *Router) FindRoute(req *http.Request) (*routers.Route, map[string]string, error) {
-	for i, muxRoute := range r.muxes {
+	for i, muxRoute := range r.Muxes {
 		var match mux.RouteMatch
 
 		if muxRoute.Match(req, &match) {
 
 			//Ensure there is no error in the match
 			if err := match.MatchErr; err == nil {
-				route := r.routes[i]
+				route := r.Routes[i]
 				route.Method = req.Method
 				route.Operation = route.Spec.Paths[route.Path].GetOperation(route.Method)
 				return route, match.Vars, nil
@@ -116,7 +119,7 @@ func (r *Router) Serve(port string) error {
 	//TODO Better start logs, Fiber Style?
 	log.Printf("listening incoming requests on port %v \n", port)
 
-	return http.ListenAndServe(":"+port, r.router)
+	return http.ListenAndServe(":"+port, r.Router)
 }
 
 // Call the handler method associated with request route
@@ -125,7 +128,7 @@ func (r *Router) Serve(port string) error {
 //
 // TODO: This method is way too huge. Need to split/use middlewares?
 //
-func (r *Router) CallRouteFunc(operation *openapi3.Operation, w http.ResponseWriter, request *http.Request) *Response {
+func (r *Router) CallRouteFunc(operation *openapi3.Operation, w http.ResponseWriter, request *http.Request) (*Response, error) {
 	//Convert ResponseWriter to apifirst.response
 	response := NewResponse(&w)
 
@@ -134,13 +137,13 @@ func (r *Router) CallRouteFunc(operation *openapi3.Operation, w http.ResponseWri
 
 	inputs := make([]reflect.Value, 2)
 
-	v := reflect.ValueOf(r.handlers)
+	v := reflect.ValueOf(r.Handlers)
 	m := v.MethodByName(handlerFunc)
 
 	//test m, return unimplemented response if method is undefined
 	if !m.IsValid() {
 		response.SetStatus(http.StatusNotImplemented)
-		return response
+		return response, nil
 	}
 
 	//Find route in spec and extract path params
@@ -148,25 +151,38 @@ func (r *Router) CallRouteFunc(operation *openapi3.Operation, w http.ResponseWri
 	if err != nil {
 		//Could not match request with any route in the OpenAPI spec
 		response.SetStatus(http.StatusNotFound)
-		return response
+		return response, err
 	}
 
 	//Prepare request validation
+	filterOptions := openapi3filter.Options{}
+	if r.Options != nil {
+		if r.Options.AuthenticationFunc != nil {
+			filterOptions.AuthenticationFunc = *r.Options.AuthenticationFunc
+		}
+	}
+
 	requestValidationInput := &openapi3filter.RequestValidationInput{
 		Request:    request,
 		PathParams: pathParams,
 		Route:      route,
+		Options:    &filterOptions,
 	}
 
 	if err := openapi3filter.ValidateRequest(context.Background(), requestValidationInput); err != nil {
-		response.SetStatus(http.StatusBadRequest)
 
-		//TODO Add switch in .env to output validation error or not
-		//TODO Seems I can't output text with this Content-Type...
-		//response.SetContentType("text/plain")
-		response.SetBody(err.Error())
+		if _, ok := err.(*openapi3filter.SecurityRequirementsError); ok {
+			response.SetStatus(http.StatusUnauthorized)
+		} else {
+			response.SetStatus(http.StatusBadRequest)
 
-		return response
+			//TODO Add switch in .env to output validation error or not
+			//TODO Seems I can't output text with this Content-Type...
+			//response.SetContentType("text/plain")
+			//response.SetBody(err.Error())
+		}
+
+		return response, err
 	}
 
 	//Call method
@@ -174,10 +190,14 @@ func (r *Router) CallRouteFunc(operation *openapi3.Operation, w http.ResponseWri
 	inputs[0] = reflect.ValueOf(response)
 	inputs[1] = reflect.ValueOf(request)
 
-	m.Call(inputs)
+	retValue := m.Call(inputs)
 
-	//TODO Writing Header at this moment could be problematic if response validation fails?
-	//response.WriteResponse()
+	//All Handlers returns exactly one value: error
+	if v := retValue[0].Interface(); v != nil {
+		err = v.(error)
+		//Error happened in handler, do not validate response and return
+		return response, err
+	}
 
 	//Validate response
 	responseValidationInput := &openapi3filter.ResponseValidationInput{
@@ -196,12 +216,12 @@ func (r *Router) CallRouteFunc(operation *openapi3.Operation, w http.ResponseWri
 
 		//TODO Add switch in .env to output validation error or not
 		//response.SetContentType("text/plain")
-		response.SetBody(err.Error())
+		//response.SetBody(err.Error())
 
-		return response
+		return response, err
 	}
 
-	return response
+	return response, nil
 }
 
 func orderedPaths(paths map[string]*openapi3.PathItem) []string {

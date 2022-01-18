@@ -8,6 +8,11 @@ type Laboratory struct {
 	Gitrepo     *string `json:"gitrepo,omitempty"`
 }
 
+type LaboratoryRole struct {
+	Laboratory `yaml:",inline"`
+	Role       string `json:"role"`
+}
+
 type LaboratoryUpdate struct {
 	Description *string `json:"description,omitempty"`
 	Displayname *string `json:"displayname,omitempty"`

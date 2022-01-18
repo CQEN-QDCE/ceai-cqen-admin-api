@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/services"
@@ -48,8 +47,7 @@ func (s ServerHandlers) GetLaboratories(response *apifirst.Response, request *ht
 	labsList, err := services.GetLaboratories()
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalRessourceNotFound); ok {
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
@@ -69,14 +67,12 @@ func (s ServerHandlers) GetLaboratoryFromId(response *apifirst.Response, request
 	lab, err := services.GetLaboratoryFromId(laboratoryid)
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalServerError); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalServerError); ok {
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
 
-		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalRessourceNotFound); ok {
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
@@ -92,15 +88,13 @@ func (s ServerHandlers) CreateLaboratory(response *apifirst.Response, request *h
 	pLab := models.Laboratory{}
 	if err := json.NewDecoder(request.Body).Decode(&pLab); err != nil {
 		response.SetStatus(http.StatusBadRequest)
-		log.Println(err)
 		return err
 	}
 
 	err := services.CreateLaboratory(&pLab)
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalRessourceExist); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalRessourceExist); ok {
 			response.SetStatus(http.StatusConflict)
 			return err
 		}
@@ -120,21 +114,18 @@ func (s ServerHandlers) UpdateLaboratory(response *apifirst.Response, request *h
 	pLab := models.LaboratoryUpdate{}
 	if err := json.NewDecoder(request.Body).Decode(&pLab); err != nil {
 		response.SetStatus(http.StatusBadRequest)
-		log.Println(err)
 		return err
 	}
 
 	err := services.UpdateLaboratory(laboratoryId, &pLab)
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalServerError); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalServerError); ok {
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
 
-		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalRessourceNotFound); ok {
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
@@ -154,21 +145,18 @@ func (s ServerHandlers) AddLaboratoryUsers(response *apifirst.Response, request 
 	var usernameList []string
 	if err := json.NewDecoder(request.Body).Decode(&usernameList); err != nil {
 		response.SetStatus(http.StatusBadRequest)
-		log.Println(err)
 		return err
 	}
 
 	err := services.AddLaboratoryUsers(laboratoryId, usernameList)
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalServerError); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalServerError); ok {
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
 
-		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalRessourceNotFound); ok {
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
@@ -189,21 +177,18 @@ func (s ServerHandlers) RemoveLaboratoryUsers(response *apifirst.Response, reque
 	var usernameList []string
 	if err := json.NewDecoder(request.Body).Decode(&usernameList); err != nil {
 		response.SetStatus(http.StatusBadRequest)
-		log.Println(err)
 		return err
 	}
 
 	err := services.AddLaboratoryUsers(laboratoryId, usernameList)
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalServerError); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalServerError); ok {
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
 
-		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalRessourceNotFound); ok {
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
@@ -223,14 +208,12 @@ func (s ServerHandlers) AttachOpenshiftProjectToLaboratory(response *apifirst.Re
 	err := services.AttachOpenshiftProjectToLaboratory(laboratoryId, projectId)
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalServerError); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalServerError); ok {
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
 
-		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalRessourceNotFound); ok {
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
@@ -250,14 +233,12 @@ func (s ServerHandlers) DetachOpenshiftProjectFromLaboratory(response *apifirst.
 	err := services.DetachOpenshiftProjectFromLaboratory(laboratoryId, projectId)
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalServerError); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalServerError); ok {
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
 
-		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalRessourceNotFound); ok {
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
@@ -276,14 +257,12 @@ func (s ServerHandlers) AttachAwsAccountToLaboratory(response *apifirst.Response
 	err := services.AttachAwsAccountToLaboratory(laboratoryId, accountId)
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalServerError); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalServerError); ok {
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
 
-		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalRessourceNotFound); ok {
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
@@ -302,14 +281,12 @@ func (s ServerHandlers) DetachAwsAccountFromLaboratory(response *apifirst.Respon
 	err := services.DetachAwsAccountFromLaboratory(laboratoryId, accountId)
 
 	if err != nil {
-		if e, ok := err.(services.ErrorExternalServerError); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalServerError); ok {
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
 
-		if e, ok := err.(services.ErrorExternalRessourceNotFound); ok {
-			log.Println(e.Error())
+		if _, ok := err.(services.ErrorExternalRessourceNotFound); ok {
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}

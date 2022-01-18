@@ -58,13 +58,13 @@ components:
           laboratories:
             type: array
             items: 
-              $ref: '#/components/schemas/LaboratoryRole'
+              $ref: '#/components/schemas/Laboratory'
     Laboratory:
       type: object
       required: 
         - "id"
         - "displayname"
-        - "description"
+        - "type"
       properties:
         id:
           type: string
@@ -74,41 +74,48 @@ components:
           type: string
         gitrepo:
           type: string
-        users:
-          type: array
-          items: 
-            $ref: '#/components/schemas/LaboratoryUser'
-        openshiftprojects:
-          type: array
-          items: 
-            $ref: '#/components/schemas/OpenshiftProject'
-    LaboratoryUser:
-      type: object
-      required:
-        - "email"
-        - "role"
-      properties:
-        email:
-          type: string
-          format: email
-        role:
+        type:
           type: string
           enum:
-            - admin
-            - developer
-    LaboratoryRole:
+            - projet
+            - experimentation
+    LaboratoryUpdate:
       type: object
-      required:
-        - "laboratory"
-        - "role"
       properties:
-        laboratory:
+        displayname:
           type: string
-        role:
+        description:
+          type: string
+        gitrepo:
+          type: string
+        type:
           type: string
           enum:
-            - Admin
-            - Developer
+            - projet
+            - experimentation
+    LaboratoryWithUsers:
+      allOf:
+        - $ref: '#/components/schemas/Laboratory'
+        - type: object
+          properties:
+            users:
+              type: array
+              items: 
+                type: string
+                format: email
+    LaboratoryWithResources:
+      allOf:
+        - $ref: '#/components/schemas/LaboratoryWithUsers'
+        - type: object
+          properties:
+            openshiftprojects:
+              type: array
+              items: 
+                $ref: '#/components/schemas/OpenshiftProject'
+            AWSAccounts:
+              type: array
+              items:
+                $ref: '#/components/schemas/AWSAccount' 
     OpenshiftProject:
       type: object
       required: 
@@ -121,7 +128,66 @@ components:
         displayname:
           type: string
         description:
-          type: string     
+          type: string
+    OpenshiftProjectWithLab:
+      allOf:
+      - $ref: '#/components/schemas/OpenshiftProject'
+      - type: object
+        required:
+          - idLab
+        properties:
+          idLab:
+            type: string
+    OpenshiftProjectWithMeta:
+      allOf:
+      - $ref: '#/components/schemas/OpenshiftProjectWithLab'
+      - type: object
+        properties:
+          requester:
+            type: string
+          creationDate:
+            type: string
+            format: date-time
+    OpenshiftProjectUpdate:
+      type: object
+      properties:
+        displayname:
+          type: string
+        description:
+          type: string
+        idLab:
+          type: string
+    AWSAccount:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email: 
+          type: string
+  responses:
+    401Unauthorized:
+      description: Unauthorized
+    500InternalServerError:
+      description: Internal Server Error
+    400BadRequest:
+      description: Invalid Request Parameter
+    502BadGateway:
+      description: Server Sent an Invalid Response
+  securitySchemes:
+    Username:
+      type: apiKey
+      in: header
+      name: X-CEAI-Username
+    UserRoles:
+      type: apiKey
+      in: header
+      name: X-CEAI-UserRoles
+    GatewaySecret:
+      type: apiKey
+      in: header
+      name: X-CEAI-Gateway-Secret
 paths:
   /user:
     get:
@@ -135,6 +201,12 @@ paths:
                 type: array
                 items: 
                   $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+        '502':
+          $ref: '#/components/responses/502BadGateway'
     post:
       operationId: CreateUser
       description: >-
@@ -148,6 +220,16 @@ paths:
       responses:
         '201':
           description: Created
+        '409':
+          description: Username already exist
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+        '502':
+          $ref: '#/components/responses/502BadGateway'
   /user/{username}:
     get:
       operationId: GetUserFromUsername
@@ -167,6 +249,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserWithLabs'
+        '404':
+          description: Username does not exist
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+        '502':
+          $ref: '#/components/responses/502BadGateway'
     put:
       operationId: UpdateUser
       description: >-
@@ -179,6 +269,7 @@ paths:
           schema:
             type: string
       requestBody:
+        required: true
         content:
           'application/json':
             schema:
@@ -186,6 +277,16 @@ paths:
       responses:
         '200':
           description: OK
+        '404':
+          description: User does not exist
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+        '502':
+          $ref: '#/components/responses/502BadGateway'
     delete:
       operationId: DeleteUser
       description: >-
@@ -200,6 +301,12 @@ paths:
       responses:
         '200':
           description: OK
+        '404':
+          description: Username does not exist
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
   /laboratory:
     get:
       operationId: GetLaboratories
@@ -214,10 +321,16 @@ paths:
                 type: array
                 items: 
                   $ref: '#/components/schemas/Laboratory'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+        '502':
+          $ref: '#/components/responses/502BadGateway'
     post:
       operationId: CreateLaboratory
       description: >-
-        Create the entire laboratory. That includes : users, projects, source code repository, etc.
+        Create a laboratory.
       requestBody:
         required: true
         content:
@@ -225,8 +338,16 @@ paths:
             schema:
               $ref: '#/components/schemas/Laboratory'
       responses:
-        '200':
-          description: OK
+        '201':
+          description: Created
+        '409':
+          description: Laboratory id already exist
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
   /laboratory/{laboratoryid}:
     get:
       operationId: GetLaboratoryFromId
@@ -246,6 +367,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Laboratory'
+        '404':
+          description: Laboratory id does not exist
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+        '502':
+          $ref: '#/components/responses/502BadGateway'
     put:
       operationId: UpdateLaboratory
       description: >-
@@ -258,21 +387,28 @@ paths:
           schema:
             type: string
       requestBody:
+        required: true
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/Laboratory'
+              $ref: '#/components/schemas/LaboratoryUpdate'
       responses:
         '200':
           description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Laboratory'
+        '404':
+          description: Laboratory id does not exist
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+        '502':
+          $ref: '#/components/responses/502BadGateway'
     delete:
       operationId: DeleteLaboratory
       description: >-
-        This endpoint deletes a laboratory. 
+        Deletes a laboratory. 
       parameters:
         - name: laboratoryid
           in: path
@@ -283,9 +419,186 @@ paths:
       responses:
         '200':
           description: OK
+        '404':
+          description: Laboratory id does not exist
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+  /laboratory/{laboratoryid}/user:
+    put:
+      operationId: AddLaboratoryUsers
+      description: >-
+        Add users to a laboratory.
+      parameters:
+        - name: laboratoryid
+          in: path
+          description: The identifier of the targetted laboratory.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              type: array
+              items:
+                type: string
+                format: email
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Laboratory id does not exist
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+    delete:
+      operationId: RemoveLaboratoryUsers
+      description: >-
+        Remove users from a laboratory.
+      parameters:
+        - name: laboratoryid
+          in: path
+          description: The identifier of the targetted laboratory.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              type: array
+              items:
+                type: string
+                format: email
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Laboratory id does not exist
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+  /laboratory/{laboratoryid}/aws/{accountid}:
+    put:
+      operationId: AttachAwsAccountToLaboratory
+      description: >-
+        Attach an existing AWS account to a laboratory.
+      parameters:
+        - name: laboratoryid
+          in: path
+          description: The identifier of the targetted laboratory.
+          required: true
+          schema:
+            type: string
+        - name: accountid
+          in: path
+          description: The identifier of the targetted AWS account.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Laboratory id or AWS account id does not exist
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+    delete:
+      operationId: DetachAwsAccountFromLaboratory
+      description: >-
+        Detach a AWS account from a laboratory.
+      parameters:
+        - name: laboratoryid
+          in: path
+          description: The identifier of the targetted laboratory.
+          required: true
+          schema:
+            type: string
+        - name: accountid
+          in: path
+          description: The identifier of the targetted AWS account.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Laboratory or AWS account id does not exist
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+  /laboratory/{laboratoryid}/openshift/{projectid}:
+    put:
+      operationId: AttachOpenshiftProjectToLaboratory
+      description: >-
+        Attach an existing Openshift project to a laboratory.
+      parameters:
+        - name: laboratoryid
+          in: path
+          description: The identifier of the targetted laboratory.
+          required: true
+          schema:
+            type: string
+        - name: projectid
+          in: path
+          description: The identifier of the targetted Openshift project.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Laboratory id or Openshift project id does not exist
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+    delete:
+      operationId: DetachOpenshiftProjectFromLaboratory
+      description: >-
+        Detach an Openshift project from a laboratory.
+      parameters:
+        - name: laboratoryid
+          in: path
+          description: The identifier of the targetted laboratory.
+          required: true
+          schema:
+            type: string
+        - name: projectid
+          in: path
+          description: The identifier of the targetted Openshift project.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Laboratory or Openshift project id does not exist
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
   /openshift/project:
     get:
-      operationId: GetProjects
+      operationId: GetOpenshiftProjects
       description: >-
        Get the list of projects defined in Openshift.
       responses:
@@ -296,9 +609,15 @@ paths:
               schema:
                 type: array
                 items: 
-                  $ref: '#/components/schemas/OpenshiftProject'
+                  $ref: '#/components/schemas/OpenshiftProjectWithMeta'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+        '502':
+          $ref: '#/components/responses/502BadGateway'
     post:
-      operationId: CreateProject
+      operationId: CreateOpenshiftProject
       description: >-
         Create a project in Openshift.
       requestBody:
@@ -306,13 +625,21 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/OpenshiftProject'
+              $ref: '#/components/schemas/OpenshiftProjectWithLab'
       responses:
         '200':
           description: OK
+        '409':
+          description: Openshift project id already exist
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
   /openshift/project/{projectid}:
     get:
-      operationId: GetProjectFromId
+      operationId: GetOpenshiftProjectFromId
       description: >-
         Get a project from its identifier in Openshift.
       parameters:
@@ -328,9 +655,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OpenshiftProject'
+                $ref: '#/components/schemas/OpenshiftProjectWithMeta'
+        '404':
+          description: Openshift project id does not exist
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+        '502':
+          $ref: '#/components/responses/502BadGateway'
     put:
-      operationId: UpdateProject
+      operationId: UpdateOpenshiftProject
       description: >-
         Update the attributes of a project Openshift.
       parameters:
@@ -341,19 +676,26 @@ paths:
           schema:
             type: string
       requestBody:
+        required: true
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/OpenshiftProject'
+              $ref: '#/components/schemas/OpenshiftProjectUpdate'
       responses:
         '200':
           description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpenshiftProject'
+        '404':
+          description: Openshift project id does not exist
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+        '502':
+          $ref: '#/components/responses/502BadGateway'
     delete:
-      operationId: DeleteProject
+      operationId: DeleteOpenshiftProject
       description: >-
         Delete a project in Openshift. 
       parameters:
@@ -366,3 +708,81 @@ paths:
       responses:
         '200':
           description: OK
+        '404':
+          description: Openshift project id does not exist
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+  /aws/account:
+    get:
+      operationId: GetAwsAccounts
+      description: >-
+        Get the list of all laboratories AWS accounts 
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/AWSAccount'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+        '502':
+          $ref: '#/components/responses/502BadGateway'
+    post:
+      operationId: CreateAWSAccount
+      description: >-
+        Create an AWS account
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/AWSAccount'
+      responses:
+        '200':
+          description: OK
+        '409':
+          description: Account informations are not unique.
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+  /aws/account/{accountid}:
+    get:
+      operationId: GetAwsAccount
+      description: >-
+        Get infos of an AWS accounts
+      parameters:
+        - name: accountid
+          in: path
+          description: The identifier of the targetted account.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AWSAccount'
+        '404':
+          description: AWS account id does not exist
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+        '502':
+          $ref: '#/components/responses/502BadGateway'
+security:
+  - Username: []
+    UserRoles: []
+    GatewaySecret: []

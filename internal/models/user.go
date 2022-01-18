@@ -23,8 +23,3 @@ type UserWithLabs struct {
 	// Embedded fields due to inline allOf schema
 	Laboratories *[]LaboratoryRole `json:"laboratories,omitempty"`
 }
-
-type LaboratoryRole struct {
-	Laboratory string `json:"laboratory"`
-	Role       string `json:"role"`
-}

@@ -334,10 +334,10 @@ func AddOpenshiftProjectAttributeToKeycloakGroup(kgroup *gocloak.Group, projectI
 	var openshiftProjects []string
 
 	if _, ok := (*kgroup.Attributes)["openshift_projects"]; ok {
-		openshiftProjects = []string{projectId}
-	} else {
 		openshiftProjects = (*kgroup.Attributes)["openshift_projects"]
 		openshiftProjects = append(openshiftProjects, projectId)
+	} else {
+		openshiftProjects = []string{projectId}
 	}
 
 	(*kgroup.Attributes)["openshift_projects"] = openshiftProjects
