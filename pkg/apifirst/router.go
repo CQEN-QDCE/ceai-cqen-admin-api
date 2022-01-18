@@ -172,11 +172,8 @@ func (r *Router) CallRouteFunc(operation *openapi3.Operation, w http.ResponseWri
 	if err := openapi3filter.ValidateRequest(context.Background(), requestValidationInput); err != nil {
 
 		if _, ok := err.(*openapi3filter.SecurityRequirementsError); ok {
-			//log.Println(e.Error())
-			//log.Println(e.Errors)
 			response.SetStatus(http.StatusUnauthorized)
 		} else {
-			//log.Println(e.Error())
 			response.SetStatus(http.StatusBadRequest)
 
 			//TODO Add switch in .env to output validation error or not
@@ -201,9 +198,6 @@ func (r *Router) CallRouteFunc(operation *openapi3.Operation, w http.ResponseWri
 		//Error happened in handler, do not validate response and return
 		return response, err
 	}
-
-	//TODO Writing Header at this moment could be problematic if response validation fails?
-	//response.WriteResponse()
 
 	//Validate response
 	responseValidationInput := &openapi3filter.ResponseValidationInput{
