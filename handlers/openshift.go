@@ -12,19 +12,19 @@ import (
 
 type OpenshiftHandlersInterface interface {
 	// (GET /openshift/project)
-	GetOpenshiftProjects(response *apifirst.Response, request *http.Request) error
+	GetOpenshiftProjects(response *apifirst.ResponseWriter, request *http.Request) error
 
 	// (POST /openshift/project)
-	CreateOpenshiftProject(response *apifirst.Response, request *http.Request) error
+	CreateOpenshiftProject(response *apifirst.ResponseWriter, request *http.Request) error
 
 	// (GET /openshift/project/{projectid})
-	GetOpenshiftProjectFromId(response *apifirst.Response, request *http.Request) error
+	GetOpenshiftProjectFromId(response *apifirst.ResponseWriter, request *http.Request) error
 
 	// (PUT /openshift/project/{projectid})
-	UpdateOpenshiftProject(response *apifirst.Response, request *http.Request) error
+	UpdateOpenshiftProject(response *apifirst.ResponseWriter, request *http.Request) error
 }
 
-func (s ServerHandlers) GetOpenshiftProjects(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) GetOpenshiftProjects(response *apifirst.ResponseWriter, request *http.Request) error {
 	projectList, err := services.GetOpenshiftProjects()
 
 	if err != nil {
@@ -40,7 +40,7 @@ func (s ServerHandlers) GetOpenshiftProjects(response *apifirst.Response, reques
 	return nil
 }
 
-func (s ServerHandlers) GetOpenshiftProjectFromId(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) GetOpenshiftProjectFromId(response *apifirst.ResponseWriter, request *http.Request) error {
 	//Path param
 	params := mux.Vars(request)
 	projectId := params["projectid"]
@@ -65,7 +65,7 @@ func (s ServerHandlers) GetOpenshiftProjectFromId(response *apifirst.Response, r
 	return nil
 }
 
-func (s ServerHandlers) CreateOpenshiftProject(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) CreateOpenshiftProject(response *apifirst.ResponseWriter, request *http.Request) error {
 	createParam := models.OpenshiftProjectWithLab{}
 	if err := json.NewDecoder(request.Body).Decode(&createParam); err != nil {
 		response.SetStatus(http.StatusBadRequest)
@@ -91,7 +91,7 @@ func (s ServerHandlers) CreateOpenshiftProject(response *apifirst.Response, requ
 	return nil
 }
 
-func (s ServerHandlers) UpdateOpenshiftProject(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) UpdateOpenshiftProject(response *apifirst.ResponseWriter, request *http.Request) error {
 	params := mux.Vars(request)
 	projectId := params["projectid"]
 

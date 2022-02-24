@@ -12,13 +12,13 @@ import (
 type KeycloakHandlersInterface interface {
 
 	// (POST /keycloak/token)
-	GetKeycloakAccessToken(response *apifirst.Response, request *http.Request) error
+	GetKeycloakAccessToken(response *apifirst.ResponseWriter, request *http.Request) error
 
 	// (POST /keycloak/token/refresh)
-	RefreshKeycloakAccessToken(response *apifirst.Response, request *http.Request) error
+	RefreshKeycloakAccessToken(response *apifirst.ResponseWriter, request *http.Request) error
 }
 
-func (s ServerHandlers) GetKeycloakAccessToken(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) GetKeycloakAccessToken(response *apifirst.ResponseWriter, request *http.Request) error {
 	pCreds := models.KeycloakCredentials{}
 	if err := json.NewDecoder(request.Body).Decode(&pCreds); err != nil {
 		response.SetStatus(http.StatusBadRequest)
@@ -28,7 +28,7 @@ func (s ServerHandlers) GetKeycloakAccessToken(response *apifirst.Response, requ
 	jwt, err := keycloak.LoginOtp(pCreds.Username, pCreds.Password, pCreds.Totp)
 
 	if err != nil {
-		response.SetStatus(http.StatusBadRequest)
+		response.SetStatus(http.StatusUnauthorized)
 		return err
 	}
 
@@ -38,7 +38,7 @@ func (s ServerHandlers) GetKeycloakAccessToken(response *apifirst.Response, requ
 	return nil
 }
 
-func (s ServerHandlers) RefreshKeycloakAccessToken(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) RefreshKeycloakAccessToken(response *apifirst.ResponseWriter, request *http.Request) error {
 	var pRefreshToken string
 	if err := json.NewDecoder(request.Body).Decode(&pRefreshToken); err != nil {
 		response.SetStatus(http.StatusBadRequest)

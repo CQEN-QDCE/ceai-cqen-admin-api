@@ -23,3 +23,9 @@ type UserWithLabs struct {
 	// Embedded fields due to inline allOf schema
 	Laboratories *[]LaboratoryRole `json:"laboratories,omitempty"`
 }
+
+type AuthenticatedUser struct {
+	Server   *string `json:"server"`
+	Username *string `json:"username"`
+	Roles    *string `json:"roles"`
+}

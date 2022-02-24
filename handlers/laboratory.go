@@ -13,37 +13,37 @@ import (
 type LaboratoryHandlersInterface interface {
 
 	// (GET /laboratory)
-	GetLaboratories(response *apifirst.Response, request *http.Request) error
+	GetLaboratories(response *apifirst.ResponseWriter, request *http.Request) error
 
 	// (GET /laboratory/{laboratoryid})
-	GetLaboratoryFromId(response *apifirst.Response, request *http.Request) error
+	GetLaboratoryFromId(response *apifirst.ResponseWriter, request *http.Request) error
 
 	// (POST /laboratory)
-	CreateLaboratory(response *apifirst.Response, request *http.Request) error
+	CreateLaboratory(response *apifirst.ResponseWriter, request *http.Request) error
 
 	// (PUT /laboratory/{laboratoryid})
-	UpdateLaboratory(response *apifirst.Response, request *http.Request) error
+	UpdateLaboratory(response *apifirst.ResponseWriter, request *http.Request) error
 
 	// (DELETE /laboratory/{laboratoryid}/user)
-	RemoveLaboratoryUsers(response *apifirst.Response, request *http.Request) error
+	RemoveLaboratoryUsers(response *apifirst.ResponseWriter, request *http.Request) error
 
 	// (PUT /laboratory/{laboratoryid}/user)
-	AddLaboratoryUsers(response *apifirst.Response, request *http.Request) error
+	AddLaboratoryUsers(response *apifirst.ResponseWriter, request *http.Request) error
 
 	// (PUT /laboratory/{laboratoryid}/openshift/{projectid})
-	AttachOpenshiftProjectToLaboratory(response *apifirst.Response, request *http.Request) error
+	AttachOpenshiftProjectToLaboratory(response *apifirst.ResponseWriter, request *http.Request) error
 
 	// (DELETE /laboratory/{laboratoryid}/openshift/{projectid})
-	DetachOpenshiftProjectFromLaboratory(response *apifirst.Response, request *http.Request) error
+	DetachOpenshiftProjectFromLaboratory(response *apifirst.ResponseWriter, request *http.Request) error
 
 	// (DELETE /laboratory/{laboratoryid}/aws/{accountid})
-	DetachAwsAccountFromLaboratory(response *apifirst.Response, request *http.Request) error
+	DetachAwsAccountFromLaboratory(response *apifirst.ResponseWriter, request *http.Request) error
 
 	// (PUT /laboratory/{laboratoryid}/aws/{accountid})
-	AttachAwsAccountToLaboratory(response *apifirst.Response, request *http.Request) error
+	AttachAwsAccountToLaboratory(response *apifirst.ResponseWriter, request *http.Request) error
 }
 
-func (s ServerHandlers) GetLaboratories(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) GetLaboratories(response *apifirst.ResponseWriter, request *http.Request) error {
 	labsList, err := services.GetLaboratories()
 
 	if err != nil {
@@ -60,7 +60,7 @@ func (s ServerHandlers) GetLaboratories(response *apifirst.Response, request *ht
 	return nil
 }
 
-func (s ServerHandlers) GetLaboratoryFromId(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) GetLaboratoryFromId(response *apifirst.ResponseWriter, request *http.Request) error {
 	params := mux.Vars(request)
 	laboratoryid := params["laboratoryid"]
 
@@ -84,7 +84,7 @@ func (s ServerHandlers) GetLaboratoryFromId(response *apifirst.Response, request
 	return nil
 }
 
-func (s ServerHandlers) CreateLaboratory(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) CreateLaboratory(response *apifirst.ResponseWriter, request *http.Request) error {
 	pLab := models.Laboratory{}
 	if err := json.NewDecoder(request.Body).Decode(&pLab); err != nil {
 		response.SetStatus(http.StatusBadRequest)
@@ -105,7 +105,7 @@ func (s ServerHandlers) CreateLaboratory(response *apifirst.Response, request *h
 	return nil
 }
 
-func (s ServerHandlers) UpdateLaboratory(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) UpdateLaboratory(response *apifirst.ResponseWriter, request *http.Request) error {
 	//Path params
 	params := mux.Vars(request)
 	laboratoryId := params["laboratoryid"]
@@ -136,7 +136,7 @@ func (s ServerHandlers) UpdateLaboratory(response *apifirst.Response, request *h
 	return nil
 }
 
-func (s ServerHandlers) AddLaboratoryUsers(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) AddLaboratoryUsers(response *apifirst.ResponseWriter, request *http.Request) error {
 	//Path param
 	params := mux.Vars(request)
 	laboratoryId := params["laboratoryid"]
@@ -168,7 +168,7 @@ func (s ServerHandlers) AddLaboratoryUsers(response *apifirst.Response, request 
 
 }
 
-func (s ServerHandlers) RemoveLaboratoryUsers(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) RemoveLaboratoryUsers(response *apifirst.ResponseWriter, request *http.Request) error {
 	//Path param
 	params := mux.Vars(request)
 	laboratoryId := params["laboratoryid"]
@@ -199,7 +199,7 @@ func (s ServerHandlers) RemoveLaboratoryUsers(response *apifirst.Response, reque
 	return nil
 }
 
-func (s ServerHandlers) AttachOpenshiftProjectToLaboratory(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) AttachOpenshiftProjectToLaboratory(response *apifirst.ResponseWriter, request *http.Request) error {
 	//Path param
 	params := mux.Vars(request)
 	laboratoryId := params["laboratoryid"]
@@ -224,7 +224,7 @@ func (s ServerHandlers) AttachOpenshiftProjectToLaboratory(response *apifirst.Re
 	return nil
 }
 
-func (s ServerHandlers) DetachOpenshiftProjectFromLaboratory(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) DetachOpenshiftProjectFromLaboratory(response *apifirst.ResponseWriter, request *http.Request) error {
 	//Path param
 	params := mux.Vars(request)
 	laboratoryId := params["laboratoryid"]
@@ -249,7 +249,7 @@ func (s ServerHandlers) DetachOpenshiftProjectFromLaboratory(response *apifirst.
 	return nil
 }
 
-func (s ServerHandlers) AttachAwsAccountToLaboratory(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) AttachAwsAccountToLaboratory(response *apifirst.ResponseWriter, request *http.Request) error {
 	params := mux.Vars(request)
 	laboratoryId := params["laboratoryid"]
 	accountId := params["accountid"]
@@ -273,7 +273,7 @@ func (s ServerHandlers) AttachAwsAccountToLaboratory(response *apifirst.Response
 	return nil
 }
 
-func (s ServerHandlers) DetachAwsAccountFromLaboratory(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) DetachAwsAccountFromLaboratory(response *apifirst.ResponseWriter, request *http.Request) error {
 	params := mux.Vars(request)
 	laboratoryId := params["laboratoryid"]
 	accountId := params["accountid"]
