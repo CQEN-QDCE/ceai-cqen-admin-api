@@ -18,6 +18,7 @@ require (
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cobra v1.3.0
 	golang.org/x/sys v0.0.0-20211210111614-af8b64212486 // indirect
+	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.22.4
 	k8s.io/apimachinery v0.22.4
 	k8s.io/client-go v0.22.4

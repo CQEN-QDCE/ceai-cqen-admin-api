@@ -28,7 +28,7 @@ func MapOpenshiftProject(project *openshiftproject.Project) *models.OpenshiftPro
 func MapOpenshiftProjectWithLab(project *openshiftproject.Project) *models.OpenshiftProjectWithLab {
 	var openshiftProject models.OpenshiftProjectWithLab
 
-	openshiftProject.OpenshiftProject = MapOpenshiftProject(project)
+	openshiftProject.OpenshiftProject = *MapOpenshiftProject(project)
 
 	if idLab, ok := project.Labels[OPENSHIFT_LABORATORY_LABEL]; ok {
 		openshiftProject.IdLab = idLab
@@ -42,7 +42,7 @@ func MapOpenshiftProjectWithLab(project *openshiftproject.Project) *models.Opens
 func MapOpenshiftProjectWithMeta(project *openshiftproject.Project) *models.OpenshiftProjectWithMeta {
 	var openshiftProject models.OpenshiftProjectWithMeta
 
-	openshiftProject.OpenshiftProjectWithLab = MapOpenshiftProjectWithLab(project)
+	openshiftProject.OpenshiftProjectWithLab = *MapOpenshiftProjectWithLab(project)
 
 	if requester, ok := project.Annotations[OPENSHIFT_REQUESTER_ANNOTATION]; ok {
 		openshiftProject.Requester = &requester
@@ -156,6 +156,10 @@ func UpdateOpenshiftProject(projectId string, updateParam *models.OpenshiftProje
 
 				//Obtain updated project
 				project, err = openshift.GetProject(projectId)
+
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

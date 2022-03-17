@@ -58,7 +58,9 @@ func MapLaboratory(kgroup gocloak.Group) (*models.Laboratory, error) {
 func MapLaboratoryWithUsers(kgroup gocloak.Group) (*models.LaboratoryWithUsers, error) {
 	var lab models.LaboratoryWithUsers
 
-	lab.Laboratory, _ = MapLaboratory(kgroup)
+	laboratory, _ := MapLaboratory(kgroup)
+
+	lab.Laboratory = *laboratory
 
 	members, err := keycloak.GetGroupMembers(&kgroup)
 
@@ -80,7 +82,9 @@ func MapLaboratoryWithUsers(kgroup gocloak.Group) (*models.LaboratoryWithUsers, 
 func MapLaboratoryWithResources(kgroup gocloak.Group) (*models.LaboratoryWithResources, error) {
 	var lab models.LaboratoryWithResources
 
-	lab.LaboratoryWithUsers, _ = MapLaboratoryWithUsers(kgroup)
+	laboratory, _ := MapLaboratoryWithUsers(kgroup)
+
+	lab.LaboratoryWithUsers = *laboratory
 
 	attributes := *kgroup.Attributes
 

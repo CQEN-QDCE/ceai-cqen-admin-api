@@ -87,7 +87,7 @@ func (c *Client) GenerateUrl(operation *Operation, parameters *map[string]string
 			value, exists := (*parameters)[parm.Value.Name]
 
 			if parm.Value.Required && !exists {
-				return nil, fmt.Errorf("Missing required path parameter %s", parm.Value.Name)
+				return nil, fmt.Errorf("missing required path parameter %s", parm.Value.Name)
 			}
 
 			path = strings.Replace(path, "{"+parm.Value.Name+"}", url.PathEscape(value), 1)
@@ -97,7 +97,7 @@ func (c *Client) GenerateUrl(operation *Operation, parameters *map[string]string
 			value, exists := (*parameters)[parm.Value.Name]
 
 			if parm.Value.Required && !exists {
-				return nil, fmt.Errorf("Missing required query parameter %s", parm.Value.Name)
+				return nil, fmt.Errorf("missing required query parameter %s", parm.Value.Name)
 			}
 
 			if queryValues == nil {

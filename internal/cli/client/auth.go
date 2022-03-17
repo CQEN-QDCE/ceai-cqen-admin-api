@@ -217,7 +217,7 @@ func GetSession() (*Session, error) {
 				return nil, err
 			}
 
-			return session, nil
+			return newSession, nil
 		}
 
 		return nil, fmt.Errorf("Session timed out. Please login.")

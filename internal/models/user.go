@@ -1,12 +1,12 @@
 package models
 
 type User struct {
-	Disabled     *bool  `json:"disabled,omitempty"`
 	Email        string `json:"email"`
 	Firstname    string `json:"firstname"`
-	Infrarole    string `json:"infrarole"`
 	Lastname     string `json:"lastname"`
+	Infrarole    string `json:"infrarole"`
 	Organisation string `json:"organisation"`
+	Disabled     *bool  `json:"disabled,omitempty"`
 }
 
 type UserUpdate struct {

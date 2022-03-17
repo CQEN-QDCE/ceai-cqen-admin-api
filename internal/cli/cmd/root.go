@@ -1,14 +1,36 @@
 package cmd
 
 import (
+	"fmt"
+
+	"github.com/CQEN-QDCE/ceai-cqen-admin-api/pkg/structprinter"
 	"github.com/spf13/cobra"
 )
+
+//Output format
+var outputFormat string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "ceai",
-	Short: "ceai CLI administration console",
-	Long:  `ceai is a CLI administration console to simplify administration tasks`,
+	Short: "Console d'administration CLI du CEAI",
+	Long:  `Console d'administration CLI du CEAI`,
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		//Validate root persistent Flags here
+
+		//Output Format
+		if outputFormat != "text" && outputFormat != "json" && outputFormat != "yaml" {
+			return fmt.Errorf("Format de sortie invalide: %q. Veuillez choisir 'text', 'json' ou 'yaml'", outputFormat)
+		}
+
+		return nil
+	},
+}
+
+var getCmd = &cobra.Command{
+	Use:   "get",
+	Short: "Obtenir une ressource",
+	Long:  `Obtenir une ressource du CEAI: user, lab, project, accounts`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -24,12 +46,27 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().StringVarP(&outputFormat, "output", "o", "text", "Format de sortie des données ('text', 'json' ou 'yaml')")
+
+	//Sub commands families
+	rootCmd.AddCommand(getCmd)
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	//Search for a session token and a server URL set by the login command
+}
+
+func PrintOutput(value interface{}) error {
+	switch outputFormat {
+	case "json":
+		return structprinter.PrintJson(value, true)
+	case "yaml":
+		return structprinter.PrintYaml(value)
+	case "text":
+		return structprinter.PrintTable(value)
+	default:
+	}
+
+	return fmt.Errorf("unsupported print format: %v", outputFormat)
 }

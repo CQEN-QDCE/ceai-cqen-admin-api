@@ -9,7 +9,7 @@ import (
 
 var LogoutCmd = &cobra.Command{
 	Use:   "logout",
-	Short: "Logout",
+	Short: "Désauthentification",
 	Long:  `Détruit la session en cours au serveur d'API`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Logout()

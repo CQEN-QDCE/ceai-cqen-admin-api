@@ -442,7 +442,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Laboratory'
+                $ref: '#/components/schemas/LaboratoryWithResources'
         '404':
           description: Laboratory id does not exist
         '401':

@@ -10,7 +10,7 @@ import (
 
 var LoginCmd = &cobra.Command{
 	Use:   "login",
-	Short: "Login",
+	Short: "Authentification",
 	Long:  `Crée une session au serveur d'API`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ServerUrl, _ := cmd.Flags().GetString("server")

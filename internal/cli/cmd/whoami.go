@@ -9,7 +9,7 @@ import (
 
 var WhoamiCmd = &cobra.Command{
 	Use:   "whoami",
-	Short: "Whoami",
+	Short: "Informations sur session en cours",
 	Long:  `Décrit la session en cours au serveur d'API`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Whoami()
@@ -37,7 +37,5 @@ func Whoami() {
 
 	authUser.Server = &session.ServerUrl
 
-	fmt.Printf("%+v \n", authUser)
-
-	return
+	PrintOutput(*authUser)
 }
