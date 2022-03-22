@@ -743,8 +743,8 @@ paths:
             schema:
               $ref: '#/components/schemas/OpenshiftProjectWithLab'
       responses:
-        '200':
-          description: OK
+        '201':
+          description: Created
         '409':
           description: Openshift project id already exist
         '400':

@@ -11,8 +11,8 @@ import (
 var updateLaboratoryCmd = &cobra.Command{
 	Use:     "laboratory [laboratory id]",
 	Aliases: []string{"lab"},
-	Short:   "Créer un usager",
-	Long:    `Créer un usager du CEAI`,
+	Short:   "Mets à jour les informations d'un laboratoire",
+	Long:    `Mets à jour les informations d'un laboratoire du CEAI`,
 	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var laboratoryUpdate models.LaboratoryUpdate

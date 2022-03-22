@@ -50,7 +50,7 @@ func HandleInput(v interface{}) error {
 		sliceValue := vPtrValue.Elem()
 
 		for {
-			newValue, oneMore, err := CreateInstanceFromPrompt(vElemType)
+			newValue, err := CreateInstanceFromPrompt(vElemType)
 
 			if err != nil {
 				return err
@@ -58,7 +58,18 @@ func HandleInput(v interface{}) error {
 
 			sliceValue.Set(reflect.Append(sliceValue, reflect.ValueOf(newValue)))
 
-			if !oneMore {
+			//Ask to enter another value
+			prompt := promptui.Prompt{
+				Label: "Voulez-vous créer un autre élément? (O)ui|(N)on",
+			}
+
+			result, err := prompt.Run()
+
+			if err != nil {
+				return err
+			}
+
+			if strings.ToLower(result) != "o" || strings.ToLower(result) != "oui" {
 				break
 			}
 		}
@@ -110,15 +121,13 @@ func HandleInput(v interface{}) error {
 	return fmt.Errorf("Aucun format d'entrée spécifié")
 }
 
-func CreateInstanceFromPrompt(t reflect.Type) (interface{}, bool, error) {
-	oneMore := false
-
+func CreateInstanceFromPrompt(t reflect.Type) (interface{}, error) {
 	ptr := reflect.New(t)
 	value := ptr.Elem()
 
 	for i := 0; i < value.NumField(); i++ {
-		if t.Field(i).Type.Kind() == reflect.String {
-
+		switch t.Field(i).Type.Kind() {
+		case reflect.String:
 			//TODO fetch input info from OpenAPI Spec
 			prompt := promptui.Prompt{
 				Label: t.Field(i).Name,
@@ -127,10 +136,20 @@ func CreateInstanceFromPrompt(t reflect.Type) (interface{}, bool, error) {
 			result, err := prompt.Run()
 
 			if err != nil {
-				return nil, false, err
+				return nil, err
 			}
 
 			value.Field(i).SetString(result)
+
+		//Handle "inheritance (recursive)"
+		case reflect.Struct:
+			structInterface, err := CreateInstanceFromPrompt(t.Field(i).Type)
+
+			if err != nil {
+				return nil, err
+			}
+
+			value.Field(i).Set(reflect.ValueOf(structInterface))
 		}
 
 		/*
@@ -142,19 +161,5 @@ func CreateInstanceFromPrompt(t reflect.Type) (interface{}, bool, error) {
 		*/
 	}
 
-	prompt := promptui.Prompt{
-		Label: "Voulez-vous créer un autre élément? (O)ui|(N)on",
-	}
-
-	result, err := prompt.Run()
-
-	if err != nil {
-		return nil, false, err
-	}
-
-	if strings.ToLower(result) == "o" || strings.ToLower(result) == "oui" {
-		oneMore = true
-	}
-
-	return value.Interface(), oneMore, nil
+	return value.Interface(), nil
 }

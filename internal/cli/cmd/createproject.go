@@ -8,24 +8,23 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var createLaboratoryCmd = &cobra.Command{
-	Use:     "laboratory",
-	Aliases: []string{"lab"},
-	Short:   "Créer un laboratoire",
-	Long:    `Créer un laboratoire dans l'environnement du CEAI`,
+var createProjectCmd = &cobra.Command{
+	Use:   "project",
+	Short: "Créer un projet Openshift",
+	Long:  `Créer un projet Openshift dans l'environnement du CEAI`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var laboratories []models.Laboratory
+		var projects []models.OpenshiftProjectWithLab
 
-		err := HandleInput(&laboratories)
+		err := HandleInput(&projects)
 
 		if err != nil {
 			fmt.Printf("Erreur: %v \n", err)
 			return
 		}
 
-		for _, laboratory := range laboratories {
+		for _, project := range projects {
 
-			err = client.CreateLaboratory(&laboratory)
+			err = client.CreateOpenshiftProject(&project)
 
 			if err != nil {
 				fmt.Printf("Erreur: %v \n", err)
@@ -38,5 +37,5 @@ var createLaboratoryCmd = &cobra.Command{
 }
 
 func init() {
-	createCmd.AddCommand(createLaboratoryCmd)
+	createCmd.AddCommand(createProjectCmd)
 }

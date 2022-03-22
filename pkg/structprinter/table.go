@@ -51,7 +51,7 @@ func (t *Table) PrintTableHeaderLabels(data interface{}) (headerString string, s
 
 	for i := 0; i < v.NumField(); i++ {
 		if v.Type().Field(i).Type.Kind() == reflect.Struct {
-			//Handle struct inheritance
+			//Handle struct inheritance (recursive)
 			subHeader, subSeparator := t.PrintTableHeaderLabels(v.Field(i).Interface())
 			headerString = headerString + subHeader
 			separatorString = separatorString + subSeparator
@@ -105,7 +105,7 @@ func (t *Table) PrintTableLineValues(data interface{}) (valueString string) {
 			if field.Type().String() == "time.Time" {
 				valueString = valueString + fmt.Sprintf("%.19s", field.Interface())
 			} else {
-				//Handle struct inheritance
+				//Handle struct inheritance (recursive)
 				valueString = valueString + t.PrintTableLineValues(field.Interface())
 			}
 		} else if field.Kind() == reflect.Slice || field.Kind() == reflect.Array {

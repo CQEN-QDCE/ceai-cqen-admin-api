@@ -51,3 +51,31 @@ func GetOpenshiftProjectFromId(projectid string) (*models.OpenshiftProjectWithMe
 
 	return &project, nil
 }
+
+func CreateOpenshiftProject(project *models.OpenshiftProjectWithLab) error {
+	client, err := GetAuthenticatedClient()
+
+	if err != nil {
+		return err
+	}
+
+	_, err = client.Request("CreateOpenshiftProject", nil, project)
+
+	return err
+}
+
+func UpdateOpenshiftProject(projectid string, project *models.OpenshiftProjectUpdate) error {
+	client, err := GetAuthenticatedClient()
+
+	if err != nil {
+		return err
+	}
+
+	pathParam := map[string]string{
+		"projectid": projectid,
+	}
+
+	_, err = client.Request("UpdateOpenshiftProject", &pathParam, project)
+
+	return err
+}
