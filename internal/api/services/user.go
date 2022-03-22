@@ -101,7 +101,11 @@ func mapKeycloakUser(kuser *gocloak.User) *models.User {
 	//Values in attributes
 	if kuser.Attributes != nil {
 		attributes := *kuser.Attributes
-		user.Organisation = attributes["organisation"][0]
+
+		organisation, present := attributes["organisation"]
+		if present {
+			user.Organisation = organisation[0]
+		}
 	}
 
 	return &user
@@ -283,9 +287,24 @@ func UpdateUserOpenshift(userState *UserState, pUser *models.UserUpdate) error {
 
 	oUser := userState.Openshift
 
-	fullName := *pUser.Firstname + " " + *pUser.Lastname
-	if fullName != oUser.FullName {
-		oUser.FullName = fullName
+	newFullName := ""
+
+	if pUser.Firstname != nil {
+		newFullName = newFullName + *pUser.Firstname
+	} else {
+		newFullName = newFullName + *userState.Keycloak.FirstName
+	}
+
+	newFullName = newFullName + " "
+
+	if pUser.Lastname != nil {
+		newFullName = newFullName + *pUser.Lastname
+	} else {
+		newFullName = newFullName + *userState.Keycloak.LastName
+	}
+
+	if newFullName != oUser.FullName {
+		oUser.FullName = newFullName
 
 		_, oerr = openshift.UpdateUser(oUser)
 	}

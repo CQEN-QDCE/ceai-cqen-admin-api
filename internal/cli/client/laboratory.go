@@ -51,3 +51,31 @@ func GetLaboratories() (*[]models.Laboratory, error) {
 
 	return &labs, nil
 }
+
+func CreateLaboratory(laboratory *models.Laboratory) error {
+	client, err := GetAuthenticatedClient()
+
+	if err != nil {
+		return err
+	}
+
+	_, err = client.Request("CreateLaboratory", nil, laboratory)
+
+	return err
+}
+
+func UpdateLaboratory(laboratoryid string, laboratory *models.LaboratoryUpdate) error {
+	client, err := GetAuthenticatedClient()
+
+	if err != nil {
+		return err
+	}
+
+	pathParam := map[string]string{
+		"laboratoryid": laboratoryid,
+	}
+
+	_, err = client.Request("UpdateLaboratory", &pathParam, laboratory)
+
+	return err
+}

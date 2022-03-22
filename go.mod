@@ -13,6 +13,7 @@ require (
 	github.com/getkin/kin-openapi v0.88.0
 	github.com/gorilla/mux v1.8.0
 	github.com/joho/godotenv v1.4.0
+	github.com/manifoldco/promptui v0.9.0
 	github.com/openshift/api v0.0.0-20211203223044-9b3afd95c93a
 	github.com/openshift/client-go v0.0.0-20210521082421-73d9475a9142
 	github.com/rakyll/statik v0.1.7

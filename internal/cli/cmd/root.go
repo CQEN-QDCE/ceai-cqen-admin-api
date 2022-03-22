@@ -27,12 +27,6 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-var getCmd = &cobra.Command{
-	Use:   "get",
-	Short: "Obtenir une ressource",
-	Long:  `Obtenir une ressource du CEAI: user, lab, project, accounts`,
-}
-
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
@@ -47,14 +41,13 @@ func init() {
 	// will be global for your application.
 
 	rootCmd.PersistentFlags().StringVarP(&outputFormat, "output", "o", "text", "Format de sortie des données ('text', 'json' ou 'yaml')")
-
-	//Sub commands families
-	rootCmd.AddCommand(getCmd)
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	//Search for a session token and a server URL set by the login command
+
+	//TODO persist a list of used server?
 }
 
 func PrintOutput(value interface{}) error {
@@ -65,7 +58,6 @@ func PrintOutput(value interface{}) error {
 		return structprinter.PrintYaml(value)
 	case "text":
 		return structprinter.PrintTable(value)
-	default:
 	}
 
 	return fmt.Errorf("unsupported print format: %v", outputFormat)

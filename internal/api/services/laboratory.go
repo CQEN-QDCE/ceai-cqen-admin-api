@@ -432,19 +432,19 @@ func UpdateLaboratory(laboratoryId string, pLab *models.LaboratoryUpdate) error 
 	}
 
 	if pLab.Description != nil {
-		(*group.Attributes)["description"][0] = *pLab.Description
+		(*group.Attributes)["description"] = []string{*pLab.Description}
 	}
 
 	if pLab.Displayname != nil {
-		(*group.Attributes)["displayname"][0] = *pLab.Displayname
+		(*group.Attributes)["displayname"] = []string{*pLab.Displayname}
 	}
 
 	if pLab.Gitrepo != nil {
-		(*group.Attributes)["gitrepo"][0] = *pLab.Gitrepo
+		(*group.Attributes)["gitrepo"] = []string{*pLab.Gitrepo}
 	}
 
 	if pLab.Type != nil {
-		(*group.Attributes)["type"][0] = *pLab.Type
+		(*group.Attributes)["type"] = []string{*pLab.Type}
 	}
 
 	err = keycloak.UpdateGroup(group)

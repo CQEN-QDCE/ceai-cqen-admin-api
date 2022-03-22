@@ -23,7 +23,6 @@ var LoginCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(LoginCmd)
 	LoginCmd.Flags().StringP("server", "s", "", "Url du serveur d'API")
 	LoginCmd.MarkFlagRequired("server")
 
@@ -35,6 +34,8 @@ func init() {
 
 	LoginCmd.Flags().StringP("totp", "t", "", "Jeton OTP")
 	LoginCmd.MarkFlagRequired("totp")
+
+	rootCmd.AddCommand(LoginCmd)
 }
 
 func Login(server string, username string, password string, totp string) {

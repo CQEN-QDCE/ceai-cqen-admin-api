@@ -51,3 +51,47 @@ func GetUserFromUsername(username string) (*models.UserWithLabs, error) {
 
 	return &user, nil
 }
+
+func CreateUser(user *models.User) error {
+	client, err := GetAuthenticatedClient()
+
+	if err != nil {
+		return err
+	}
+
+	_, err = client.Request("CreateUser", nil, user)
+
+	return err
+}
+
+func UpdateUser(username string, user *models.UserUpdate) error {
+	client, err := GetAuthenticatedClient()
+
+	if err != nil {
+		return err
+	}
+
+	pathParam := map[string]string{
+		"username": username,
+	}
+
+	_, err = client.Request("UpdateUser", &pathParam, user)
+
+	return err
+}
+
+func DeleteUser(username string) error {
+	client, err := GetAuthenticatedClient()
+
+	if err != nil {
+		return err
+	}
+
+	pathParam := map[string]string{
+		"username": username,
+	}
+
+	_, err = client.Request("DeleteUser", &pathParam, nil)
+
+	return err
+}

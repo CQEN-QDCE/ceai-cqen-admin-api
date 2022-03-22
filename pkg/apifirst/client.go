@@ -148,6 +148,10 @@ func (c *Client) Request(operationId string, parameters *map[string]string, requ
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", c.UserAgent)
 
+	//Localhost tests *Remove*
+	req.Header.Set("X-CEAI-Username", "francis.gagne@sct.gouv.qc.ca")
+	req.Header.Set("X-CEAI-UserRoles", "api-admin")
+
 	if c.Authorization != nil {
 		req.Header.Set("Authorization", *c.Authorization)
 	}
