@@ -20,6 +20,9 @@ const LAB_TOP_GROUP = "/Laboratories/"
 const KEYCLOAK_LAB_TOP_GROUP = "Laboratories"
 const OPENSHIFT_LAB_GROUP_PREFIX = "Lab_"
 
+const KEYCLOAK_OPENSHIFT_PROJECT_ATTRIBUTE = "openshift_projects"
+const KEYCLOAK_AWS_ACCOUNT_ATTRIBUTE = "aws_accounts"
+
 type LaboratoryState struct {
 	Keycloak  *gocloak.Group
 	Aws       *scim.Group
@@ -334,19 +337,41 @@ func GetKeycloakUserList(userList *[]string) (*[]gocloak.User, error) {
 	return &users, nil
 }
 
-func AddOpenshiftProjectAttributeToKeycloakGroup(kgroup *gocloak.Group, projectId string) error {
-	var openshiftProjects []string
+func AddElementToKeycloakGroupArrayAttribute(kgroup *gocloak.Group, attribute string, element string) error {
+	var AttrElements []string
 
-	if _, ok := (*kgroup.Attributes)["openshift_projects"]; ok {
-		openshiftProjects = (*kgroup.Attributes)["openshift_projects"]
-		openshiftProjects = append(openshiftProjects, projectId)
+	if _, ok := (*kgroup.Attributes)[attribute]; ok {
+		AttrElements = (*kgroup.Attributes)[attribute]
+
+		//Verify that element is not already there
+		for _, attrElem := range AttrElements {
+			if attrElem == element {
+				return nil
+			}
+		}
+
+		AttrElements = append(AttrElements, element)
 	} else {
-		openshiftProjects = []string{projectId}
+		AttrElements = []string{element}
 	}
 
-	(*kgroup.Attributes)["openshift_projects"] = openshiftProjects
+	(*kgroup.Attributes)[attribute] = AttrElements
 
 	return keycloak.UpdateGroup(kgroup)
+}
+
+func RemoveElementFromKeycloakGroupArrayAttribute(kgroup *gocloak.Group, attribute string, element string) error {
+	AttrElements := (*kgroup.Attributes)[attribute]
+
+	if len(AttrElements) > 0 {
+		AttrElements = RemoveStringElementFromArray(AttrElements, element)
+
+		(*kgroup.Attributes)[attribute] = AttrElements
+
+		return keycloak.UpdateGroup(kgroup)
+	}
+
+	return nil
 }
 
 func GetLaboratories() ([]*models.LaboratoryWithResources, error) {
@@ -606,7 +631,7 @@ func AttachOpenshiftProjectToLaboratory(laboratoryId string, projectId string) e
 	}
 
 	//Add project to keycloak openshift_projects attribute
-	err = AddOpenshiftProjectAttributeToKeycloakGroup(kgroup, projectId)
+	err = AddElementToKeycloakGroupArrayAttribute(kgroup, KEYCLOAK_OPENSHIFT_PROJECT_ATTRIBUTE, projectId)
 
 	if err != nil {
 		return NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
@@ -661,17 +686,10 @@ func DetachOpenshiftProjectFromLaboratory(laboratoryId string, projectId string)
 	}
 
 	//Remove project to keycloak openshift_projects attribute
-	openshiftProjects := (*kgroup.Attributes)["openshift_projects"]
-	if len(openshiftProjects) > 0 {
-		openshiftProjects = RemoveStringElementFromArray(openshiftProjects, projectId)
+	err = RemoveElementFromKeycloakGroupArrayAttribute(kgroup, KEYCLOAK_OPENSHIFT_PROJECT_ATTRIBUTE, projectId)
 
-		(*kgroup.Attributes)["openshift_projects"] = openshiftProjects
-
-		err = keycloak.UpdateGroup(kgroup)
-
-		if err != nil {
-			return NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
-		}
+	if err != nil {
+		return NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
 	}
 
 	return nil
@@ -702,6 +720,19 @@ func AttachAwsAccountToLaboratory(laboratoryId string, accountId string) error {
 		return NewErrorExternalRessourceExist(err, ERROR_SERVER_AWS)
 	}
 
+	//Add account to keycloak aws_projects attribute
+	kgroup, err := keycloak.GetGroup(laboratoryId)
+
+	if err != nil {
+		return NewErrorExternalRessourceNotFound(err, ERROR_SERVER_KEYCLOAK)
+	}
+
+	err = AddElementToKeycloakGroupArrayAttribute(kgroup, KEYCLOAK_AWS_ACCOUNT_ATTRIBUTE, accountId)
+
+	if err != nil {
+		return NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
+	}
+
 	return nil
 }
 
@@ -728,6 +759,19 @@ func DetachAwsAccountFromLaboratory(laboratoryId string, accountId string) error
 
 	if err != nil {
 		return NewErrorExternalRessourceNotFound(err, ERROR_SERVER_AWS)
+	}
+
+	//Remove account from keycloak aws_projects attribute
+	kgroup, err := keycloak.GetGroup(laboratoryId)
+
+	if err != nil {
+		return NewErrorExternalRessourceNotFound(err, ERROR_SERVER_KEYCLOAK)
+	}
+
+	err = RemoveElementFromKeycloakGroupArrayAttribute(kgroup, KEYCLOAK_AWS_ACCOUNT_ATTRIBUTE, accountId)
+
+	if err != nil {
+		return NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
 	}
 
 	return nil

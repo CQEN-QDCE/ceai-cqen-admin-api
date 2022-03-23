@@ -79,3 +79,103 @@ func UpdateLaboratory(laboratoryid string, laboratory *models.LaboratoryUpdate) 
 
 	return err
 }
+
+func AddLaboratoryUsers(laboratoryid string, userIdList []string) error {
+	client, err := GetAuthenticatedClient()
+
+	if err != nil {
+		return err
+	}
+
+	pathParam := map[string]string{
+		"laboratoryid": laboratoryid,
+	}
+
+	_, err = client.Request("AddLaboratoryUsers", &pathParam, userIdList)
+
+	return err
+}
+
+func RemoveLaboratoryUsers(laboratoryid string, userIdList []string) error {
+	client, err := GetAuthenticatedClient()
+
+	if err != nil {
+		return err
+	}
+
+	pathParam := map[string]string{
+		"laboratoryid": laboratoryid,
+	}
+
+	_, err = client.Request("RemoveLaboratoryUsers", &pathParam, userIdList)
+
+	return err
+}
+
+func AttachAwsAccountToLaboratory(laboratoryid string, accountid string) error {
+	client, err := GetAuthenticatedClient()
+
+	if err != nil {
+		return err
+	}
+
+	pathParam := map[string]string{
+		"laboratoryid": laboratoryid,
+		"accountid":    accountid,
+	}
+
+	_, err = client.Request("AttachAwsAccountToLaboratory", &pathParam, nil)
+
+	return err
+}
+
+func DetachAwsAccountFromLaboratory(laboratoryid string, accountid string) error {
+	client, err := GetAuthenticatedClient()
+
+	if err != nil {
+		return err
+	}
+
+	pathParam := map[string]string{
+		"laboratoryid": laboratoryid,
+		"accountid":    accountid,
+	}
+
+	_, err = client.Request("DetachAwsAccountFromLaboratory", &pathParam, nil)
+
+	return err
+}
+
+func AttachOpenshiftProjectToLaboratory(laboratoryid string, projectid string) error {
+	client, err := GetAuthenticatedClient()
+
+	if err != nil {
+		return err
+	}
+
+	pathParam := map[string]string{
+		"laboratoryid": laboratoryid,
+		"projectid":    projectid,
+	}
+
+	_, err = client.Request("AttachOpenshiftProjectToLaboratory", &pathParam, nil)
+
+	return err
+}
+
+func DetachOpenshiftProjectFromLaboratory(laboratoryid string, projectid string) error {
+	client, err := GetAuthenticatedClient()
+
+	if err != nil {
+		return err
+	}
+
+	pathParam := map[string]string{
+		"laboratoryid": laboratoryid,
+		"projectid":    projectid,
+	}
+
+	_, err = client.Request("DetachOpenshiftProjectFromLaboratory", &pathParam, nil)
+
+	return err
+}

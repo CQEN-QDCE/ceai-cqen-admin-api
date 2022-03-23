@@ -162,7 +162,7 @@ func (s ServerHandlers) AddLaboratoryUsers(response *apifirst.ResponseWriter, re
 		}
 	}
 
-	response.SetStatus(http.StatusCreated)
+	response.SetStatus(http.StatusOK)
 
 	return nil
 
@@ -180,7 +180,7 @@ func (s ServerHandlers) RemoveLaboratoryUsers(response *apifirst.ResponseWriter,
 		return err
 	}
 
-	err := services.AddLaboratoryUsers(laboratoryId, usernameList)
+	err := services.RemoveLaboratoryUsers(laboratoryId, usernameList)
 
 	if err != nil {
 		if _, ok := err.(services.ErrorExternalServerError); ok {
