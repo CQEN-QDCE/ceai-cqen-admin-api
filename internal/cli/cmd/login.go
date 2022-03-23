@@ -5,35 +5,74 @@ import (
 	"time"
 
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/cli/client"
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 )
 
 var LoginCmd = &cobra.Command{
-	Use:   "login",
+	Use:   "login [server]",
 	Short: "Authentification",
 	Long:  `Crée une session au serveur d'API`,
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		ServerUrl, _ := cmd.Flags().GetString("server")
+		var err error
+
 		User, _ := cmd.Flags().GetString("user")
+
+		if User == "" {
+			prompt := promptui.Prompt{
+				Label: "Nom d'usager",
+			}
+
+			User, err = prompt.Run()
+
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		}
+
 		Password, _ := cmd.Flags().GetString("password")
+
+		if Password == "" {
+			prompt := promptui.Prompt{
+				Label: "Mot de passe",
+				Mask:  '*',
+			}
+
+			Password, err = prompt.Run()
+
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		}
+
 		Totp, _ := cmd.Flags().GetString("totp")
 
-		Login(ServerUrl, User, Password, Totp)
+		if Totp == "" {
+			prompt := promptui.Prompt{
+				Label: "Jeton OTP",
+			}
+
+			Totp, err = prompt.Run()
+
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		}
+
+		Login(args[0], User, Password, Totp)
 	},
 }
 
 func init() {
-	LoginCmd.Flags().StringP("server", "s", "", "Url du serveur d'API")
-	LoginCmd.MarkFlagRequired("server")
-
 	LoginCmd.Flags().StringP("user", "u", "", "Nom d'usager")
-	LoginCmd.MarkFlagRequired("user")
 
 	LoginCmd.Flags().StringP("password", "p", "", "Mot de passe")
-	LoginCmd.MarkFlagRequired("password")
 
 	LoginCmd.Flags().StringP("totp", "t", "", "Jeton OTP")
-	LoginCmd.MarkFlagRequired("totp")
 
 	rootCmd.AddCommand(LoginCmd)
 }
