@@ -35,7 +35,7 @@ type Router struct {
 
 type RouterOptions struct {
 	AuthenticationFunc *openapi3filter.AuthenticationFunc
-	CustomCallLogFunc  *func(request *http.Request, response *Response, err error) error
+	CustomCallLogFunc  *func(request *http.Request, response *ResponseWriter, err error) error
 	//Add more options as needed
 }
 
@@ -124,13 +124,13 @@ func (r *Router) Serve(port string) error {
 
 // Call the handler method associated with request route
 // Validate request and response against OpenAPI Spec
-// Then return a apifirst.Response
+// Then return a apifirst.ResponseWriter
 //
 // TODO: This method is way too huge. Need to split/use middlewares?
 //
-func (r *Router) CallRouteFunc(operation *openapi3.Operation, w http.ResponseWriter, request *http.Request) (*Response, error) {
-	//Convert ResponseWriter to apifirst.response
-	response := NewResponse(&w)
+func (r *Router) CallRouteFunc(operation *openapi3.Operation, w http.ResponseWriter, request *http.Request) (*ResponseWriter, error) {
+	//Convert ResponseWriter to apifirst.ResponseWriter
+	response := NewResponseWriter(&w)
 
 	//Find handler method using Reflect package
 	handlerFunc := operation.OperationID

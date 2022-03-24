@@ -59,6 +59,13 @@ components:
             type: array
             items: 
               $ref: '#/components/schemas/Laboratory'
+    AuthenticatedUser:
+      type: object
+      properties:
+        username:
+          type: string
+        roles:
+          type: string
     Laboratory:
       type: object
       required: 
@@ -435,7 +442,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Laboratory'
+                $ref: '#/components/schemas/LaboratoryWithResources'
         '404':
           description: Laboratory id does not exist
         '401':
@@ -736,8 +743,8 @@ paths:
             schema:
               $ref: '#/components/schemas/OpenshiftProjectWithLab'
       responses:
-        '200':
-          description: OK
+        '201':
+          description: Created
         '409':
           description: Openshift project id already exist
         '400':
@@ -940,7 +947,7 @@ paths:
         '400':
           $ref: '#/components/responses/400BadRequest'
         '401':
-          $ref: '#/components/responses/401Unauthorized'
+          description: 'Invalid user credentials'
         '500':
           $ref: '#/components/responses/500InternalServerError'
         '502':
@@ -967,12 +974,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/KeycloakAccessToken'
         '400':
-          $ref: '#/components/responses/400BadRequest'
+          description: 'Token is not active'
         '401':
-          $ref: '#/components/responses/401Unauthorized'
+          description: 'Bad refresh token'
         '500':
           $ref: '#/components/responses/500InternalServerError'
         '502':
           $ref: '#/components/responses/502BadGateway'
       security:
         - GatewaySecret: []
+  /whoami:
+    get:
+      operationId: GetCurrentUserInfo
+      description: >-
+        Get username and roles of current authenticated user
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticatedUser'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []

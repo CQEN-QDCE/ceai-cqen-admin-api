@@ -104,7 +104,7 @@ func Authenticate(ctx context.Context, authenticationInput *openapi3filter.Authe
 	return nil
 }
 
-func CustomCallLogFunction(request *http.Request, response *apifirst.Response, err error) error {
+func CustomCallLogFunction(request *http.Request, response *apifirst.ResponseWriter, err error) error {
 	output := fmt.Sprintf("%v | %v %v %v", request.Header.Get("X-CEAI-Username"), request.Method, request.RequestURI, response.Status)
 
 	if err != nil {

@@ -5,4 +5,5 @@ generate:
   - types
   - chi-server
   - skip-prune
+  - client
 templates: templates/

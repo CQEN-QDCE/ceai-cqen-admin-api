@@ -10,13 +10,13 @@ import (
 
 type AwsHandlersInterface interface {
 	// (GET /aws/account)
-	GetAwsAccounts(response *apifirst.Response, request *http.Request) error
+	GetAwsAccounts(response *apifirst.ResponseWriter, request *http.Request) error
 
 	// (GET /aws/account/{accountid})
-	GetAwsAccount(response *apifirst.Response, request *http.Request) error
+	GetAwsAccount(response *apifirst.ResponseWriter, request *http.Request) error
 }
 
-func (s ServerHandlers) GetAwsAccounts(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) GetAwsAccounts(response *apifirst.ResponseWriter, request *http.Request) error {
 	accounts, err := services.GetAwsAccounts()
 
 	if err != nil {
@@ -33,7 +33,7 @@ func (s ServerHandlers) GetAwsAccounts(response *apifirst.Response, request *htt
 	return nil
 }
 
-func (s ServerHandlers) GetAwsAccount(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) GetAwsAccount(response *apifirst.ResponseWriter, request *http.Request) error {
 	params := mux.Vars(request)
 	accountId := params["accountid"]
 

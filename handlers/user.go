@@ -13,17 +13,17 @@ import (
 type UserHandlersInterface interface {
 
 	// (GET /user)
-	GetUsers(response *apifirst.Response, r *http.Request) error
+	GetUsers(response *apifirst.ResponseWriter, r *http.Request) error
 	// (GET /user/{username})
-	GetUserFromUsername(response *apifirst.Response, request *http.Request) error
+	GetUserFromUsername(response *apifirst.ResponseWriter, request *http.Request) error
 	// (POST /user)
-	CreateUser(response *apifirst.Response, r *http.Request) error
+	CreateUser(response *apifirst.ResponseWriter, r *http.Request) error
 	// (PUT /user/{username})
-	UpdateUser(response *apifirst.Response, r *http.Request) error
+	UpdateUser(response *apifirst.ResponseWriter, r *http.Request) error
 }
 
 // GetAllUsers
-func (s ServerHandlers) GetUsers(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) GetUsers(response *apifirst.ResponseWriter, request *http.Request) error {
 	usersList, err := services.GetUsers()
 
 	if err != nil {
@@ -40,7 +40,7 @@ func (s ServerHandlers) GetUsers(response *apifirst.Response, request *http.Requ
 	return nil
 }
 
-func (s ServerHandlers) GetUserFromUsername(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) GetUserFromUsername(response *apifirst.ResponseWriter, request *http.Request) error {
 	params := mux.Vars(request)
 	username := params["username"]
 
@@ -61,7 +61,7 @@ func (s ServerHandlers) GetUserFromUsername(response *apifirst.Response, request
 }
 
 // CreateUser
-func (s ServerHandlers) CreateUser(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) CreateUser(response *apifirst.ResponseWriter, request *http.Request) error {
 	puser := models.User{}
 	if err := json.NewDecoder(request.Body).Decode(&puser); err != nil {
 		response.SetStatus(http.StatusBadRequest)
@@ -89,7 +89,7 @@ func (s ServerHandlers) CreateUser(response *apifirst.Response, request *http.Re
 }
 
 //Idempotent
-func (s ServerHandlers) UpdateUser(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) UpdateUser(response *apifirst.ResponseWriter, request *http.Request) error {
 	//Path params
 	params := mux.Vars(request)
 	username := params["username"]
@@ -120,7 +120,7 @@ func (s ServerHandlers) UpdateUser(response *apifirst.Response, request *http.Re
 	return nil
 }
 
-func (s ServerHandlers) DeleteUser(response *apifirst.Response, request *http.Request) error {
+func (s ServerHandlers) DeleteUser(response *apifirst.ResponseWriter, request *http.Request) error {
 	//Path params
 	params := mux.Vars(request)
 	username := params["username"]

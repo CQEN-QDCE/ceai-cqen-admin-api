@@ -10,11 +10,11 @@ components:
     User:
       type: object
       required:
-        - "firstname"
-        - "lastname"
-        - "email"
-        - "organisation"
-        - "infrarole"
+        - firstname
+        - lastname
+        - email
+        - organisation
+        - infrarole
       properties:
         firstname:
           type: string
@@ -59,12 +59,19 @@ components:
             type: array
             items: 
               $ref: '#/components/schemas/Laboratory'
+    AuthenticatedUser:
+      type: object
+      properties:
+        username:
+          type: string
+        roles:
+          type: string
     Laboratory:
       type: object
       required: 
-        - "id"
-        - "displayname"
-        - "type"
+        - id
+        - displayname
+        - type
       properties:
         id:
           type: string
@@ -119,9 +126,9 @@ components:
     OpenshiftProject:
       type: object
       required: 
-        - "id"
-        - "displayname"
-        - "description"
+        - id
+        - displayname
+        - description
       properties:
         id:
           type: string
@@ -166,6 +173,47 @@ components:
           type: string
         email: 
           type: string
+    KeycloakCredentials:
+      type: object
+      required:
+          - username
+          - password
+          - totp
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        totp:
+          type: string
+    KeycloakAccessToken:
+      type: object
+      required:
+        - access_token
+        - expires_in
+        - refresh_token
+        - refresh_expires_in
+        - token_type
+        - not-before-policy
+        - session_state
+        - scope
+      properties:
+        access_token:
+          type: string
+        expires_in:
+          type: integer
+        refresh_token:
+          type: string
+        refresh_expires_in:
+          type: integer
+        token_type:
+          type: string
+        not-before-policy:
+          type: integer
+        session_state:
+          type: string
+        scope:
+          type: string
   responses:
     401Unauthorized:
       description: Unauthorized
@@ -207,6 +255,10 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
         '502':
           $ref: '#/components/responses/502BadGateway'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
     post:
       operationId: CreateUser
       description: >-
@@ -230,6 +282,10 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
         '502':
           $ref: '#/components/responses/502BadGateway'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
   /user/{username}:
     get:
       operationId: GetUserFromUsername
@@ -257,6 +313,10 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
         '502':
           $ref: '#/components/responses/502BadGateway'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
     put:
       operationId: UpdateUser
       description: >-
@@ -287,6 +347,10 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
         '502':
           $ref: '#/components/responses/502BadGateway'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
     delete:
       operationId: DeleteUser
       description: >-
@@ -307,6 +371,10 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
   /laboratory:
     get:
       operationId: GetLaboratories
@@ -327,6 +395,10 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
         '502':
           $ref: '#/components/responses/502BadGateway'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
     post:
       operationId: CreateLaboratory
       description: >-
@@ -348,6 +420,10 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
   /laboratory/{laboratoryid}:
     get:
       operationId: GetLaboratoryFromId
@@ -366,7 +442,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Laboratory'
+                $ref: '#/components/schemas/LaboratoryWithResources'
         '404':
           description: Laboratory id does not exist
         '401':
@@ -375,6 +451,10 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
         '502':
           $ref: '#/components/responses/502BadGateway'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
     put:
       operationId: UpdateLaboratory
       description: >-
@@ -405,6 +485,10 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
         '502':
           $ref: '#/components/responses/502BadGateway'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
     delete:
       operationId: DeleteLaboratory
       description: >-
@@ -425,6 +509,10 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
   /laboratory/{laboratoryid}/user:
     put:
       operationId: AddLaboratoryUsers
@@ -457,6 +545,10 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
     delete:
       operationId: RemoveLaboratoryUsers
       description: >-
@@ -486,6 +578,10 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
   /laboratory/{laboratoryid}/aws/{accountid}:
     put:
       operationId: AttachAwsAccountToLaboratory
@@ -515,6 +611,10 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
     delete:
       operationId: DetachAwsAccountFromLaboratory
       description: >-
@@ -541,6 +641,10 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
   /laboratory/{laboratoryid}/openshift/{projectid}:
     put:
       operationId: AttachOpenshiftProjectToLaboratory
@@ -570,6 +674,10 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
     delete:
       operationId: DetachOpenshiftProjectFromLaboratory
       description: >-
@@ -596,6 +704,10 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
   /openshift/project:
     get:
       operationId: GetOpenshiftProjects
@@ -616,6 +728,10 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
         '502':
           $ref: '#/components/responses/502BadGateway'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
     post:
       operationId: CreateOpenshiftProject
       description: >-
@@ -627,8 +743,8 @@ paths:
             schema:
               $ref: '#/components/schemas/OpenshiftProjectWithLab'
       responses:
-        '200':
-          description: OK
+        '201':
+          description: Created
         '409':
           description: Openshift project id already exist
         '400':
@@ -637,6 +753,10 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
   /openshift/project/{projectid}:
     get:
       operationId: GetOpenshiftProjectFromId
@@ -664,6 +784,10 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
         '502':
           $ref: '#/components/responses/502BadGateway'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
     put:
       operationId: UpdateOpenshiftProject
       description: >-
@@ -694,6 +818,10 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
         '502':
           $ref: '#/components/responses/502BadGateway'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
     delete:
       operationId: DeleteOpenshiftProject
       description: >-
@@ -714,6 +842,10 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
   /aws/account:
     get:
       operationId: GetAwsAccounts
@@ -734,6 +866,10 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
         '502':
           $ref: '#/components/responses/502BadGateway'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
     post:
       operationId: CreateAWSAccount
       description: >-
@@ -755,6 +891,10 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
   /aws/account/{accountid}:
     get:
       operationId: GetAwsAccount
@@ -782,7 +922,84 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
         '502':
           $ref: '#/components/responses/502BadGateway'
-security:
-  - Username: []
-    UserRoles: []
-    GatewaySecret: []
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
+  /keycloak/token:
+    post:
+      operationId: GetKeycloakAccessToken
+      description: >-
+        Get a Keycloak Access Token for a specified user credentials
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/KeycloakCredentials'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeycloakAccessToken'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          description: 'Invalid user credentials'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+        '502':
+          $ref: '#/components/responses/502BadGateway'
+      security:
+        - GatewaySecret: []
+  /keycloak/token/refresh:
+    post:
+      operationId: RefreshKeycloakAccessToken
+      description: >-
+        Get a Keycloak Access Token for a specified user credentials
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              type: string
+              description: A valid refresh token
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeycloakAccessToken'
+        '400':
+          description: 'Token is not active'
+        '401':
+          description: 'Bad refresh token'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+        '502':
+          $ref: '#/components/responses/502BadGateway'
+      security:
+        - GatewaySecret: []
+  /whoami:
+    get:
+      operationId: GetCurrentUserInfo
+      description: >-
+        Get username and roles of current authenticated user
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticatedUser'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []

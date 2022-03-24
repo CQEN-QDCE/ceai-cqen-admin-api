@@ -3,66 +3,49 @@ package apifirst
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+
+	"github.com/getkin/kin-openapi/openapi3"
 )
 
-const DefaultContentType = "application/json"
-
 type Response struct {
-	http.ResponseWriter
-	Status      int
-	Body        interface{}
-	ContentType string
+	*http.Response
+	OapiResponse *openapi3.Response
 }
 
-func NewResponse(w *http.ResponseWriter) *Response {
-	response := &Response{
-		ResponseWriter: *w,
+func NewResponse(httpResponse *http.Response, oapiResponse *openapi3.Response) (*Response, error) {
+
+	response := Response{
+		Response:     httpResponse,
+		OapiResponse: oapiResponse,
 	}
 
-	response.SetStatus(http.StatusOK)
-	response.SetContentType(DefaultContentType)
-
-	return response
-}
-
-func (r *Response) SetStatus(status int) {
-	r.Status = status
-}
-
-func (r *Response) SetContentType(contentType string) {
-	r.ContentType = contentType
-	r.Header().Set("Content-Type", r.ContentType)
-}
-
-func (r *Response) SetBody(body interface{}) {
-	r.Body = body
-}
-
-func (r *Response) GetMarshaledBody() ([]byte, error) {
-	if r.Body != nil {
-
-		switch r.ContentType {
-		case "application/json":
-			return json.Marshal(r.Body)
-		case "":
+	if httpResponse.StatusCode > 300 {
+		//Send error with specification message
+		if oapiResponse.Description != nil {
+			return nil, fmt.Errorf(*oapiResponse.Description)
+		} else {
+			return nil, fmt.Errorf("Server Error: %s", httpResponse.Status)
 		}
+	}
 
+	return &response, nil
+}
+
+func (r *Response) UnmarshalBody(v interface{}) error {
+	if r.Body != nil {
+		switch r.Header.Get("Content-Type") {
+		case "application/json":
+			err := json.NewDecoder(r.Body).Decode(&v)
+			return err
+		case "": //TODO Support more contentTypes?
+		}
+	} else {
+		return nil
 	}
 
 	err := errors.New("Unsupported content type")
 
-	return nil, err
-}
-
-func (r *Response) WriteResponse() {
-	r.WriteHeader(r.Status)
-
-	mBody, err := r.GetMarshaledBody()
-
-	if err != nil {
-		//error
-	}
-
-	r.Write(mBody)
+	return err
 }

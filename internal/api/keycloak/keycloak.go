@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/Nerzal/gocloak/v9"
+	"github.com/Nerzal/gocloak/v11"
 )
 
 const CLIENT_TOKEN_TTL = 60
@@ -328,6 +328,20 @@ func GetGroup(groupName string) (*gocloak.Group, error) {
 	return group, nil
 }
 
+func GetGroupById(id string) (*gocloak.Group, error) {
+	c, err := GetServiceAccountClient()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return (*c.GoCloakClient).GetGroup(
+		context.Background(),
+		c.Token.AccessToken,
+		c.Realm,
+		id)
+}
+
 func GetGroups(parentGroupName *string) (*[]gocloak.Group, error) {
 	if parentGroupName == nil {
 		parentGroupName = gocloak.StringP("/")
@@ -335,8 +349,16 @@ func GetGroups(parentGroupName *string) (*[]gocloak.Group, error) {
 
 	group, err := GetGroup(*parentGroupName)
 
-	if group != nil {
-		return group.SubGroups, err
+	if group != nil && err == nil {
+		//For some reasons Keycloak won't always provide subgroups on GetGroups search call
+		//So we get group full info with a GetGroup(idGroup) call
+		fullGroup, err := GetGroupById(*group.ID)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return fullGroup.SubGroups, err
 	} else {
 		err := errors.New("Group name does not exist.")
 		return nil, err
