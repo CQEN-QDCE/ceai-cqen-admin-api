@@ -147,10 +147,12 @@ func (t *Table) PrintTable(data interface{}) error {
 	reflectValue := reflect.ValueOf(data)
 
 	if reflectValue.Kind() == reflect.Array || reflectValue.Kind() == reflect.Slice {
-		t.PrintTableHeader(reflectValue.Index(0).Interface())
+		if reflectValue.Len() > 0 {
+			t.PrintTableHeader(reflectValue.Index(0).Interface())
 
-		for i := 0; i < reflectValue.Len(); i++ {
-			t.PrintTableLine(reflectValue.Index(i).Interface())
+			for i := 0; i < reflectValue.Len(); i++ {
+				t.PrintTableLine(reflectValue.Index(i).Interface())
+			}
 		}
 	} else if reflectValue.Kind() == reflect.Struct {
 		t.PrintTableHeader(data)

@@ -8,7 +8,7 @@ import (
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/keycloak"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/openshift"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/models"
-	"github.com/Nerzal/gocloak/v9"
+	"github.com/Nerzal/gocloak/v11"
 	userv1 "github.com/openshift/api/user/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
