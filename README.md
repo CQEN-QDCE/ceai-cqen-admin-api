@@ -83,7 +83,7 @@ go run ./cmd/server
 
 La documentation SwaggerUI peut être générée et rendue disponible par l'API. La variable d'environnement _SWAGGER_UI_PATH_ doit être définie pour rendre accessible SwaggerUI à l'url voulue.
  
-La documentation SwaggerUI doit être générée et compilée à partir du fichier api/openapi-v1.yaml. En case de modification à la définition, SwaggerUi doit être régénéré et recompilé :
+La documentation SwaggerUI doit être générée et compilée à partir du fichier api/openapi-v1.yaml. En cas de modification à la définition, SwaggerUi doit être régénéré et recompilé :
  
 ```
 go get github.com/rakyll/statik
@@ -97,4 +97,11 @@ Des tests unitaires sont pour la plupart des routes sont disponibles dans le fic
 
 # Console CLI
 
-TODO
+## Compiler et installer l'exécutable du CLI
+
+```
+go build ./cmd/cli -o ./ceai
+cp ceai $GOPATH/bin/
+
+ceai --help
+```
