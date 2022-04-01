@@ -100,7 +100,7 @@ Des tests unitaires sont pour la plupart des routes sont disponibles dans le fic
 ## Compiler et installer l'exécutable du CLI
 
 ```
-go build ./cmd/cli -o ./ceai
+go build -o ./ceai ./cmd/cli
 cp ceai $GOPATH/bin/
 
 ceai --help

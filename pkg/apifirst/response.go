@@ -22,12 +22,15 @@ func NewResponse(httpResponse *http.Response, oapiResponse *openapi3.Response) (
 	}
 
 	if httpResponse.StatusCode > 300 {
-		//Send error with specification message
-		if oapiResponse.Description != nil {
-			return nil, fmt.Errorf(*oapiResponse.Description)
-		} else {
-			return nil, fmt.Errorf("Server Error: %s", httpResponse.Status)
+		if oapiResponse != nil {
+			//Send error with specification message if found in spec
+			if oapiResponse.Description != nil {
+				return nil, fmt.Errorf(*oapiResponse.Description)
+			}
 		}
+
+		//Send Response status if not found in spec
+		return nil, fmt.Errorf("Server Error: %s", httpResponse.Status)
 	}
 
 	return &response, nil

@@ -165,7 +165,13 @@ func (c *Client) Request(operationId string, parameters *map[string]string, requ
 
 	oapiResponse := operation.Responses.Get(resp.StatusCode)
 
-	response, err := NewResponse(resp, oapiResponse.Value)
+	var oapiResponseValue *openapi3.Response
+
+	if oapiResponse != nil {
+		oapiResponseValue = oapiResponse.Value
+	}
+
+	response, err := NewResponse(resp, oapiResponseValue)
 
 	if err != nil {
 		return nil, err
