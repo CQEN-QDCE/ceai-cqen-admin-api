@@ -87,8 +87,8 @@ La documentation SwaggerUI doit être générée et compilée à partir du fichi
  
 ```
 go get github.com/rakyll/statik
-cd api
-/genswagger.sh
+cd third_party
+/compile_spec.sh
 ```
 
 ### test.http

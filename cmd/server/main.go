@@ -15,6 +15,8 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"
+
+	_ "github.com/CQEN-QDCE/ceai-cqen-admin-api/api/swaggerui"
 )
 
 var Handlers handlers.ServerHandlers

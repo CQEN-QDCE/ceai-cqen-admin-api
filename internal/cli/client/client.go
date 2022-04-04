@@ -3,18 +3,39 @@ package client
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/pkg/apifirst"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/rakyll/statik/fs"
+
+	_ "github.com/CQEN-QDCE/ceai-cqen-admin-api/api/oapispecs"
 )
 
 func GetClient() (*apifirst.Client, error) {
 	ctx := context.Background()
 	loader := &openapi3.Loader{Context: ctx, IsExternalRefsAllowed: true}
 
-	OpenAPIDoc, err := loader.LoadFromFile("/home/gagf01/projets/ceai-cqen-admin-api/api/openapi-v1.yaml")
+	statikFS, err := fs.New()
 	if err != nil {
-		return nil, fmt.Errorf("Error loading OpenAPI Spec file: %s", err.Error())
+		return nil, fmt.Errorf("error loading OpenAPI Spec content: %s", err.Error())
+	}
+
+	// Access individual files by their paths.
+	r, err := statikFS.Open("/openapi-v1.yaml")
+	if err != nil {
+		return nil, fmt.Errorf("error loading OpenAPI Spec content: %s", err.Error())
+	}
+	defer r.Close()
+	contents, err := ioutil.ReadAll(r)
+
+	if err != nil {
+		return nil, fmt.Errorf("error loading OpenAPI Spec content: %s", err.Error())
+	}
+
+	OpenAPIDoc, err := loader.LoadFromData(contents)
+	if err != nil {
+		return nil, fmt.Errorf("error loading OpenAPI Spec file: %s", err.Error())
 	}
 
 	if err = OpenAPIDoc.Validate(ctx); err != nil {

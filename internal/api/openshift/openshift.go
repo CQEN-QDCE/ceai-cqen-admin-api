@@ -290,6 +290,10 @@ func GetNamespaceRoleBindings(namespace string) (*[]authorization.RoleBinding, e
 
 	roleList, err := authorizationClient.RoleBindings(namespace).List(context.TODO(), meta.ListOptions{FieldSelector: ""})
 
+	if err != nil {
+		return nil, err
+	}
+
 	return &roleList.Items, nil
 }
 

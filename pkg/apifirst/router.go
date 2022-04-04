@@ -20,8 +20,6 @@ import (
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getkin/kin-openapi/routers"
 	"github.com/gorilla/mux"
-
-	_ "github.com/CQEN-QDCE/ceai-cqen-admin-api/api"
 )
 
 // Router helps link http.Request.s and an OpenAPIv3 spec
