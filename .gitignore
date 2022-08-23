@@ -4,9 +4,15 @@
 *.dll
 *.so
 *.dylib
+*.zip
+*.old
+*.bak
 
 # Test binary, built with `go test -c`
 *.test
+
+# CLI build binaries
+ceai
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
