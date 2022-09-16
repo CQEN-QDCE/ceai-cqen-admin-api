@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	scim "github.com/CQEN-QDCE/aws-sso-scim-goclient"
+	"github.com/CQEN-QDCE/ceai-cqen-admin-api/api/globalvar"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/aws"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/keycloak"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/openshift"
@@ -422,7 +423,9 @@ func CreateLaboratory(pLab *models.Laboratory) error {
 	}
 
 	ofunc := func() {
-		oerr = CreateGroupOpenshift(pLab)
+		if globalvar.IsProdEnv() {
+			oerr = CreateGroupOpenshift(pLab)
+		}
 	}
 
 	afunc := func() {
@@ -510,7 +513,9 @@ func AddLaboratoryUsers(laboratoryId string, usernameList []string) error {
 	}
 
 	ofunc := func() {
-		oerr = AddUsersToGroupOpenshift(labState, userStates)
+		if globalvar.IsProdEnv() {
+			oerr = AddUsersToGroupOpenshift(labState, userStates)
+		}
 	}
 
 	afunc := func() {
@@ -565,7 +570,9 @@ func RemoveLaboratoryUsers(laboratoryId string, usernameList []string) error {
 	}
 
 	ofunc := func() {
-		oerr = RemoveUsersFromGroupOpenshift(labState, userStates)
+		if globalvar.IsProdEnv() {
+			oerr = RemoveUsersFromGroupOpenshift(labState, userStates)
+		}
 	}
 
 	afunc := func() {
@@ -647,39 +654,41 @@ func DetachOpenshiftProjectFromLaboratory(laboratoryId string, projectId string)
 		return NewErrorExternalRessourceNotFound(err, ERROR_SERVER_KEYCLOAK)
 	}
 
-	openshiftGroupName := OPENSHIFT_LAB_GROUP_PREFIX + laboratoryId
+	if globalvar.IsProdEnv() {
+		openshiftGroupName := OPENSHIFT_LAB_GROUP_PREFIX + laboratoryId
 
-	//Remove lab label to namespace
-	namespace, err := openshift.GetNamespace(projectId)
+		//Remove lab label to namespace
+		namespace, err := openshift.GetNamespace(projectId)
 
-	if err != nil {
-		return NewErrorExternalRessourceNotFound(err, ERROR_SERVER_OPENSHIFT)
-	}
+		if err != nil {
+			return NewErrorExternalRessourceNotFound(err, ERROR_SERVER_OPENSHIFT)
+		}
 
-	if _, ok := namespace.Labels["ceai-laboratory"]; ok {
-		delete(namespace.Labels, "ceai-laboratory")
+		if _, ok := namespace.Labels["ceai-laboratory"]; ok {
+			delete(namespace.Labels, "ceai-laboratory")
 
-		_, err = openshift.UpdateNamespace(namespace)
+			_, err = openshift.UpdateNamespace(namespace)
+
+			if err != nil {
+				return NewErrorExternalServerError(err, ERROR_SERVER_OPENSHIFT)
+			}
+		}
+
+		//Remove Rolebinding between group and project namespace
+		roleBindings, err := openshift.GetNamespaceRoleBindings(projectId)
 
 		if err != nil {
 			return NewErrorExternalServerError(err, ERROR_SERVER_OPENSHIFT)
 		}
-	}
 
-	//Remove Rolebinding between group and project namespace
-	roleBindings, err := openshift.GetNamespaceRoleBindings(projectId)
+		for _, roleBinding := range *roleBindings {
+			for _, subject := range roleBinding.Subjects {
+				if subject.Kind == "Group" && subject.Name == openshiftGroupName {
+					err = openshift.DeleteRoleBinding(projectId, &roleBinding)
 
-	if err != nil {
-		return NewErrorExternalServerError(err, ERROR_SERVER_OPENSHIFT)
-	}
-
-	for _, roleBinding := range *roleBindings {
-		for _, subject := range roleBinding.Subjects {
-			if subject.Kind == "Group" && subject.Name == openshiftGroupName {
-				err = openshift.DeleteRoleBinding(projectId, &roleBinding)
-
-				if err != nil {
-					return NewErrorExternalServerError(err, ERROR_SERVER_OPENSHIFT)
+					if err != nil {
+						return NewErrorExternalServerError(err, ERROR_SERVER_OPENSHIFT)
+					}
 				}
 			}
 		}

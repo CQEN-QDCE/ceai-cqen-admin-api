@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	scim "github.com/CQEN-QDCE/aws-sso-scim-goclient"
+	"github.com/CQEN-QDCE/ceai-cqen-admin-api/api/globalvar"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/aws"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/keycloak"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/openshift"
@@ -41,7 +42,9 @@ func GetUserState(username string) (*UserState, error) {
 	}
 
 	fOpenshift := func() {
-		state.Openshift, oerr = openshift.GetUser(username)
+		if globalvar.IsProdEnv() {
+			state.Openshift, oerr = openshift.GetUser(username)
+		}
 	}
 
 	Parallelize(fKeycloak, fAws, fOpenshift)
@@ -401,7 +404,9 @@ func CreateUser(pUser models.User) error {
 	}
 
 	ofunc := func() {
-		_, oerr = CreateUserOpenshift(&pUser)
+		if globalvar.IsProdEnv() {
+			_, oerr = CreateUserOpenshift(&pUser)
+		}
 	}
 
 	afunc := func() {
@@ -450,7 +455,9 @@ func UpdateUser(username string, pUser models.UserUpdate) error {
 	}
 
 	ofunc := func() {
-		oerr = UpdateUserOpenshift(userState, &pUser)
+		if globalvar.IsProdEnv() {
+			oerr = UpdateUserOpenshift(userState, &pUser)
+		}
 	}
 
 	afunc := func() {
@@ -490,7 +497,9 @@ func DeleteUser(username string) error {
 	}
 
 	ofunc := func() {
-		oerr = DeleteUserOpenshift(userState)
+		if globalvar.IsProdEnv() {
+			oerr = DeleteUserOpenshift(userState)
+		}
 	}
 
 	afunc := func() {

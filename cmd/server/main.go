@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/handlers"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/pkg/apifirst"
@@ -16,6 +17,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"
 
+	"github.com/CQEN-QDCE/ceai-cqen-admin-api/api/globalvar"
 	_ "github.com/CQEN-QDCE/ceai-cqen-admin-api/api/swaggerui"
 )
 
@@ -41,6 +43,15 @@ func main() {
 
 	if err = OpenAPIDoc.Validate(ctx); err != nil {
 		log.Fatal("Invalid OpenAPI Spec file: " + err.Error())
+	}
+
+	//set ProdEnv value if true
+	strProdEnv, isProdEnvPresent := os.LookupEnv("PROD_ENV")
+	if isProdEnvPresent {
+		isProdEnv, _ := strconv.ParseBool(strProdEnv)
+		if isProdEnv {
+			globalvar.SetProdEnv(true)
+		}
 	}
 
 	//API Security validation to support OpenAPI security scheme
