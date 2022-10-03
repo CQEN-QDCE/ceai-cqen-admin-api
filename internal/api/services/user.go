@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	scim "github.com/CQEN-QDCE/aws-sso-scim-goclient"
+	"github.com/CQEN-QDCE/ceai-cqen-admin-api/api/globalvar"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/aws"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/keycloak"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/openshift"
@@ -27,7 +28,7 @@ func GetKeycloakAdminGroup() (*gocloak.Group, error) {
 	return keycloak.GetGroup(ADMIN_ROLE_NAME)
 }
 
-//Gets current User state across all products: Keycloak|AWS|Openshift
+// Gets current User state across all products: Keycloak|AWS|Openshift
 func GetUserState(username string) (*UserState, error) {
 	var state UserState
 	var kerr, aerr, oerr error
@@ -424,18 +425,20 @@ func CreateUser(pUser models.User) error {
 		return err
 	}
 
-	//Send account init email
-	err := keycloak.ExecuteCurrentActionEmail(pUser.Email)
+	if !globalvar.IsOcNonPersist {
+		//Send account init email
+		err := keycloak.ExecuteCurrentActionEmail(pUser.Email)
 
-	if err != nil {
-		return NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
-		//TODO email not sent error??
+		if err != nil {
+			return NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
+			//TODO email not sent error??
+		}
 	}
 
 	return nil
 }
 
-//Idempotent
+// Idempotent
 func UpdateUser(username string, pUser models.UserUpdate) error {
 	userState, err := GetUserState(username)
 

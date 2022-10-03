@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/handlers"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/pkg/apifirst"
@@ -16,6 +17,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"
 
+	"github.com/CQEN-QDCE/ceai-cqen-admin-api/api/globalvar"
 	_ "github.com/CQEN-QDCE/ceai-cqen-admin-api/api/swaggerui"
 )
 
@@ -76,6 +78,9 @@ func main() {
 		response.WriteHeader(http.StatusOK)
 	})
 
+	//Is Openshift Non Persist?
+	SetOCNonPersistIfApplies()
+
 	port := os.Getenv("PORT")
 
 	log.Fatal(r.Serve(port))
@@ -120,4 +125,16 @@ func CustomCallLogFunction(request *http.Request, response *apifirst.ResponseWri
 	log.Printf(output)
 
 	return nil
+}
+
+func SetOCNonPersistIfApplies() {
+	strOcNonPersist, existsOcNonPersist := os.LookupEnv("OC_NON_PERSIST")
+	if existsOcNonPersist {
+		_isOCNonPersist, _ := strconv.ParseBool(strOcNonPersist)
+		if _isOCNonPersist {
+			log.Println("Setting Openshift Non Persist to true!")
+			globalvar.IsOcNonPersist = true
+			log.Printf("Setting global variable IsOcNonPersist to %t \n", globalvar.IsOcNonPersist)
+		}
+	}
 }

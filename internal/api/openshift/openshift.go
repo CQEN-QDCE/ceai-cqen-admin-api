@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/CQEN-QDCE/ceai-cqen-admin-api/api/globalvar"
 	authorization "github.com/openshift/api/authorization/v1"
 	project "github.com/openshift/api/project/v1"
 	user "github.com/openshift/api/user/v1"
@@ -104,7 +105,7 @@ func CreateUser(user *user.User) (*user.User, error) {
 		return nil, err
 	}
 
-	return userClient.Users().Create(context.TODO(), user, meta.CreateOptions{})
+	return userClient.Users().Create(context.TODO(), user, GetCreateOptions())
 }
 
 func UpdateUser(user *user.User) (*user.User, error) {
@@ -113,7 +114,7 @@ func UpdateUser(user *user.User) (*user.User, error) {
 		return nil, err
 	}
 
-	return userClient.Users().Update(context.TODO(), user, meta.UpdateOptions{})
+	return userClient.Users().Update(context.TODO(), user, GetUpdateOptions())
 }
 
 func DeleteUser(user *user.User) error {
@@ -122,7 +123,7 @@ func DeleteUser(user *user.User) error {
 		return err
 	}
 
-	return userClient.Users().Delete(context.TODO(), user.Name, meta.DeleteOptions{})
+	return userClient.Users().Delete(context.TODO(), user.Name, GetDeleteOptions())
 }
 
 func GetGroup(groupName string) (*user.Group, error) {
@@ -140,7 +141,7 @@ func CreateGroup(group *user.Group) (*user.Group, error) {
 		return nil, err
 	}
 
-	return userClient.Groups().Create(context.TODO(), group, meta.CreateOptions{})
+	return userClient.Groups().Create(context.TODO(), group, GetCreateOptions())
 }
 
 func UpdateGroup(group *user.Group) (*user.Group, error) {
@@ -149,7 +150,7 @@ func UpdateGroup(group *user.Group) (*user.Group, error) {
 		return nil, err
 	}
 
-	return userClient.Groups().Update(context.TODO(), group, meta.UpdateOptions{})
+	return userClient.Groups().Update(context.TODO(), group, GetUpdateOptions())
 }
 
 func DeleteGroup(group *user.Group) error {
@@ -158,7 +159,7 @@ func DeleteGroup(group *user.Group) error {
 		return err
 	}
 
-	return userClient.Groups().Delete(context.TODO(), group.Name, meta.DeleteOptions{})
+	return userClient.Groups().Delete(context.TODO(), group.Name, GetDeleteOptions())
 }
 
 func AddUserInGroup(userName string, groupName string) error {
@@ -173,7 +174,7 @@ func AddUserInGroup(userName string, groupName string) error {
 
 	if !inGroup {
 		group.Users = append(group.Users, userName)
-		_, err = userClient.Groups().Update(context.TODO(), group, meta.UpdateOptions{})
+		_, err = userClient.Groups().Update(context.TODO(), group, GetUpdateOptions())
 	}
 
 	return err
@@ -196,13 +197,13 @@ func RemoveUserFromGroup(userName string, groupName string) error {
 			group.Users = []string{} //Replace with a empty array if it only has our user in it
 		}
 
-		_, err = userClient.Groups().Update(context.TODO(), group, meta.UpdateOptions{})
+		_, err = userClient.Groups().Update(context.TODO(), group, GetUpdateOptions())
 	}
 
 	return err
 }
 
-//Check if a user is in a group
+// Check if a user is in a group
 func UserInGroup(username string, group *user.Group) (bool, int) {
 	for i, user := range group.Users {
 		if user == username {
@@ -243,7 +244,7 @@ func CreateProject(project *project.ProjectRequest) (*project.Project, error) {
 		return nil, err
 	}
 
-	return projectClient.ProjectRequests().Create(context.TODO(), project, meta.CreateOptions{})
+	return projectClient.ProjectRequests().Create(context.TODO(), project, GetCreateOptions())
 }
 
 func UpdateProject(project *project.Project) (*project.Project, error) {
@@ -252,7 +253,7 @@ func UpdateProject(project *project.Project) (*project.Project, error) {
 		return nil, err
 	}
 
-	return projectClient.Projects().Update(context.TODO(), project, meta.UpdateOptions{})
+	return projectClient.Projects().Update(context.TODO(), project, GetUpdateOptions())
 }
 
 func DeleteProject(project *project.Project) error {
@@ -261,7 +262,7 @@ func DeleteProject(project *project.Project) error {
 		return err
 	}
 
-	return projectClient.Projects().Delete(context.TODO(), project.Name, meta.DeleteOptions{})
+	return projectClient.Projects().Delete(context.TODO(), project.Name, GetDeleteOptions())
 }
 
 func GetNamespace(projectName string) (*core.Namespace, error) {
@@ -279,7 +280,7 @@ func UpdateNamespace(namespace *core.Namespace) (*core.Namespace, error) {
 		return nil, err
 	}
 
-	return k8sClient.CoreV1().Namespaces().Update(context.TODO(), namespace, meta.UpdateOptions{})
+	return k8sClient.CoreV1().Namespaces().Update(context.TODO(), namespace, GetUpdateOptions())
 }
 
 func GetNamespaceRoleBindings(namespace string) (*[]authorization.RoleBinding, error) {
@@ -303,7 +304,7 @@ func CreateRoleBinding(namespace string, roleBinding *authorization.RoleBinding)
 		return nil, err
 	}
 
-	return authorizationClient.RoleBindings(namespace).Create(context.TODO(), roleBinding, meta.CreateOptions{})
+	return authorizationClient.RoleBindings(namespace).Create(context.TODO(), roleBinding, GetCreateOptions())
 }
 
 func DeleteRoleBinding(namespace string, roleBinding *authorization.RoleBinding) error {
@@ -312,5 +313,29 @@ func DeleteRoleBinding(namespace string, roleBinding *authorization.RoleBinding)
 		return err
 	}
 
-	return authorizationClient.RoleBindings(namespace).Delete(context.TODO(), roleBinding.Name, meta.DeleteOptions{})
+	return authorizationClient.RoleBindings(namespace).Delete(context.TODO(), roleBinding.Name, GetDeleteOptions())
+}
+
+func GetCreateOptions() meta.CreateOptions {
+	opts := meta.CreateOptions{}
+	if globalvar.IsOcNonPersist {
+		opts.DryRun = append(opts.DryRun, meta.DryRunAll)
+	}
+	return opts
+}
+
+func GetUpdateOptions() meta.UpdateOptions {
+	opts := meta.UpdateOptions{}
+	if globalvar.IsOcNonPersist {
+		opts.DryRun = append(opts.DryRun, meta.DryRunAll)
+	}
+	return opts
+}
+
+func GetDeleteOptions() meta.DeleteOptions {
+	opts := meta.DeleteOptions{}
+	if globalvar.IsOcNonPersist {
+		opts.DryRun = append(opts.DryRun, meta.DryRunAll)
+	}
+	return opts
 }
