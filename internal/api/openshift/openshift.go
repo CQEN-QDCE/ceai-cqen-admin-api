@@ -2,9 +2,10 @@ package openshift
 
 import (
 	"context"
+	"log"
 	"os"
+	"strconv"
 
-	"github.com/CQEN-QDCE/ceai-cqen-admin-api/api/globalvar"
 	authorization "github.com/openshift/api/authorization/v1"
 	project "github.com/openshift/api/project/v1"
 	user "github.com/openshift/api/user/v1"
@@ -19,6 +20,7 @@ import (
 )
 
 var ocConfig *rest.Config
+var isOCNonPersist bool
 
 func GetClientConfig() (*rest.Config, error) {
 	if ocConfig != nil {
@@ -30,6 +32,17 @@ func GetClientConfig() (*rest.Config, error) {
 	ocConfig, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		return nil, err
+	}
+
+	//ocNonPersist?
+	strOcNonPersist, existsOcNonPersist := os.LookupEnv("OC_NON_PERSIST")
+	if existsOcNonPersist {
+		_isOCNonPersist, _ := strconv.ParseBool(strOcNonPersist)
+		if _isOCNonPersist {
+			log.Println("Setting Openshift Non Persist to true!")
+			isOCNonPersist = true
+			log.Printf("Setting global variable IsOcNonPersist to %t \n", isOCNonPersist)
+		}
 	}
 
 	return ocConfig, nil
@@ -318,7 +331,7 @@ func DeleteRoleBinding(namespace string, roleBinding *authorization.RoleBinding)
 
 func GetCreateOptions() meta.CreateOptions {
 	opts := meta.CreateOptions{}
-	if globalvar.IsOcNonPersist {
+	if isOCNonPersist {
 		opts.DryRun = append(opts.DryRun, meta.DryRunAll)
 	}
 	return opts
@@ -326,7 +339,7 @@ func GetCreateOptions() meta.CreateOptions {
 
 func GetUpdateOptions() meta.UpdateOptions {
 	opts := meta.UpdateOptions{}
-	if globalvar.IsOcNonPersist {
+	if isOCNonPersist {
 		opts.DryRun = append(opts.DryRun, meta.DryRunAll)
 	}
 	return opts
@@ -334,7 +347,7 @@ func GetUpdateOptions() meta.UpdateOptions {
 
 func GetDeleteOptions() meta.DeleteOptions {
 	opts := meta.DeleteOptions{}
-	if globalvar.IsOcNonPersist {
+	if isOCNonPersist {
 		opts.DryRun = append(opts.DryRun, meta.DryRunAll)
 	}
 	return opts

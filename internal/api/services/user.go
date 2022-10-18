@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	scim "github.com/CQEN-QDCE/aws-sso-scim-goclient"
-	"github.com/CQEN-QDCE/ceai-cqen-admin-api/api/globalvar"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/aws"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/keycloak"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/openshift"
@@ -425,14 +424,12 @@ func CreateUser(pUser models.User) error {
 		return err
 	}
 
-	if !globalvar.IsOcNonPersist {
-		//Send account init email
-		err := keycloak.ExecuteCurrentActionEmail(pUser.Email)
+	//Send account init email
+	err := keycloak.ExecuteCurrentActionEmail(pUser.Email)
 
-		if err != nil {
-			return NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
-			//TODO email not sent error??
-		}
+	if err != nil {
+		return NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
+		//TODO email not sent error??
 	}
 
 	return nil
