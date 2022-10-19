@@ -39,9 +39,8 @@ func GetClientConfig() (*rest.Config, error) {
 	if existsOcNonPersist {
 		_isOCNonPersist, _ := strconv.ParseBool(strOcNonPersist)
 		if _isOCNonPersist {
-			log.Println("Setting Openshift Non Persist to true!")
+			log.Println("Setting Openshift Non Persist var to true!")
 			isOCNonPersist = true
-			log.Printf("Setting global variable IsOcNonPersist to %t \n", isOCNonPersist)
 		}
 	}
 
