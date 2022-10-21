@@ -108,7 +108,14 @@ func GetUser(username string) (*user.User, error) {
 		return nil, err
 	}
 
-	return userClient.Users().Get(context.TODO(), username, meta.GetOptions{})
+	_user, err := userClient.Users().Get(context.TODO(), username, meta.GetOptions{})
+	if err != nil {
+		if isOCNonPersist {
+			return _user, nil
+		}
+	}
+
+	return _user, err
 }
 
 func CreateUser(user *user.User) (*user.User, error) {
@@ -121,6 +128,10 @@ func CreateUser(user *user.User) (*user.User, error) {
 }
 
 func UpdateUser(user *user.User) (*user.User, error) {
+	if isOCNonPersist {
+		return user, nil //No action in Openshift
+	}
+
 	userClient, err := GetUserClient()
 	if err != nil {
 		return nil, err
@@ -130,6 +141,10 @@ func UpdateUser(user *user.User) (*user.User, error) {
 }
 
 func DeleteUser(user *user.User) error {
+	if isOCNonPersist {
+		return nil //No action in Openshift
+	}
+
 	userClient, err := GetUserClient()
 	if err != nil {
 		return err
@@ -144,7 +159,14 @@ func GetGroup(groupName string) (*user.Group, error) {
 		return nil, err
 	}
 
-	return userClient.Groups().Get(context.TODO(), groupName, meta.GetOptions{})
+	_group, err := userClient.Groups().Get(context.TODO(), groupName, meta.GetOptions{})
+	if err != nil {
+		if isOCNonPersist {
+			return _group, nil
+		}
+	}
+
+	return _group, err
 }
 
 func CreateGroup(group *user.Group) (*user.Group, error) {
@@ -157,6 +179,10 @@ func CreateGroup(group *user.Group) (*user.Group, error) {
 }
 
 func UpdateGroup(group *user.Group) (*user.Group, error) {
+	if isOCNonPersist {
+		return group, nil //No action in Openshift
+	}
+
 	userClient, err := GetUserClient()
 	if err != nil {
 		return nil, err
@@ -166,6 +192,10 @@ func UpdateGroup(group *user.Group) (*user.Group, error) {
 }
 
 func DeleteGroup(group *user.Group) error {
+	if isOCNonPersist {
+		return nil //No action in Openshift
+	}
+
 	userClient, err := GetUserClient()
 	if err != nil {
 		return err
@@ -175,6 +205,10 @@ func DeleteGroup(group *user.Group) error {
 }
 
 func AddUserInGroup(userName string, groupName string) error {
+	if isOCNonPersist {
+		return nil //No action in Openshift
+	}
+
 	userClient, err := GetUserClient()
 	if err != nil {
 		return err
@@ -193,6 +227,10 @@ func AddUserInGroup(userName string, groupName string) error {
 }
 
 func RemoveUserFromGroup(userName string, groupName string) error {
+	if isOCNonPersist {
+		return nil //No action in Openshift
+	}
+
 	userClient, err := GetUserClient()
 	if err != nil {
 		return err
@@ -247,7 +285,14 @@ func GetProject(projectName string) (*project.Project, error) {
 		return nil, err
 	}
 
-	return projectClient.Projects().Get(context.TODO(), projectName, meta.GetOptions{})
+	_project, err := projectClient.Projects().Get(context.TODO(), projectName, meta.GetOptions{})
+	if err != nil {
+		if isOCNonPersist {
+			return _project, nil
+		}
+	}
+
+	return _project, err
 }
 
 func CreateProject(project *project.ProjectRequest) (*project.Project, error) {
@@ -260,6 +305,10 @@ func CreateProject(project *project.ProjectRequest) (*project.Project, error) {
 }
 
 func UpdateProject(project *project.Project) (*project.Project, error) {
+	if isOCNonPersist {
+		return project, nil //No action in Openshift
+	}
+
 	projectClient, err := GetProjectClient()
 	if err != nil {
 		return nil, err
@@ -269,6 +318,10 @@ func UpdateProject(project *project.Project) (*project.Project, error) {
 }
 
 func DeleteProject(project *project.Project) error {
+	if isOCNonPersist {
+		return nil //No action in Openshift
+	}
+
 	projectClient, err := GetProjectClient()
 	if err != nil {
 		return err
@@ -283,10 +336,21 @@ func GetNamespace(projectName string) (*core.Namespace, error) {
 		return nil, err
 	}
 
-	return k8sClient.CoreV1().Namespaces().Get(context.TODO(), projectName, meta.GetOptions{})
+	_ns, err := k8sClient.CoreV1().Namespaces().Get(context.TODO(), projectName, meta.GetOptions{})
+	if err != nil {
+		if isOCNonPersist {
+			return _ns, nil
+		}
+	}
+
+	return _ns, err
 }
 
 func UpdateNamespace(namespace *core.Namespace) (*core.Namespace, error) {
+	if isOCNonPersist {
+		return namespace, nil //No action in Openshift
+	}
+
 	k8sClient, err := GetK8sClient()
 	if err != nil {
 		return nil, err
@@ -320,6 +384,10 @@ func CreateRoleBinding(namespace string, roleBinding *authorization.RoleBinding)
 }
 
 func DeleteRoleBinding(namespace string, roleBinding *authorization.RoleBinding) error {
+	if isOCNonPersist {
+		return nil //No action in Openshift
+	}
+
 	authorizationClient, err := GetAuthorizationClient()
 	if err != nil {
 		return err
