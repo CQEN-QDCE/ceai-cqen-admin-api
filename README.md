@@ -99,9 +99,14 @@ Des tests unitaires sont pour la plupart des routes sont disponibles dans le fic
 
 ## Compiler et installer l'exécutable du CLI
 
+Linux - MacOS - WSL
 ```
 go build -o ./ceai ./cmd/cli
-cp ceai $GOPATH/bin/
+
+#Voir les répertoires pris en charge par votre système où copier l'exécutable
+echo $PATH
+
+cp ceai [/votre/repertoire/de/bin/prefere/] 
 
 ceai --help
 ```
