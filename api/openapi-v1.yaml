@@ -57,6 +57,7 @@ components:
         properties:
           laboratories:
             type: array
+            nullable: true
             items: 
               $ref: '#/components/schemas/Laboratory'
     AuthenticatedUser:
@@ -107,6 +108,7 @@ components:
           properties:
             users:
               type: array
+              nullable: true
               items: 
                 type: string
                 format: email
@@ -117,10 +119,12 @@ components:
           properties:
             openshiftprojects:
               type: array
+              nullable: true
               items: 
                 $ref: '#/components/schemas/OpenshiftProject'
             AWSAccounts:
               type: array
+              nullable: true
               items:
                 $ref: '#/components/schemas/AWSAccount' 
     OpenshiftProject:
