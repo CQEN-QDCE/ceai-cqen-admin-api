@@ -11,6 +11,20 @@ import (
 
 const CLIENT_TOKEN_TTL = 60
 
+const CREDENTIAL_PW = "password"
+const CREDENTIAL_OTP = "otp"
+const CREDENTIAL_ALL = "_All_"
+
+const REQUIRED_ACTION_VERIFY_EMAIL = "VERIFY_EMAIL"
+const REQUIRED_ACTION_UPDATE_PASSWORD = "UPDATE_PASSWORD"
+const REQUIRED_ACTION_CONFIGURE_TOTP = "CONFIGURE_TOTP"
+const REQUIRED_ACTION_UPDATE_PROFILE = "UPDATE_PROFILE"
+
+var CREDENTIAL_REQUIRED_ACTION_INDEX = map[string]string{
+	CREDENTIAL_PW:  REQUIRED_ACTION_UPDATE_PASSWORD,
+	CREDENTIAL_OTP: REQUIRED_ACTION_CONFIGURE_TOTP,
+}
+
 var serviceAccountClient *ServiceAccountClient
 var serviceAccountClientTime int64
 
@@ -115,6 +129,7 @@ func GetUsers() ([]*gocloak.User, error) {
 	return users, nil
 }
 
+// Fetch a user by username (Slower than by ID)
 func GetUser(username string) (*gocloak.User, error) {
 	c, err := GetServiceAccountClient()
 
@@ -138,12 +153,72 @@ func GetUser(username string) (*gocloak.User, error) {
 	}
 
 	if len(users) < 1 {
-		err := errors.New("Username not found.")
+		err := errors.New("username not found")
 		return nil, err
 	}
 
-	//Get groups because Keycloak won't get them in its User endpoint
-	groups, err := GetUserGroups(users[0])
+	//Get groups because Keycloak won't get them in its Users endpoint
+	users[0], err = RefreshUserGroups(users[0])
+
+	if err != nil {
+		return nil, err
+	}
+
+	//Get roles because Keycloak won't get them either
+	users[0], err = RefreshUserRoles(users[0])
+
+	if err != nil {
+		return nil, err
+	}
+
+	return users[0], nil
+}
+
+// Fetch a user by user ID
+func GetUserById(userId string) (*gocloak.User, error) {
+	c, err := GetServiceAccountClient()
+
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	user, err := (*c.GoCloakClient).GetUserByID(
+		ctx,
+		c.Token.AccessToken,
+		c.Realm,
+		userId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	//Get groups because Keycloak won't get them in its Users endpoint
+	user, err = RefreshUserGroups(user)
+
+	if err != nil {
+		return nil, err
+	}
+
+	//Get roles because Keycloak won't get them either
+	user, err = RefreshUserRoles(user)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+//Fetch last version of a user from server
+func RefreshUser(user *gocloak.User) (*gocloak.User, error) {
+	return GetUserById(*user.ID)
+}
+
+// Fetch the last version of the groups list of a user
+func RefreshUserGroups(user *gocloak.User) (*gocloak.User, error) {
+	groups, err := GetUserGroups(user)
 	if err != nil {
 		return nil, err
 	}
@@ -153,22 +228,26 @@ func GetUser(username string) (*gocloak.User, error) {
 		groupList = append(groupList, *group.Path)
 	}
 
-	users[0].Groups = &groupList
+	user.Groups = &groupList
 
-	//Get roles because Keycloak won't get them either
-	roles, err := GetUserRoles(users[0])
+	return user, nil
+}
+
+// Fetch the last version of the roles list of a user
+func RefreshUserRoles(user *gocloak.User) (*gocloak.User, error) {
+	roles, err := GetUserRoles(user)
 	if err != nil {
 		return nil, err
 	}
 
-	roleList := make([]string, len(groups))
+	roleList := make([]string, len(roles))
 	for _, role := range roles {
 		roleList = append(roleList, *role.Name)
 	}
 
-	users[0].RealmRoles = &roleList
+	user.RealmRoles = &roleList
 
-	return users[0], nil
+	return user, nil
 }
 
 //Create a new User, returns it's ID
@@ -309,12 +388,12 @@ func GetGroup(groupName string) (*gocloak.Group, error) {
 	}
 
 	if len(groups) < 1 {
-		err := errors.New("Group not found.")
+		err := errors.New("group not found")
 		return nil, err
 	}
 
 	if len(groups) > 1 {
-		err := errors.New("Group name is not unique.")
+		err := errors.New("group name is not unique")
 		return nil, err
 	}
 
@@ -322,7 +401,7 @@ func GetGroup(groupName string) (*gocloak.Group, error) {
 	group := FindSubgroup(groups[0], groupName)
 
 	if group == nil {
-		return nil, errors.New("Group not found in tree.")
+		return nil, errors.New("group not found in tree")
 	}
 
 	return group, nil
@@ -360,7 +439,7 @@ func GetGroups(parentGroupName *string) (*[]gocloak.Group, error) {
 
 		return fullGroup.SubGroups, err
 	} else {
-		err := errors.New("Group name does not exist.")
+		err := errors.New("group name does not exist")
 		return nil, err
 	}
 }
@@ -501,14 +580,80 @@ func DeleteGroup(group *gocloak.Group) error {
 	)
 }
 
-//Send an email with a link to complete all required actions for a user
-func ExecuteCurrentActionEmail(username string) error {
-	user, err := GetUser(username)
+func GetUserCredentials(user *gocloak.User) ([]*gocloak.CredentialRepresentation, error) {
+	c, err := GetServiceAccountClient()
+
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	credentials, err := (*c.GoCloakClient).GetCredentials(
+		ctx,
+		c.Token.AccessToken,
+		c.Realm,
+		*user.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return credentials, nil
+}
+
+func DeleteUserCredential(user *gocloak.User, credential *gocloak.CredentialRepresentation) error {
+	c, err := GetServiceAccountClient()
 
 	if err != nil {
 		return err
 	}
 
+	ctx := context.Background()
+
+	return (*c.GoCloakClient).DeleteCredentials(
+		ctx,
+		c.Token.AccessToken,
+		c.Realm,
+		*user.ID,
+		*credential.ID,
+	)
+}
+
+func AddUserRequiredAction(user *gocloak.User, requiredAction string) error {
+	hasUserRequiredAction, _ := HasUserRequiredAction(user, requiredAction)
+
+	if !hasUserRequiredAction {
+		*(user.RequiredActions) = append(*(user.RequiredActions), requiredAction)
+		return UpdateUser(user)
+	}
+
+	return nil
+}
+
+func HasUserRequiredAction(user *gocloak.User, requiredAction string) (bool, int) {
+	for i, action := range *user.RequiredActions {
+		if action == requiredAction {
+			return true, i
+		}
+	}
+
+	return false, -1
+}
+
+func RemoveUserRequiredAction(user *gocloak.User, requiredAction string) error {
+	hasUserRequiredAction, pos := HasUserRequiredAction(user, requiredAction)
+
+	if hasUserRequiredAction {
+		*user.RequiredActions = append((*user.RequiredActions)[:pos], (*user.RequiredActions)[pos+1:]...)
+		return UpdateUser(user)
+	}
+
+	return nil
+}
+
+//Send an email with a link to complete all required actions for a user
+func ExecuteCurrentActionEmail(user *gocloak.User) error {
 	return ExecuteActionEmail(*user.ID, *user.RequiredActions)
 }
 
