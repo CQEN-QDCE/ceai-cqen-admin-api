@@ -152,6 +152,10 @@ func (c *Client) Request(operationId string, parameters *map[string]string, requ
 		req.Header.Set("Authorization", *c.Authorization)
 	}
 
+	// Uncomment for local tests
+	//req.Header.Set("X-CEAI-Username", "user@example.com")
+	//req.Header.Set("X-CEAI-UserRoles", "api-admin")
+
 	//TODO Request validation? Optional?
 
 	resp, err := c.HttpClient.Do(req)
