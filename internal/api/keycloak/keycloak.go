@@ -11,9 +11,9 @@ import (
 
 const CLIENT_TOKEN_TTL = 60
 
-const CREDENTIAL_PW = "password"
-const CREDENTIAL_OTP = "otp"
-const CREDENTIAL_ALL = "_All_"
+const CREDENTIAL_TYPE_PW = "password"
+const CREDENTIAL_TYPE_OTP = "otp"
+const CREDENTIAL_TYPE_ALL = "_All_"
 
 const REQUIRED_ACTION_VERIFY_EMAIL = "VERIFY_EMAIL"
 const REQUIRED_ACTION_UPDATE_PASSWORD = "UPDATE_PASSWORD"
@@ -21,8 +21,8 @@ const REQUIRED_ACTION_CONFIGURE_TOTP = "CONFIGURE_TOTP"
 const REQUIRED_ACTION_UPDATE_PROFILE = "UPDATE_PROFILE"
 
 var CREDENTIAL_REQUIRED_ACTION_INDEX = map[string]string{
-	CREDENTIAL_PW:  REQUIRED_ACTION_UPDATE_PASSWORD,
-	CREDENTIAL_OTP: REQUIRED_ACTION_CONFIGURE_TOTP,
+	CREDENTIAL_TYPE_PW:  REQUIRED_ACTION_UPDATE_PASSWORD,
+	CREDENTIAL_TYPE_OTP: REQUIRED_ACTION_CONFIGURE_TOTP,
 }
 
 var serviceAccountClient *ServiceAccountClient
@@ -216,7 +216,7 @@ func RefreshUser(user *gocloak.User) (*gocloak.User, error) {
 	return GetUserById(*user.ID)
 }
 
-// Fetch the last version of the groups list of a user
+// Fetch the last version of a user groups
 func RefreshUserGroups(user *gocloak.User) (*gocloak.User, error) {
 	groups, err := GetUserGroups(user)
 	if err != nil {
@@ -233,7 +233,7 @@ func RefreshUserGroups(user *gocloak.User) (*gocloak.User, error) {
 	return user, nil
 }
 
-// Fetch the last version of the roles list of a user
+// Fetch the last version of a user roles
 func RefreshUserRoles(user *gocloak.User) (*gocloak.User, error) {
 	roles, err := GetUserRoles(user)
 	if err != nil {
@@ -248,6 +248,41 @@ func RefreshUserRoles(user *gocloak.User) (*gocloak.User, error) {
 	user.RealmRoles = &roleList
 
 	return user, nil
+}
+
+// Do not use until https://github.com/Nerzal/gocloak/issues/381 is resolved
+func GetUserLastLoginEvent(user *gocloak.User) (*gocloak.EventRepresentation, error) {
+	c, err := GetServiceAccountClient()
+
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	events, err := (*c.GoCloakClient).GetEvents(
+		ctx,
+		c.Token.AccessToken,
+		c.Realm,
+		gocloak.GetEventsParams{
+			UserID: user.ID,
+			Type:   []string{"LOGIN"},
+		})
+
+	if err != nil {
+		return nil, err
+	}
+
+	//Find last one
+	var lastLoginEvent *gocloak.EventRepresentation
+
+	for _, event := range events {
+		if lastLoginEvent == nil || event.Time > lastLoginEvent.Time {
+			lastLoginEvent = event
+		}
+	}
+
+	return lastLoginEvent, nil
 }
 
 //Create a new User, returns it's ID
