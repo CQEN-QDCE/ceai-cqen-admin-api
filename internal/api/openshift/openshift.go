@@ -22,6 +22,12 @@ import (
 var ocConfig *rest.Config
 var isOCNonPersist bool
 
+const ERR_RESOURCE_NAME_MAY_NOT_BE_EMPTY = "resource name may not be empty"
+const ERR_RESOURCE_USER_NOT_FOUND_PREFIX = "users.user.openshift.io \""
+const ERR_RESOURCE_GROUP_NOT_FOUND_PREFIX = "groups.user.openshift.io \""
+const ERR_RESOURCE_NAMESPACE_NOT_FOUND_PREFIX = "namespaces \""
+const ERR_RESOURCE_NOT_FOUND_SUFFIX = "\" not found"
+
 func GetClientConfig() (*rest.Config, error) {
 	if ocConfig != nil {
 		return ocConfig, nil
@@ -34,12 +40,11 @@ func GetClientConfig() (*rest.Config, error) {
 		return nil, err
 	}
 
-	//ocNonPersist?
+	//Openshift Non Persist?
 	strOcNonPersist, existsOcNonPersist := os.LookupEnv("OC_NON_PERSIST")
 	if existsOcNonPersist {
 		_isOCNonPersist, _ := strconv.ParseBool(strOcNonPersist)
 		if _isOCNonPersist {
-			log.Println("Setting Openshift Non Persist var to true!")
 			isOCNonPersist = true
 		}
 	}
@@ -109,10 +114,9 @@ func GetUser(username string) (*user.User, error) {
 	}
 
 	_user, err := userClient.Users().Get(context.TODO(), username, meta.GetOptions{})
-	if err != nil {
-		if isOCNonPersist {
-			return _user, nil
-		}
+	errorMessage := ERR_RESOURCE_USER_NOT_FOUND_PREFIX + username + ERR_RESOURCE_NOT_FOUND_SUFFIX
+	if IsErrorWithMessageAndOcNonPersist(errorMessage, err) {
+		return _user, nil
 	}
 
 	return _user, err
@@ -128,29 +132,31 @@ func CreateUser(user *user.User) (*user.User, error) {
 }
 
 func UpdateUser(user *user.User) (*user.User, error) {
-	if isOCNonPersist {
-		return user, nil //No action in Openshift
-	}
-
 	userClient, err := GetUserClient()
 	if err != nil {
 		return nil, err
 	}
 
-	return userClient.Users().Update(context.TODO(), user, GetUpdateOptions())
+	_usr, err := userClient.Users().Update(context.TODO(), user, GetUpdateOptions())
+	if IsErrorWithMessageAndOcNonPersist(ERR_RESOURCE_NAME_MAY_NOT_BE_EMPTY, err) {
+		return _usr, nil
+	}
+
+	return _usr, err
 }
 
 func DeleteUser(user *user.User) error {
-	if isOCNonPersist {
-		return nil //No action in Openshift
-	}
-
 	userClient, err := GetUserClient()
 	if err != nil {
 		return err
 	}
 
-	return userClient.Users().Delete(context.TODO(), user.Name, GetDeleteOptions())
+	_err := userClient.Users().Delete(context.TODO(), user.Name, GetDeleteOptions())
+	if IsErrorWithMessageAndOcNonPersist(ERR_RESOURCE_NAME_MAY_NOT_BE_EMPTY, _err) {
+		return nil
+	}
+
+	return _err
 }
 
 func GetGroup(groupName string) (*user.Group, error) {
@@ -160,10 +166,9 @@ func GetGroup(groupName string) (*user.Group, error) {
 	}
 
 	_group, err := userClient.Groups().Get(context.TODO(), groupName, meta.GetOptions{})
-	if err != nil {
-		if isOCNonPersist {
-			return _group, nil
-		}
+	errorMessage := ERR_RESOURCE_GROUP_NOT_FOUND_PREFIX + groupName + ERR_RESOURCE_NOT_FOUND_SUFFIX
+	if IsErrorWithMessageAndOcNonPersist(errorMessage, err) {
+		return _group, nil
 	}
 
 	return _group, err
@@ -179,23 +184,20 @@ func CreateGroup(group *user.Group) (*user.Group, error) {
 }
 
 func UpdateGroup(group *user.Group) (*user.Group, error) {
-	if isOCNonPersist {
-		return group, nil //No action in Openshift
-	}
-
 	userClient, err := GetUserClient()
 	if err != nil {
 		return nil, err
 	}
 
-	return userClient.Groups().Update(context.TODO(), group, GetUpdateOptions())
+	_group, err := userClient.Groups().Update(context.TODO(), group, GetUpdateOptions())
+	if IsErrorWithMessageAndOcNonPersist(ERR_RESOURCE_NAME_MAY_NOT_BE_EMPTY, err) {
+		return _group, nil
+	}
+
+	return _group, err
 }
 
 func DeleteGroup(group *user.Group) error {
-	if isOCNonPersist {
-		return nil //No action in Openshift
-	}
-
 	userClient, err := GetUserClient()
 	if err != nil {
 		return err
@@ -205,9 +207,6 @@ func DeleteGroup(group *user.Group) error {
 }
 
 func AddUserInGroup(userName string, groupName string) error {
-	if isOCNonPersist {
-		return nil //No action in Openshift
-	}
 
 	userClient, err := GetUserClient()
 	if err != nil {
@@ -221,15 +220,15 @@ func AddUserInGroup(userName string, groupName string) error {
 	if !inGroup {
 		group.Users = append(group.Users, userName)
 		_, err = userClient.Groups().Update(context.TODO(), group, GetUpdateOptions())
+		if IsErrorWithMessageAndOcNonPersist(ERR_RESOURCE_NAME_MAY_NOT_BE_EMPTY, err) {
+			return nil
+		}
 	}
 
 	return err
 }
 
 func RemoveUserFromGroup(userName string, groupName string) error {
-	if isOCNonPersist {
-		return nil //No action in Openshift
-	}
 
 	userClient, err := GetUserClient()
 	if err != nil {
@@ -237,6 +236,9 @@ func RemoveUserFromGroup(userName string, groupName string) error {
 	}
 
 	group, err := userClient.Groups().Get(context.TODO(), groupName, meta.GetOptions{})
+	if IsErrorWithMessageAndOcNonPersist(ERR_RESOURCE_NAME_MAY_NOT_BE_EMPTY, err) {
+		return nil
+	}
 
 	inGroup, pos := UserInGroup(userName, group)
 
@@ -248,6 +250,9 @@ func RemoveUserFromGroup(userName string, groupName string) error {
 		}
 
 		_, err = userClient.Groups().Update(context.TODO(), group, GetUpdateOptions())
+		if IsErrorWithMessageAndOcNonPersist(ERR_RESOURCE_NAME_MAY_NOT_BE_EMPTY, err) {
+			return nil
+		}
 	}
 
 	return err
@@ -286,10 +291,10 @@ func GetProject(projectName string) (*project.Project, error) {
 	}
 
 	_project, err := projectClient.Projects().Get(context.TODO(), projectName, meta.GetOptions{})
-	if err != nil {
-		if isOCNonPersist {
-			return _project, nil
-		}
+	errorMessage := ERR_RESOURCE_NAMESPACE_NOT_FOUND_PREFIX + projectName + ERR_RESOURCE_NOT_FOUND_SUFFIX
+	if IsErrorWithMessageAndOcNonPersist(errorMessage, err) {
+		_project = GetDummyProject(projectName)
+		return _project, nil
 	}
 
 	return _project, err
@@ -305,29 +310,37 @@ func CreateProject(project *project.ProjectRequest) (*project.Project, error) {
 }
 
 func UpdateProject(project *project.Project) (*project.Project, error) {
-	if isOCNonPersist {
-		return project, nil //No action in Openshift
-	}
 
 	projectClient, err := GetProjectClient()
 	if err != nil {
 		return nil, err
 	}
 
-	return projectClient.Projects().Update(context.TODO(), project, GetUpdateOptions())
+	_project, err := projectClient.Projects().Update(context.TODO(), project, GetUpdateOptions())
+	errorMessage := ERR_RESOURCE_NAMESPACE_NOT_FOUND_PREFIX + project.Name + ERR_RESOURCE_NOT_FOUND_SUFFIX
+	if IsErrorWithMessageAndOcNonPersist(errorMessage, err) {
+		_project = GetDummyProject(project.Name)
+		return _project, nil
+	}
+
+	return _project, err
 }
 
 func DeleteProject(project *project.Project) error {
-	if isOCNonPersist {
-		return nil //No action in Openshift
-	}
 
 	projectClient, err := GetProjectClient()
 	if err != nil {
 		return err
 	}
 
-	return projectClient.Projects().Delete(context.TODO(), project.Name, GetDeleteOptions())
+	_err := projectClient.Projects().Delete(context.TODO(), project.Name, GetDeleteOptions())
+
+	errorMessage := ERR_RESOURCE_NAMESPACE_NOT_FOUND_PREFIX + project.Name + ERR_RESOURCE_NOT_FOUND_SUFFIX
+	if IsErrorWithMessageAndOcNonPersist(errorMessage, err) {
+		return nil
+	}
+
+	return _err
 }
 
 func GetNamespace(projectName string) (*core.Namespace, error) {
@@ -336,20 +349,10 @@ func GetNamespace(projectName string) (*core.Namespace, error) {
 		return nil, err
 	}
 
-	_ns, err := k8sClient.CoreV1().Namespaces().Get(context.TODO(), projectName, meta.GetOptions{})
-	if err != nil {
-		if isOCNonPersist {
-			return _ns, nil
-		}
-	}
-
-	return _ns, err
+	return k8sClient.CoreV1().Namespaces().Get(context.TODO(), projectName, meta.GetOptions{})
 }
 
 func UpdateNamespace(namespace *core.Namespace) (*core.Namespace, error) {
-	if isOCNonPersist {
-		return namespace, nil //No action in Openshift
-	}
 
 	k8sClient, err := GetK8sClient()
 	if err != nil {
@@ -384,9 +387,6 @@ func CreateRoleBinding(namespace string, roleBinding *authorization.RoleBinding)
 }
 
 func DeleteRoleBinding(namespace string, roleBinding *authorization.RoleBinding) error {
-	if isOCNonPersist {
-		return nil //No action in Openshift
-	}
 
 	authorizationClient, err := GetAuthorizationClient()
 	if err != nil {
@@ -418,4 +418,35 @@ func GetDeleteOptions() meta.DeleteOptions {
 		opts.DryRun = append(opts.DryRun, meta.DryRunAll)
 	}
 	return opts
+}
+
+/**
+Methods to support a non Openshift environment
+**/
+
+func IsErrorWithMessageAndOcNonPersist(errorMessage string, err error) bool {
+	if err != nil {
+		if err.Error() == errorMessage {
+			if isOCNonPersist {
+				log.Println("IsSpecifiedErrorMessageAndOcNonPersist " + errorMessage + " is true!!!")
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func GetDummyProject(projectName string) *project.Project {
+	var dummyProject *project.Project
+	dummyProject = new(project.Project)
+
+	dummyProject.Name = projectName
+
+	mapAnnotations := map[string]string{
+		"openshift.io/description":  "some description",
+		"openshift.io/display-name": "some displayname",
+	}
+	dummyProject.Annotations = mapAnnotations
+
+	return dummyProject
 }
