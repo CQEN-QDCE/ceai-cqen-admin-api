@@ -95,3 +95,36 @@ func DeleteUser(username string) error {
 
 	return err
 }
+
+func ResetUserCredential(username string, credentialType string) error {
+	client, err := GetAuthenticatedClient()
+
+	if err != nil {
+		return err
+	}
+
+	pathParam := map[string]string{
+		"username":       username,
+		"credentialType": credentialType,
+	}
+
+	_, err = client.Request("ResetUserCredential", &pathParam, nil)
+
+	return err
+}
+
+func SendRequiredActionEmail(username string) error {
+	client, err := GetAuthenticatedClient()
+
+	if err != nil {
+		return err
+	}
+
+	pathParam := map[string]string{
+		"username": username,
+	}
+
+	_, err = client.Request("SendRequiredActionEmail", &pathParam, nil)
+
+	return err
+}

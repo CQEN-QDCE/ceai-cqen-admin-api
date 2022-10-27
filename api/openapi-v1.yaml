@@ -379,6 +379,66 @@ paths:
         - Username: []
           UserRoles: []
           GatewaySecret: []
+  /user/{username}/credential/{credentialType}:
+    delete:
+      operationId: ResetUserCredential
+      description: >-
+        Reset user credentials. Delete the credential then send an email to create a new one.
+      parameters:
+        - name: username
+          in: path
+          description: The username of the targetted user.
+          required: true
+          schema:
+            type: string
+        - name: credentialType
+          in: path
+          description: The type of credential to reset (password, otp, all).
+          required: true
+          schema:
+            type: string
+            enum:
+              - password
+              - otp
+              - all
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Username does not exist
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
+  /user/{username}/actionEmail:
+    post:
+      operationId: SendRequiredActionEmail
+      description: >-
+        Send a user an email with a link to complete his required actions.
+      parameters:
+        - name: username
+          in: path
+          description: The username of the targetted user.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Username does not exist
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+      security:
+        - Username: []
+          UserRoles: []
+          GatewaySecret: []
   /laboratory:
     get:
       operationId: GetLaboratories

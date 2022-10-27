@@ -20,6 +20,10 @@ type UserHandlersInterface interface {
 	CreateUser(response *apifirst.ResponseWriter, r *http.Request) error
 	// (PUT /user/{username})
 	UpdateUser(response *apifirst.ResponseWriter, r *http.Request) error
+	// (DELETE /user/{username}/credential/{credentialType})
+	ResetUserCredential(response *apifirst.ResponseWriter, request *http.Request) error
+	// (POST /user/{username}/actionEmail
+	SendRequiredActionEmail(response *apifirst.ResponseWriter, request *http.Request) error
 }
 
 // GetAllUsers
@@ -126,6 +130,61 @@ func (s ServerHandlers) DeleteUser(response *apifirst.ResponseWriter, request *h
 	username := params["username"]
 
 	err := services.DeleteUser(username)
+
+	if err != nil {
+		if _, ok := err.(services.ErrorExternalRessourceNotFound); ok {
+			response.SetStatus(http.StatusNotFound)
+			return err
+		}
+
+		if _, ok := err.(services.ErrorExternalServerError); ok {
+			response.SetStatus(http.StatusInternalServerError)
+			return err
+		}
+	}
+
+	response.SetStatus(http.StatusOK)
+
+	return nil
+}
+
+func (s ServerHandlers) ResetUserCredential(response *apifirst.ResponseWriter, request *http.Request) error {
+	//Path params
+	params := mux.Vars(request)
+	username := params["username"]
+	credentialType := params["credentialType"]
+
+	credTypeIndex := map[string]string{
+		"password": services.CREDENTIAL_PW,
+		"otp":      services.CREDENTIAL_OTP,
+		"all":      services.CREDENTIAL_ALL,
+	}
+
+	err := services.ResetUserCredential(username, credTypeIndex[credentialType])
+
+	if err != nil {
+		if _, ok := err.(services.ErrorExternalRessourceNotFound); ok {
+			response.SetStatus(http.StatusNotFound)
+			return err
+		}
+
+		if _, ok := err.(services.ErrorExternalServerError); ok {
+			response.SetStatus(http.StatusInternalServerError)
+			return err
+		}
+	}
+
+	response.SetStatus(http.StatusOK)
+
+	return nil
+}
+
+func (s ServerHandlers) SendRequiredActionEmail(response *apifirst.ResponseWriter, request *http.Request) error {
+	//Path params
+	params := mux.Vars(request)
+	username := params["username"]
+
+	err := services.SendCurrentActionEmail(username)
 
 	if err != nil {
 		if _, ok := err.(services.ErrorExternalRessourceNotFound); ok {
