@@ -20,6 +20,10 @@ type UserHandlersInterface interface {
 	CreateUser(response *apifirst.ResponseWriter, r *http.Request) error
 	// (PUT /user/{username})
 	UpdateUser(response *apifirst.ResponseWriter, r *http.Request) error
+	// (DELETE /user/{username}/credential/{credentialType})
+	ResetUserCredential(response *apifirst.ResponseWriter, request *http.Request) error
+	// (POST /user/{username}/actionEmail
+	SendRequiredActionEmail(response *apifirst.ResponseWriter, request *http.Request) error
 }
 
 // GetAllUsers

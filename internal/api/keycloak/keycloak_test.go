@@ -42,7 +42,7 @@ func TestGetUser(t *testing.T) {
 		t.Fatal(errors.New("User has no groups"))
 	}
 
-	//User shoulf have RealmRoles
+	//User should have RealmRoles
 	if len(*user.RealmRoles) < 1 {
 		t.Fatal(errors.New("User has no realmRoles"))
 	}
@@ -67,7 +67,7 @@ func TestGetUserById(t *testing.T) {
 		t.Fatal(errors.New("User has no groups"))
 	}
 
-	//User shoulf have RealmRoles
+	//User should have RealmRoles
 	if len(*user.RealmRoles) < 1 {
 		t.Fatal(errors.New("User has no realmRoles"))
 	}

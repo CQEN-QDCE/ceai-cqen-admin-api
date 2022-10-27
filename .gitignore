@@ -23,6 +23,8 @@ ceai
 # Config and env files
 .env
 test.env
+dev.env
+prod.env
 kubeconfig
 
 # Dependency directories (remove the comment below to include it)
