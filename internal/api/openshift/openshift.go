@@ -2,7 +2,9 @@ package openshift
 
 import (
 	"context"
+	"log"
 	"os"
+	"strconv"
 
 	authorization "github.com/openshift/api/authorization/v1"
 	project "github.com/openshift/api/project/v1"
@@ -18,6 +20,13 @@ import (
 )
 
 var ocConfig *rest.Config
+var isOCNonPersist bool
+
+const ERR_RESOURCE_NAME_MAY_NOT_BE_EMPTY = "resource name may not be empty"
+const ERR_RESOURCE_USER_NOT_FOUND_PREFIX = "users.user.openshift.io \""
+const ERR_RESOURCE_GROUP_NOT_FOUND_PREFIX = "groups.user.openshift.io \""
+const ERR_RESOURCE_NAMESPACE_NOT_FOUND_PREFIX = "namespaces \""
+const ERR_RESOURCE_NOT_FOUND_SUFFIX = "\" not found"
 
 func GetClientConfig() (*rest.Config, error) {
 	if ocConfig != nil {
@@ -29,6 +38,15 @@ func GetClientConfig() (*rest.Config, error) {
 	ocConfig, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		return nil, err
+	}
+
+	//Openshift Non Persist?
+	strOcNonPersist, existsOcNonPersist := os.LookupEnv("OC_NON_PERSIST")
+	if existsOcNonPersist {
+		_isOCNonPersist, _ := strconv.ParseBool(strOcNonPersist)
+		if _isOCNonPersist {
+			isOCNonPersist = true
+		}
 	}
 
 	return ocConfig, nil
@@ -95,7 +113,13 @@ func GetUser(username string) (*user.User, error) {
 		return nil, err
 	}
 
-	return userClient.Users().Get(context.TODO(), username, meta.GetOptions{})
+	_user, err := userClient.Users().Get(context.TODO(), username, meta.GetOptions{})
+	errorMessage := ERR_RESOURCE_USER_NOT_FOUND_PREFIX + username + ERR_RESOURCE_NOT_FOUND_SUFFIX
+	if IsErrorWithMessageAndOcNonPersist(errorMessage, err) {
+		return _user, nil
+	}
+
+	return _user, err
 }
 
 func CreateUser(user *user.User) (*user.User, error) {
@@ -104,7 +128,7 @@ func CreateUser(user *user.User) (*user.User, error) {
 		return nil, err
 	}
 
-	return userClient.Users().Create(context.TODO(), user, meta.CreateOptions{})
+	return userClient.Users().Create(context.TODO(), user, GetCreateOptions())
 }
 
 func UpdateUser(user *user.User) (*user.User, error) {
@@ -113,7 +137,12 @@ func UpdateUser(user *user.User) (*user.User, error) {
 		return nil, err
 	}
 
-	return userClient.Users().Update(context.TODO(), user, meta.UpdateOptions{})
+	_usr, err := userClient.Users().Update(context.TODO(), user, GetUpdateOptions())
+	if IsErrorWithMessageAndOcNonPersist(ERR_RESOURCE_NAME_MAY_NOT_BE_EMPTY, err) {
+		return _usr, nil
+	}
+
+	return _usr, err
 }
 
 func DeleteUser(user *user.User) error {
@@ -122,7 +151,12 @@ func DeleteUser(user *user.User) error {
 		return err
 	}
 
-	return userClient.Users().Delete(context.TODO(), user.Name, meta.DeleteOptions{})
+	_err := userClient.Users().Delete(context.TODO(), user.Name, GetDeleteOptions())
+	if IsErrorWithMessageAndOcNonPersist(ERR_RESOURCE_NAME_MAY_NOT_BE_EMPTY, _err) {
+		return nil
+	}
+
+	return _err
 }
 
 func GetGroup(groupName string) (*user.Group, error) {
@@ -131,7 +165,13 @@ func GetGroup(groupName string) (*user.Group, error) {
 		return nil, err
 	}
 
-	return userClient.Groups().Get(context.TODO(), groupName, meta.GetOptions{})
+	_group, err := userClient.Groups().Get(context.TODO(), groupName, meta.GetOptions{})
+	errorMessage := ERR_RESOURCE_GROUP_NOT_FOUND_PREFIX + groupName + ERR_RESOURCE_NOT_FOUND_SUFFIX
+	if IsErrorWithMessageAndOcNonPersist(errorMessage, err) {
+		return _group, nil
+	}
+
+	return _group, err
 }
 
 func CreateGroup(group *user.Group) (*user.Group, error) {
@@ -140,7 +180,7 @@ func CreateGroup(group *user.Group) (*user.Group, error) {
 		return nil, err
 	}
 
-	return userClient.Groups().Create(context.TODO(), group, meta.CreateOptions{})
+	return userClient.Groups().Create(context.TODO(), group, GetCreateOptions())
 }
 
 func UpdateGroup(group *user.Group) (*user.Group, error) {
@@ -149,7 +189,12 @@ func UpdateGroup(group *user.Group) (*user.Group, error) {
 		return nil, err
 	}
 
-	return userClient.Groups().Update(context.TODO(), group, meta.UpdateOptions{})
+	_group, err := userClient.Groups().Update(context.TODO(), group, GetUpdateOptions())
+	if IsErrorWithMessageAndOcNonPersist(ERR_RESOURCE_NAME_MAY_NOT_BE_EMPTY, err) {
+		return _group, nil
+	}
+
+	return _group, err
 }
 
 func DeleteGroup(group *user.Group) error {
@@ -158,10 +203,11 @@ func DeleteGroup(group *user.Group) error {
 		return err
 	}
 
-	return userClient.Groups().Delete(context.TODO(), group.Name, meta.DeleteOptions{})
+	return userClient.Groups().Delete(context.TODO(), group.Name, GetDeleteOptions())
 }
 
 func AddUserInGroup(userName string, groupName string) error {
+
 	userClient, err := GetUserClient()
 	if err != nil {
 		return err
@@ -173,19 +219,26 @@ func AddUserInGroup(userName string, groupName string) error {
 
 	if !inGroup {
 		group.Users = append(group.Users, userName)
-		_, err = userClient.Groups().Update(context.TODO(), group, meta.UpdateOptions{})
+		_, err = userClient.Groups().Update(context.TODO(), group, GetUpdateOptions())
+		if IsErrorWithMessageAndOcNonPersist(ERR_RESOURCE_NAME_MAY_NOT_BE_EMPTY, err) {
+			return nil
+		}
 	}
 
 	return err
 }
 
 func RemoveUserFromGroup(userName string, groupName string) error {
+
 	userClient, err := GetUserClient()
 	if err != nil {
 		return err
 	}
 
 	group, err := userClient.Groups().Get(context.TODO(), groupName, meta.GetOptions{})
+	if IsErrorWithMessageAndOcNonPersist(ERR_RESOURCE_NAME_MAY_NOT_BE_EMPTY, err) {
+		return nil
+	}
 
 	inGroup, pos := UserInGroup(userName, group)
 
@@ -196,13 +249,16 @@ func RemoveUserFromGroup(userName string, groupName string) error {
 			group.Users = []string{} //Replace with a empty array if it only has our user in it
 		}
 
-		_, err = userClient.Groups().Update(context.TODO(), group, meta.UpdateOptions{})
+		_, err = userClient.Groups().Update(context.TODO(), group, GetUpdateOptions())
+		if IsErrorWithMessageAndOcNonPersist(ERR_RESOURCE_NAME_MAY_NOT_BE_EMPTY, err) {
+			return nil
+		}
 	}
 
 	return err
 }
 
-//Check if a user is in a group
+// Check if a user is in a group
 func UserInGroup(username string, group *user.Group) (bool, int) {
 	for i, user := range group.Users {
 		if user == username {
@@ -234,7 +290,14 @@ func GetProject(projectName string) (*project.Project, error) {
 		return nil, err
 	}
 
-	return projectClient.Projects().Get(context.TODO(), projectName, meta.GetOptions{})
+	_project, err := projectClient.Projects().Get(context.TODO(), projectName, meta.GetOptions{})
+	errorMessage := ERR_RESOURCE_NAMESPACE_NOT_FOUND_PREFIX + projectName + ERR_RESOURCE_NOT_FOUND_SUFFIX
+	if IsErrorWithMessageAndOcNonPersist(errorMessage, err) {
+		_project = GetDummyProject(projectName)
+		return _project, nil
+	}
+
+	return _project, err
 }
 
 func CreateProject(project *project.ProjectRequest) (*project.Project, error) {
@@ -243,25 +306,41 @@ func CreateProject(project *project.ProjectRequest) (*project.Project, error) {
 		return nil, err
 	}
 
-	return projectClient.ProjectRequests().Create(context.TODO(), project, meta.CreateOptions{})
+	return projectClient.ProjectRequests().Create(context.TODO(), project, GetCreateOptions())
 }
 
 func UpdateProject(project *project.Project) (*project.Project, error) {
+
 	projectClient, err := GetProjectClient()
 	if err != nil {
 		return nil, err
 	}
 
-	return projectClient.Projects().Update(context.TODO(), project, meta.UpdateOptions{})
+	_project, err := projectClient.Projects().Update(context.TODO(), project, GetUpdateOptions())
+	errorMessage := ERR_RESOURCE_NAMESPACE_NOT_FOUND_PREFIX + project.Name + ERR_RESOURCE_NOT_FOUND_SUFFIX
+	if IsErrorWithMessageAndOcNonPersist(errorMessage, err) {
+		_project = GetDummyProject(project.Name)
+		return _project, nil
+	}
+
+	return _project, err
 }
 
 func DeleteProject(project *project.Project) error {
+
 	projectClient, err := GetProjectClient()
 	if err != nil {
 		return err
 	}
 
-	return projectClient.Projects().Delete(context.TODO(), project.Name, meta.DeleteOptions{})
+	_err := projectClient.Projects().Delete(context.TODO(), project.Name, GetDeleteOptions())
+
+	errorMessage := ERR_RESOURCE_NAMESPACE_NOT_FOUND_PREFIX + project.Name + ERR_RESOURCE_NOT_FOUND_SUFFIX
+	if IsErrorWithMessageAndOcNonPersist(errorMessage, err) {
+		return nil
+	}
+
+	return _err
 }
 
 func GetNamespace(projectName string) (*core.Namespace, error) {
@@ -274,12 +353,13 @@ func GetNamespace(projectName string) (*core.Namespace, error) {
 }
 
 func UpdateNamespace(namespace *core.Namespace) (*core.Namespace, error) {
+
 	k8sClient, err := GetK8sClient()
 	if err != nil {
 		return nil, err
 	}
 
-	return k8sClient.CoreV1().Namespaces().Update(context.TODO(), namespace, meta.UpdateOptions{})
+	return k8sClient.CoreV1().Namespaces().Update(context.TODO(), namespace, GetUpdateOptions())
 }
 
 func GetNamespaceRoleBindings(namespace string) (*[]authorization.RoleBinding, error) {
@@ -303,14 +383,70 @@ func CreateRoleBinding(namespace string, roleBinding *authorization.RoleBinding)
 		return nil, err
 	}
 
-	return authorizationClient.RoleBindings(namespace).Create(context.TODO(), roleBinding, meta.CreateOptions{})
+	return authorizationClient.RoleBindings(namespace).Create(context.TODO(), roleBinding, GetCreateOptions())
 }
 
 func DeleteRoleBinding(namespace string, roleBinding *authorization.RoleBinding) error {
+
 	authorizationClient, err := GetAuthorizationClient()
 	if err != nil {
 		return err
 	}
 
-	return authorizationClient.RoleBindings(namespace).Delete(context.TODO(), roleBinding.Name, meta.DeleteOptions{})
+	return authorizationClient.RoleBindings(namespace).Delete(context.TODO(), roleBinding.Name, GetDeleteOptions())
+}
+
+func GetCreateOptions() meta.CreateOptions {
+	opts := meta.CreateOptions{}
+	if isOCNonPersist {
+		opts.DryRun = append(opts.DryRun, meta.DryRunAll)
+	}
+	return opts
+}
+
+func GetUpdateOptions() meta.UpdateOptions {
+	opts := meta.UpdateOptions{}
+	if isOCNonPersist {
+		opts.DryRun = append(opts.DryRun, meta.DryRunAll)
+	}
+	return opts
+}
+
+func GetDeleteOptions() meta.DeleteOptions {
+	opts := meta.DeleteOptions{}
+	if isOCNonPersist {
+		opts.DryRun = append(opts.DryRun, meta.DryRunAll)
+	}
+	return opts
+}
+
+/**
+Methods to support a non Openshift environment
+**/
+
+func IsErrorWithMessageAndOcNonPersist(errorMessage string, err error) bool {
+	if err != nil {
+		if err.Error() == errorMessage {
+			if isOCNonPersist {
+				log.Println("IsSpecifiedErrorMessageAndOcNonPersist " + errorMessage + " is true!!!")
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func GetDummyProject(projectName string) *project.Project {
+	var dummyProject *project.Project
+	dummyProject = new(project.Project)
+
+	dummyProject.Name = projectName
+
+	mapAnnotations := map[string]string{
+		"openshift.io/description":  "some description",
+		"openshift.io/display-name": "some displayname",
+	}
+	dummyProject.Annotations = mapAnnotations
+
+	return dummyProject
 }

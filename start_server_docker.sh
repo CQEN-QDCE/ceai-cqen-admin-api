@@ -16,7 +16,7 @@ then
     then
         docker start ceai_admin_api_server
     else
-        docker run -d --name ceai_admin_api_server --env-file .env --env OPENAPI_PATH=/go/bin/openapi-v1.yaml --env PORT=8080 -p 8080:8080 ceai_admin_api_server
+        docker run -d --name ceai_admin_api_server --env-file .env --env OPENAPI_PATH=/go/bin/openapi-v1.yaml --env PORT=8080 --env KUBECONFIG_PATH=/go/bin/kubeconfig -p 8080:8080 ceai_admin_api_server
     fi
 else
     docker stop ceai_admin_api_server
