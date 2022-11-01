@@ -12,15 +12,16 @@ var outputFormat string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "ceai",
-	Short: "Console d'administration CLI du CEAI",
-	Long:  `Console d'administration CLI du CEAI`,
+	Use:     "ceai",
+	Short:   "Console d'administration CLI du CEAI",
+	Long:    `Console d'administration CLI du CEAI`,
+	Version: "0.2.0",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		//Validate root persistent Flags here
 
 		//Output Format
 		if outputFormat != "text" && outputFormat != "json" && outputFormat != "yaml" {
-			return fmt.Errorf("Format de sortie invalide: %q. Veuillez choisir 'text', 'json' ou 'yaml'", outputFormat)
+			return fmt.Errorf("format de sortie invalide: %q. Veuillez choisir 'text', 'json' ou 'yaml'", outputFormat)
 		}
 
 		return nil
@@ -60,5 +61,5 @@ func PrintOutput(value interface{}) error {
 		return structprinter.PrintTable(value)
 	}
 
-	return fmt.Errorf("unsupported print format: %v", outputFormat)
+	return fmt.Errorf("format de sortie non supporté: %v", outputFormat)
 }

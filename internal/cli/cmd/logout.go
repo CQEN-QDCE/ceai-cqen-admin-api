@@ -28,5 +28,5 @@ func Logout() {
 		return
 	}
 
-	fmt.Printf("Logged out succesfully. \n")
+	fmt.Printf("Session terminée. \n")
 }

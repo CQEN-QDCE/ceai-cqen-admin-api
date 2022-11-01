@@ -60,7 +60,7 @@ func GetUpdateFlagsValues(updateStruct interface{}, structUpdateCmd *cobra.Comma
 				} else if flagVal == "false" {
 					boolval = false
 				} else {
-					return fmt.Errorf("Les valeurs possibles pour la propritété %s sont 'true' ou 'false'.", value.Type().Field(i).Name)
+					return fmt.Errorf("les valeurs possibles pour la propritété %s sont 'true' ou 'false'", value.Type().Field(i).Name)
 				}
 
 				value.Field(i).Elem().SetBool(boolval)
@@ -69,7 +69,7 @@ func GetUpdateFlagsValues(updateStruct interface{}, structUpdateCmd *cobra.Comma
 	}
 
 	if !flagFound {
-		return fmt.Errorf("Aucune valeur à mettre à jour.")
+		return fmt.Errorf("aucune valeur à mettre à jour")
 	}
 
 	return nil

@@ -84,7 +84,7 @@ func Login(server string, username string, password string, totp string) {
 	token, err := client.GetKeycloakAccessToken(server, username, password, totp)
 
 	if err != nil {
-		fmt.Printf("Error: %v \n", err)
+		fmt.Printf("Erreur: %v \n", err)
 		return
 	}
 
@@ -100,5 +100,5 @@ func Login(server string, username string, password string, totp string) {
 		return
 	}
 
-	fmt.Printf("Logged succesfully as %v on %v \n", username, server)
+	fmt.Printf("Session démarrée avec succès en tant que %v sur %v \n", username, server)
 }
