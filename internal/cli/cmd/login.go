@@ -91,6 +91,14 @@ func Login(server string, username string, password string, totp string) {
 	//TODO check audience
 	//Need to decode the token...
 
+	//Force old session deletion
+	err = client.DeleteSession()
+
+	if err != nil {
+		fmt.Printf("Erreur: %v \n", err)
+		return
+	}
+
 	session := client.NewSession(server, requestTime, token)
 
 	err = client.StoreSession(session)
