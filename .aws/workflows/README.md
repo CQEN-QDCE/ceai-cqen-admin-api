@@ -1,5 +1,9 @@
 # CI-CD AWS
 
+![CI AWS - Pull Request](images/AWS-Pipelines-ceai-cqen-admin-api-pull-request.png)
+
+![CI-CD AWS - Merge à la branch dev](images/AWS-Pipelines-ceai-cqen-admin-api-AWS-CI-CD-Merge-Dev.png)
+
 # AWS CodeBuild
 
 ## Projets Build
@@ -12,7 +16,7 @@
     - Il travaille avec le fichier de buildspec dans le code de source: [ci-pr.yml](ci-pr.yml)
 - Build de l'application (go command)
 - Scan de l'application avec l'outil de scan pour les projets go: govulncheck
-- Dépose le résultat du scan dans un fichier nommé "**govulncheck-scan-results**".json**      
+- Dépose le résultat du scan dans un fichier nommé "**govulncheck-scan-results.json**"
     - Il utilise le AWS S3 bucket: "**admin-api-pipeline-bucket**"
     - folder: "**pull-request-build**"
 
