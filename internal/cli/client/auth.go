@@ -193,7 +193,11 @@ func DeleteSession() error {
 		return err
 	}
 
-	return os.Remove(*filePath)
+	if _, err := os.Stat(*filePath); err == nil {
+		return os.Remove(*filePath)
+	}
+
+	return nil
 }
 
 func GetSession() (*Session, error) {
