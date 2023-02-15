@@ -1,0 +1,10 @@
+- id: Id1
+  displayname: Nom complet 1
+  description: Description 1
+  type: projet
+  gitrepo: ""
+- id: Id2
+  displayname: Nom complet 2
+  description: Description 2
+  type: experimentation
+  gitrepo: ""

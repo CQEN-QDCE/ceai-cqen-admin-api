@@ -1,0 +1,18 @@
+[
+    {
+        "firstname": "string",
+        "lastname": "string",
+        "email": "user@example.com",
+        "organisation": "string",
+        "infrarole": "Developer",
+        "disabled": false
+    },
+    {
+        "firstname": "string",
+        "lastname": "string",
+        "email": "user@example.com",
+        "organisation": "string",
+        "infrarole": "Developer",
+        "disabled": false
+    }
+]
