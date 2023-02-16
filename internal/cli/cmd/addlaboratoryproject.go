@@ -20,6 +20,8 @@ var addLaboratoryProjectCmd = &cobra.Command{
 			fmt.Printf("Erreur: %v \n", err)
 			return
 		}
+
+		fmt.Printf("Project Openshift #%v associé au laboratoire %v", args[1], args[0])
 	},
 }
 

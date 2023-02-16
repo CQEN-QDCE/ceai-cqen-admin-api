@@ -29,6 +29,8 @@ var updateUserCmd = &cobra.Command{
 			fmt.Printf("Erreur: %v \n", err)
 			return
 		}
+
+		fmt.Printf("Usager %v mis à jour", args[0])
 	},
 }
 
