@@ -29,7 +29,7 @@ RUN go build -o /go/bin/server ./cmd/server
 RUN cp ./api/openapi-v1.yaml /go/bin/openapi-v1.yaml
 
 #Copy Openshift service account kubeconfig file to bin path
-RUN cp ./openshift/kubeconfig /go/bin/kubeconfig
+RUN cp ./openshift/kubeconfig.yaml /go/bin/kubeconfig
 
 
 ############################
