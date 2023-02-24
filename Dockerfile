@@ -29,7 +29,7 @@ RUN go build -o /go/bin/server ./cmd/server
 RUN cp ./api/openapi-v1.yaml /go/bin/openapi-v1.yaml
 
 #Copy Openshift service account kubeconfig file to bin path
-RUN cp ./openshift/kubeconfig.yaml /go/bin/kubeconfig.yaml
+RUN cp ./openshift/kubeconfig /go/bin/kubeconfig
 
 
 ############################
@@ -46,7 +46,7 @@ ENTRYPOINT /go/bin/server
 # Define fixed env variables
 ENV PORT=8080
 ENV OPENAPI_PATH="/go/bin/openapi-v1.yaml"
-ENV KUBECONFIG_PATH="/go/bin/kubeconfig.yaml"
+ENV KUBECONFIG_PATH="/go/bin/kubeconfig"
 
 # Document that the service listens on port 8080.
 EXPOSE 8080
