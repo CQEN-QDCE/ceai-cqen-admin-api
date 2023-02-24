@@ -46,7 +46,7 @@ ENTRYPOINT /go/bin/server
 # Define fixed env variables
 ENV PORT=8080
 ENV OPENAPI_PATH="/go/bin/openapi-v1.yaml"
-ENV KUBECONFIG_PATH="/go/bin/kubeconfig"
+ENV KUBECONFIG_PATH="/go/bin/kubeconfig.yaml"
 
 # Document that the service listens on port 8080.
 EXPOSE 8080
