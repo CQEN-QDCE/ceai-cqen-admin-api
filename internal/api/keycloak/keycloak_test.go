@@ -1,6 +1,7 @@
 package keycloak
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/Nerzal/gocloak/v11"
@@ -36,7 +37,63 @@ func TestGetUser(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
+	//User should have groups
+	if len(*user.Groups) < 1 {
+		t.Fatal(errors.New("User has no groups"))
+	}
+
+	//User should have RealmRoles
+	if len(*user.RealmRoles) < 1 {
+		t.Fatal(errors.New("User has no realmRoles"))
+	}
+
 	println(*user.ID)
+}
+
+func TestGetUserById(t *testing.T) {
+	err := godotenv.Load("../../../.env")
+	if err != nil {
+		t.Fatal("Error loading .env file: " + err.Error())
+	}
+
+	user, err := GetUserById("user-id-xxxx-xxxx-xxxxxxxxxx")
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	//User should have groups
+	if len(*user.Groups) < 1 {
+		t.Fatal(errors.New("User has no groups"))
+	}
+
+	//User should have RealmRoles
+	if len(*user.RealmRoles) < 1 {
+		t.Fatal(errors.New("User has no realmRoles"))
+	}
+
+	println(*user.ID)
+}
+
+func TestGetUserLastLoginEvent(t *testing.T) {
+	err := godotenv.Load("../../../.env")
+	if err != nil {
+		t.Fatal("Error loading .env file: " + err.Error())
+	}
+
+	user, err := GetUserById("user-id-xxxx-xxxx-xxxxxxxxxx")
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	lastLogin, err := GetUserLastLoginEvent(user)
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	println(lastLogin.Time)
 }
 
 func TestGetGroup(t *testing.T) {

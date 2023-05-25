@@ -1,0 +1,12 @@
+- firstname: Bobby
+  lastname: Example
+  email: bobby@example.com
+  organisation: MCN
+  infrarole: Developer
+  disabled: true
+- firstname: Serge
+  lastname: Example
+  email: serge@example.com
+  organisation: MCN
+  infrarole: Developer
+  disabled: true

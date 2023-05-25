@@ -220,8 +220,11 @@ func GetSession() (*Session, error) {
 			return newSession, nil
 		}
 
-		return nil, fmt.Errorf("Session timed out. Please login.")
+		//Delete expired session
+		DeleteSession()
+
+		return nil, fmt.Errorf("session expirée")
 	}
 
-	return nil, fmt.Errorf("No valid session found. Please login.")
+	return nil, fmt.Errorf("aucune session valide trouvée")
 }

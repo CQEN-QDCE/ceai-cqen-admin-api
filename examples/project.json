@@ -1,0 +1,14 @@
+[
+    {
+      "id": "Identifiant 1",
+      "displayname": "Nom complet du project 1",
+      "description": "Description 1",
+      "idLab": "Identifiant du laboratoire"
+    },
+    {
+      "id": "Identifiant 2",
+      "displayname": "Nom complet du project 2",
+      "description": "Description 2",
+      "idLab": "Identifiant du laboratoire"
+    }
+]

@@ -16,6 +16,10 @@ import (
 const ADMIN_ROLE_NAME = "Admin"
 const DEV_ROLE_NAME = "Developer"
 
+const CREDENTIAL_PW = "password"
+const CREDENTIAL_OTP = "otp"
+const CREDENTIAL_ALL = "_All_"
+
 type UserState struct {
 	models.UserWithLabs
 	Keycloak  *gocloak.User
@@ -27,7 +31,7 @@ func GetKeycloakAdminGroup() (*gocloak.Group, error) {
 	return keycloak.GetGroup(ADMIN_ROLE_NAME)
 }
 
-//Gets current User state across all products: Keycloak|AWS|Openshift
+// Gets current User state across all products: Keycloak|AWS|Openshift
 func GetUserState(username string) (*UserState, error) {
 	var state UserState
 	var kerr, aerr, oerr error
@@ -424,8 +428,16 @@ func CreateUser(pUser models.User) error {
 		return err
 	}
 
+	//Get newly created keycloak user
+	kuser, err := keycloak.GetUser(pUser.Email)
+
+	if err != nil {
+		return NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
+		//TODO email not sent error??
+	}
+
 	//Send account init email
-	err := keycloak.ExecuteCurrentActionEmail(pUser.Email)
+	err = keycloak.ExecuteCurrentActionEmail(kuser)
 
 	if err != nil {
 		return NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
@@ -435,7 +447,7 @@ func CreateUser(pUser models.User) error {
 	return nil
 }
 
-//Idempotent
+// Idempotent
 func UpdateUser(username string, pUser models.UserUpdate) error {
 	userState, err := GetUserState(username)
 
@@ -511,6 +523,60 @@ func DeleteUser(username string) error {
 		}
 
 		return err
+	}
+
+	return nil
+}
+
+func ResetUserCredential(username string, credential string) error {
+	kuser, err := keycloak.GetUser(username)
+
+	if err != nil {
+		return NewErrorExternalRessourceNotFound(err, ERROR_SERVER_KEYCLOAK)
+	}
+
+	userCurrentCreds, err := keycloak.GetUserCredentials(kuser)
+
+	if err != nil {
+		return NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
+	}
+
+	for _, currentCred := range userCurrentCreds {
+		if credential == CREDENTIAL_ALL || *currentCred.Type == credential {
+			err = keycloak.DeleteUserCredential(kuser, currentCred)
+
+			if err != nil {
+				return NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
+			}
+
+			err = keycloak.AddUserRequiredAction(kuser, keycloak.CREDENTIAL_REQUIRED_ACTION_INDEX[*currentCred.Type])
+
+			if err != nil {
+				return NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
+			}
+		}
+	}
+
+	err = keycloak.ExecuteCurrentActionEmail(kuser)
+
+	if err != nil {
+		return NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
+	}
+
+	return nil
+}
+
+func SendCurrentActionEmail(username string) error {
+	kuser, err := keycloak.GetUser(username)
+
+	if err != nil {
+		return NewErrorExternalRessourceNotFound(err, ERROR_SERVER_KEYCLOAK)
+	}
+
+	err = keycloak.ExecuteCurrentActionEmail(kuser)
+
+	if err != nil {
+		return NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
 	}
 
 	return nil

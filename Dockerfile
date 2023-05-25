@@ -2,7 +2,7 @@
 ############################
 # STEP 1 build executable binary
 ############################
-FROM registry.redhat.io/rhel8/go-toolset:1.16 AS builder
+FROM golang:1.18 AS builder
 
 #Copy source files
 ENV GOPATH=/go
