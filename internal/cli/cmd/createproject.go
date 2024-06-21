@@ -33,6 +33,7 @@ var createProjectCmd = &cobra.Command{
 
 		}
 
+		fmt.Printf("%v laboratoire(s) créé(s)", len(projects))
 	},
 }
 

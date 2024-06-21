@@ -20,6 +20,8 @@ var removeLaboratoryAccountCmd = &cobra.Command{
 			fmt.Printf("Erreur: %v \n", err)
 			return
 		}
+
+		fmt.Printf("Compte AWS #%v desassocié du laboratoire %v", args[1], args[0])
 	},
 }
 

@@ -29,6 +29,8 @@ var updateProjectCmd = &cobra.Command{
 			fmt.Printf("Erreur: %v \n", err)
 			return
 		}
+
+		fmt.Printf("Project Openshift %v mis à jour", args[0])
 	},
 }
 

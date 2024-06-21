@@ -20,6 +20,8 @@ var addLaboratoryAccountCmd = &cobra.Command{
 			fmt.Printf("Erreur: %v \n", err)
 			return
 		}
+
+		fmt.Printf("Compte AWS #%v associé au laboratoire %v", args[1], args[0])
 	},
 }
 
