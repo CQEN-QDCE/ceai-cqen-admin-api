@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Nerzal/gocloak/v11"
+	"github.com/Nerzal/gocloak/v13"
 	"github.com/joho/godotenv"
 )
 
@@ -31,7 +31,7 @@ func TestGetUser(t *testing.T) {
 		t.Fatal("Error loading .env file: " + err.Error())
 	}
 
-	user, err := GetUser("test@example.com")
+	user, err := GetUser("user.test@example.com")
 
 	if err != nil {
 		t.Fatal(err.Error())
@@ -145,7 +145,7 @@ func TestAddUserToGroup(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	user, err := GetUser("test@example.com")
+	user, err := GetUser("user.test@example.com")
 
 	if err != nil {
 		t.Fatal(err.Error())

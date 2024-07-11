@@ -33,7 +33,7 @@ func TestGetUser(t *testing.T) {
 		t.Fatal("Error loading .env file: " + err.Error())
 	}
 
-	user, err := GetUser("francis.gagne@sct.gouv.qc.ca")
+	user, err := GetUser("user.test@example.com")
 
 	if err != nil {
 		t.Fatal(err.Error())
@@ -46,13 +46,35 @@ func TestGetUser(t *testing.T) {
 	println(user.Name.GivenName)
 }
 
+func TestCreateUser(t *testing.T) {
+	err := godotenv.Load("../../../.env")
+	if err != nil {
+		t.Fatal("Error loading .env file: " + err.Error())
+	}
+
+	user := scim.NewUser(
+		"User",
+		"Test",
+		"user.test@example.com",
+		true,
+	)
+
+	newuser, err := CreateUser(user)
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	t.Log(newuser.ID)
+}
+
 func TestCreateGroups(t *testing.T) {
 	err := godotenv.Load("../../../.env")
 	if err != nil {
 		t.Fatal("Error loading .env file: " + err.Error())
 	}
 
-	grp, err := CreateGroup(scim.NewGroup("TestGroup"))
+	grp, err := CreateGroup(scim.NewGroup("Developer"))
 
 	if err != nil {
 		t.Fatal(err.Error())
@@ -78,4 +100,29 @@ func TestUpdateGroup(t *testing.T) {
 	}
 
 	t.Log(grp.DisplayName)
+}
+
+func TestAddUserToGroup(t *testing.T) {
+	err := godotenv.Load("../../../.env")
+	if err != nil {
+		t.Fatal("Error loading .env file: " + err.Error())
+	}
+
+	user, err := GetUser("user.test@example.com")
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	grp, err := GetGroup("Admin")
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	AddUserToGroup(user, grp)
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
 }

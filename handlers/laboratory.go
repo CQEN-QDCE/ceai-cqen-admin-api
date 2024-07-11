@@ -51,7 +51,9 @@ func (s ServerHandlers) GetLaboratories(response *apifirst.ResponseWriter, reque
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
-		//TODO else
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusOK)
@@ -76,6 +78,9 @@ func (s ServerHandlers) GetLaboratoryFromId(response *apifirst.ResponseWriter, r
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusOK)
@@ -98,6 +103,9 @@ func (s ServerHandlers) CreateLaboratory(response *apifirst.ResponseWriter, requ
 			response.SetStatus(http.StatusConflict)
 			return err
 		}
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusCreated)
@@ -129,6 +137,9 @@ func (s ServerHandlers) UpdateLaboratory(response *apifirst.ResponseWriter, requ
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusOK)
@@ -160,6 +171,9 @@ func (s ServerHandlers) AddLaboratoryUsers(response *apifirst.ResponseWriter, re
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusOK)
@@ -192,6 +206,9 @@ func (s ServerHandlers) RemoveLaboratoryUsers(response *apifirst.ResponseWriter,
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusOK)
@@ -217,6 +234,9 @@ func (s ServerHandlers) AttachOpenshiftProjectToLaboratory(response *apifirst.Re
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusOK)
@@ -242,6 +262,9 @@ func (s ServerHandlers) DetachOpenshiftProjectFromLaboratory(response *apifirst.
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusOK)
@@ -266,6 +289,9 @@ func (s ServerHandlers) AttachAwsAccountToLaboratory(response *apifirst.Response
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusOK)
@@ -290,6 +316,9 @@ func (s ServerHandlers) DetachAwsAccountFromLaboratory(response *apifirst.Respon
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusOK)
