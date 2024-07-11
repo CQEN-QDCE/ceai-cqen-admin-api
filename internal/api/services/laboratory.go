@@ -8,7 +8,7 @@ import (
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/keycloak"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/openshift"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/models"
-	"github.com/Nerzal/gocloak/v11"
+	"github.com/Nerzal/gocloak/v13"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	openshiftuser "github.com/openshift/api/user/v1"
@@ -71,7 +71,7 @@ func MapLaboratoryWithUsers(kgroup gocloak.Group) (*models.LaboratoryWithUsers, 
 		return nil, err
 	}
 
-	var users []string
+	users := make([]string, 0, len(members))
 
 	for _, member := range members {
 		users = append(users, *member.Email)
@@ -91,7 +91,7 @@ func MapLaboratoryWithResources(kgroup gocloak.Group) (*models.LaboratoryWithRes
 
 	attributes := *kgroup.Attributes
 
-	var openshiftprojects []models.OpenshiftProject
+	openshiftProjects := make([]models.OpenshiftProject, 0, len(attributes["openshift_projects"]))
 
 	if attributes["openshift_projects"] != nil {
 		for _, projectName := range attributes["openshift_projects"] {
@@ -105,15 +105,15 @@ func MapLaboratoryWithResources(kgroup gocloak.Group) (*models.LaboratoryWithRes
 				project.Description = oProject.Annotations["openshift.io/description"]
 				project.Displayname = oProject.Annotations["openshift.io/display-name"]
 
-				openshiftprojects = append(openshiftprojects, project)
+				openshiftProjects = append(openshiftProjects, project)
 			}
 			//else ignore project TODO Log?
 		}
-
-		lab.Openshiftprojects = &openshiftprojects
 	}
 
-	var awsAccounts []models.AWSAccount
+	lab.Openshiftprojects = &openshiftProjects
+
+	awsAccounts := make([]models.AWSAccount, 0, len(attributes["aws_accounts"]))
 
 	if attributes["aws_accounts"] != nil {
 		for _, accountId := range attributes["aws_accounts"] {
@@ -131,15 +131,15 @@ func MapLaboratoryWithResources(kgroup gocloak.Group) (*models.LaboratoryWithRes
 			}
 			//else ignore account TODO log?
 		}
-
-		lab.AWSAccounts = &awsAccounts
 	}
+
+	lab.AWSAccounts = &awsAccounts
 
 	return &lab, nil
 }
 
 func CreateGroupKeycloak(plab *models.Laboratory) error {
-	labTopGroup, err := keycloak.GetGroup(KEYCLOAK_LAB_TOP_GROUP)
+	labTopGroup, err := keycloak.GetGroupByPath(KEYCLOAK_LAB_TOP_GROUP)
 
 	if err != nil {
 		return err
@@ -183,13 +183,13 @@ func CreateGroupOpenshift(plab *models.Laboratory) error {
 	return err
 }
 
-//Gets current Lab states across all products: Keycloak|AWS|Openshift
+// Gets current Lab states across all products: Keycloak|AWS|Openshift
 func GetLaboratoryState(idLab string) (*LaboratoryState, error) {
 	var state LaboratoryState
 	var kerr, aerr, oerr error
 
 	fKeycloak := func() {
-		state.Keycloak, kerr = keycloak.GetGroup(idLab)
+		state.Keycloak, kerr = keycloak.GetGroupByPath(LAB_TOP_GROUP + idLab)
 	}
 
 	fAws := func() {
@@ -375,18 +375,24 @@ func RemoveElementFromKeycloakGroupArrayAttribute(kgroup *gocloak.Group, attribu
 }
 
 func GetLaboratories() ([]*models.LaboratoryWithResources, error) {
-	labGroups, err := keycloak.GetGroups(gocloak.StringP(KEYCLOAK_LAB_TOP_GROUP))
+	labTopGroup, err := keycloak.GetGroupByPath(KEYCLOAK_LAB_TOP_GROUP)
 
 	if err != nil {
 		return nil, NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
 	}
 
-	labsList := make([]*models.LaboratoryWithResources, 0, len(*labGroups))
+	labGroups, err := keycloak.GetGroupChildren(labTopGroup)
 
-	if labGroups != nil {
+	if err != nil {
+		return nil, NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
+	}
 
-		for _, group := range *labGroups {
-			lab, err := MapLaboratoryWithResources(group)
+	labsList := make([]*models.LaboratoryWithResources, 0, len(labGroups))
+
+	if len(labGroups) > 0 {
+
+		for _, group := range labGroups {
+			lab, err := MapLaboratoryWithResources(*group)
 
 			if err == nil {
 				labsList = append(labsList, lab)
@@ -399,7 +405,7 @@ func GetLaboratories() ([]*models.LaboratoryWithResources, error) {
 }
 
 func GetLaboratoryFromId(laboratoryid string) (*models.LaboratoryWithResources, error) {
-	labGroup, err := keycloak.GetGroup(laboratoryid)
+	labGroup, err := keycloak.GetGroupByPath(LAB_TOP_GROUP + laboratoryid)
 
 	if err != nil {
 		return nil, NewErrorExternalRessourceNotFound(err, ERROR_SERVER_KEYCLOAK)
@@ -412,6 +418,16 @@ func GetLaboratoryFromId(laboratoryid string) (*models.LaboratoryWithResources, 
 	}
 
 	return lab, nil
+}
+
+func LaboratoryExists(laboratoryid string) (bool, error) {
+	_, err := keycloak.GetGroupByPath(LAB_TOP_GROUP + laboratoryid)
+
+	if err != nil {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func CreateLaboratory(pLab *models.Laboratory) error {
@@ -450,7 +466,7 @@ func CreateLaboratory(pLab *models.Laboratory) error {
 
 func UpdateLaboratory(laboratoryId string, pLab *models.LaboratoryUpdate) error {
 	//change info in keycloak group only as groups in AWS and Openshift only has id in them
-	group, err := keycloak.GetGroup(laboratoryId)
+	group, err := keycloak.GetGroupByPath(LAB_TOP_GROUP + laboratoryId)
 
 	if err != nil {
 		return NewErrorExternalRessourceNotFound(err, ERROR_SERVER_KEYCLOAK)
@@ -592,7 +608,7 @@ func RemoveLaboratoryUsers(laboratoryId string, usernameList []string) error {
 }
 
 func AttachOpenshiftProjectToLaboratory(laboratoryId string, projectId string) error {
-	kgroup, err := keycloak.GetGroup(laboratoryId)
+	kgroup, err := keycloak.GetGroupByPath(LAB_TOP_GROUP + laboratoryId)
 
 	if err != nil {
 		return NewErrorExternalRessourceNotFound(err, ERROR_SERVER_KEYCLOAK)
@@ -641,7 +657,7 @@ func AttachOpenshiftProjectToLaboratory(laboratoryId string, projectId string) e
 }
 
 func DetachOpenshiftProjectFromLaboratory(laboratoryId string, projectId string) error {
-	kgroup, err := keycloak.GetGroup(laboratoryId)
+	kgroup, err := keycloak.GetGroupByPath(LAB_TOP_GROUP + laboratoryId)
 
 	if err != nil {
 		return NewErrorExternalRessourceNotFound(err, ERROR_SERVER_KEYCLOAK)
@@ -721,7 +737,7 @@ func AttachAwsAccountToLaboratory(laboratoryId string, accountId string) error {
 	}
 
 	//Add account to keycloak aws_projects attribute
-	kgroup, err := keycloak.GetGroup(laboratoryId)
+	kgroup, err := keycloak.GetGroupByPath(LAB_TOP_GROUP + laboratoryId)
 
 	if err != nil {
 		return NewErrorExternalRessourceNotFound(err, ERROR_SERVER_KEYCLOAK)
@@ -762,7 +778,7 @@ func DetachAwsAccountFromLaboratory(laboratoryId string, accountId string) error
 	}
 
 	//Remove account from keycloak aws_projects attribute
-	kgroup, err := keycloak.GetGroup(laboratoryId)
+	kgroup, err := keycloak.GetGroupByPath(LAB_TOP_GROUP + laboratoryId)
 
 	if err != nil {
 		return NewErrorExternalRessourceNotFound(err, ERROR_SERVER_KEYCLOAK)
