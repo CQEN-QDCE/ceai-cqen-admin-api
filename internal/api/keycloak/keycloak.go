@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/Nerzal/gocloak/v11"
+	"github.com/Nerzal/gocloak/v13"
 )
 
 const CLIENT_TOKEN_TTL = 60
@@ -55,7 +55,7 @@ func GetGoCloakClient() *gocloak.GoCloak {
 
 	client := gocloak.NewClient(url)
 
-	return &client
+	return client
 }
 
 func GetServiceAccountClient() (*ServiceAccountClient, error) {
@@ -211,7 +211,7 @@ func GetUserById(userId string) (*gocloak.User, error) {
 	return user, nil
 }
 
-//Fetch last version of a user from server
+// Fetch last version of a user from server
 func RefreshUser(user *gocloak.User) (*gocloak.User, error) {
 	return GetUserById(*user.ID)
 }
@@ -285,7 +285,7 @@ func GetUserLastLoginEvent(user *gocloak.User) (*gocloak.EventRepresentation, er
 	return lastLoginEvent, nil
 }
 
-//Create a new User, returns it's ID
+// Create a new User, returns it's ID
 func CreateUser(user *gocloak.User) (string, error) {
 	c, err := GetServiceAccountClient()
 
@@ -382,7 +382,7 @@ func GetUserGroups(user *gocloak.User) ([]*gocloak.Group, error) {
 	return groups, nil
 }
 
-//Recursive
+// Recursive
 func FindSubgroup(group *gocloak.Group, subgroupName string) *gocloak.Group {
 	if group != nil {
 		if *group.Name == subgroupName {
@@ -397,6 +397,24 @@ func FindSubgroup(group *gocloak.Group, subgroupName string) *gocloak.Group {
 	}
 
 	return nil
+}
+
+func GetGroupByPath(path string) (*gocloak.Group, error) {
+	c, err := GetServiceAccountClient()
+
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	group, err := (*c.GoCloakClient).GetGroupByPath(ctx, c.Token.AccessToken, c.Realm, path)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return group, nil
 }
 
 func GetGroup(groupName string) (*gocloak.Group, error) {
@@ -440,6 +458,31 @@ func GetGroup(groupName string) (*gocloak.Group, error) {
 	}
 
 	return group, nil
+}
+
+// Implémentation temporaire en attendant le PR: https://github.com/Nerzal/gocloak/pull/459
+func GetGroupChildren(group *gocloak.Group) ([]*gocloak.Group, error) {
+	c, err := GetServiceAccountClient()
+
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	var result []*gocloak.Group
+
+	endpoint := os.Getenv("KEYCLOAK_URL") + "/admin/realms/" + c.Realm + "/groups/" + *group.ID + "/children"
+
+	_, err = (*c.GoCloakClient).GetRequestWithBearerAuth(ctx, c.Token.AccessToken).
+		SetResult(&result).
+		Get(endpoint)
+
+	if err != nil {
+		return nil, errors.New("Could not get group children: " + err.Error())
+	}
+
+	return result, nil
 }
 
 func GetGroupById(id string) (*gocloak.Group, error) {
@@ -505,7 +548,7 @@ func GetGroupMembers(group *gocloak.Group) ([]*gocloak.User, error) {
 	return users, nil
 }
 
-//Idempotent
+// Idempotent
 func AddUserToGroup(user *gocloak.User, group *gocloak.Group) error {
 	c, err := GetServiceAccountClient()
 
@@ -687,7 +730,7 @@ func RemoveUserRequiredAction(user *gocloak.User, requiredAction string) error {
 	return nil
 }
 
-//Send an email with a link to complete all required actions for a user
+// Send an email with a link to complete all required actions for a user
 func ExecuteCurrentActionEmail(user *gocloak.User) error {
 	return ExecuteActionEmail(*user.ID, *user.RequiredActions)
 }

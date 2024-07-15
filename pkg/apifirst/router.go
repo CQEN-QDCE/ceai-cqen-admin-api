@@ -48,8 +48,8 @@ func NewRouter(doc *openapi3.T, serverWrapper interface{}, options *RouterOption
 
 	log.Println("API First router initialization")
 
-	for _, path := range orderedPaths(doc.Paths) {
-		pathItem := doc.Paths[path]
+	for _, path := range orderedPaths(doc.Paths.Map()) {
+		pathItem := doc.Paths.Value(path)
 
 		operations := pathItem.Operations()
 		methods := make([]string, 0, len(operations))
@@ -104,7 +104,7 @@ func (r *Router) FindRoute(req *http.Request) (*routers.Route, map[string]string
 			if err := match.MatchErr; err == nil {
 				route := r.Routes[i]
 				route.Method = req.Method
-				route.Operation = route.Spec.Paths[route.Path].GetOperation(route.Method)
+				route.Operation = route.Spec.Paths.Value(route.Path).GetOperation(route.Method)
 				return route, match.Vars, nil
 			}
 		}
@@ -125,7 +125,6 @@ func (r *Router) Serve(port string) error {
 // Then return a apifirst.ResponseWriter
 //
 // TODO: This method is way too huge. Need to split/use middlewares?
-//
 func (r *Router) CallRouteFunc(operation *openapi3.Operation, w http.ResponseWriter, request *http.Request) (*ResponseWriter, error) {
 	//Convert ResponseWriter to apifirst.ResponseWriter
 	response := NewResponseWriter(&w)

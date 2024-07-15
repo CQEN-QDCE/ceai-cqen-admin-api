@@ -32,6 +32,9 @@ func (s ServerHandlers) GetOpenshiftProjects(response *apifirst.ResponseWriter, 
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusOK)
@@ -57,6 +60,9 @@ func (s ServerHandlers) GetOpenshiftProjectFromId(response *apifirst.ResponseWri
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusOK)
@@ -84,6 +90,9 @@ func (s ServerHandlers) CreateOpenshiftProject(response *apifirst.ResponseWriter
 			response.SetStatus(http.StatusConflict)
 			return err
 		}
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusCreated)
@@ -113,6 +122,9 @@ func (s ServerHandlers) UpdateOpenshiftProject(response *apifirst.ResponseWriter
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusOK)

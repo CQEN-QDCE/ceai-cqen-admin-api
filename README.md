@@ -1,46 +1,44 @@
 # API d'administration de l'infrastructure du centre d'expertise appliquée en innovation du CQEN
 
-Le centre d'expertise appliquée en innovation du CQEN offre des services de laboratoires d'expérimentation sur ses plateformes AWS SEA et Openshift. Il fournit une authentification unique vers ses plateformes via un serveur d'authentification Keycloak.
+Le centre d'expertise appliquée en innovation du CQEN offre des services de laboratoires d'expérimentation sur ses plateformes AWS SEA et Openshift. Il fournit une authentification unique vers ses plateformes via un fournisseur d'identité Keycloak.
 
-Le CEAI a conçu une API d'administration unifiant la gestion des usagers et des ressources allouées aux laboratoires sur les trois produits mentionnés ci-haut : AWS SEA, Openshift et Keycloak.
+Le CEAI a conçu un API d'administration unifiant la gestion des usagers et des ressources allouées aux laboratoires sur les trois produits mentionnés ci-haut : AWS SEA, Openshift et Keycloak.
 
 La création de cet API vise les buts suivants :
 
- * Propager les droits d'accès aux ressources de laboratoires via une ressource unique.
+ * Propager les droits d'accès aux ressources de laboratoires via un point d'entré unique.
  * Permettre la création de consoles d'administration unifiées.
  * Automatiser la gestion de l'infrastructure via des scripts et des appels HTTP.
- * Produire une preuve de concept d'un API défini par sa documentation (API first) dans le langage Go et la spécification OpenAPI 3.0.
+ * Produire une preuve de concept d'un API défini par sa documentation (API first) dans le langage Go et la spécification OpenAPI 3.0+.
 
 Le dépôt contient le serveur d'API ainsi qu'une console en ligne de commande (CLI) pour exploiter celui-ci.
 
 # Serveur API
 
-L'API s'appuis sur un Realm Keycloak lequel il exploite via l'API Keycloak. L'API nécessite des accès API au point d'accès du service SSO SCIM ainsi qu'un accès API IAM au compte AWS Master de l'environnement SEA. Finalement, un accès API à Openshift est aussi nécessaire.
+L'API d'administration du laboratoire du CEAI consiste en une collection de service web REST interfaçant les API d'administration des différents produits dans lequel le laboratoire provisionne des ressources. 
 
 ## Keycloak
 
-TODO
+Keycloak est le fournisseur d'identité du laboratoire. L'API s'appuis ce produit pour persister les usagers du laboratoire ainsi que les informations permettant d'effectuer la gestion des accès aux ressources. Un *realm* et un client Keycloak gère aussi les accès à l'API lui-même.
 
-## AWS SSO SCIM
+## AWS Identity Center (SCIM)
 
-TODO
+Pour permettre aux usagers d'accéder aux comptes de travail, AWS mets à disposition le service pour zone d'accueil Identity Center. Celui-ci utilise le protocol SCIM pour permettre la propagation des informations des usagers à AWS. 
 
-## AWS Master
+## AWS Compte *Management* 
 
-TODO
+Les informations concernant les comptes de travail de la zone d'accueil sont récupéré via l'API d'AWS. Le compte *management* de la zone LZA expose en lecture seule les informations nécessaires à l'administration du laboratoire.
 
 ## Openshift
 
-TODO
+Openshift est déployé comme plateforme en tant que service dans le laboratoire. Le provisionnement des usagers ainsi que des *projects* est effectué via son API d'administration.
 
 
 ## Sécurité
 
-L'API ne contient pas de mécanisme d'authentification des usagers. Cela doit être pris en charge par un API Gateway ou un Reverse Proxy. Celui-ci doit prendre en charge l'authentification et l'identification de l'usager. Il doit passer le nom d'usager et son rôle à l'API via les entêtes _X-CEAI-Username_ et _X-CEAI-UserRoles_ .
+L'API ne contient pas de mécanisme d'authentification des usagers. Cela doit être pris en charge par un API Gateway ou un Reverse Proxy. Celui-ci doit prendre en charge l'authentification et l'identification de l'usager via le protocol OpenIdConnect au realm Keycloak. Il doit passer le nom d'usager et son rôle à l'API via les entêtes _X-CEAI-Username_ et _X-CEAI-UserRoles_ .
 
-Pour s'assurer que l'API ne soit pas accédée directement un "Gateway Secret" peut être défini dans les variables d'environnement. L'API validera que celui-ci est passé dans l'entête _X-CEAI-Gateway-Secret_ avant de traiter la requête.
-
-Un exemple de déploiement derrière le produit AWS API Gateway est disponible dans le dépôt suivant : https://github.com/CQEN-QDCE/ceai-cqen-deployments
+Pour s'assurer que l'API ne soit pas accédé directement un "Gateway Secret" peut être défini dans les variables d'environnement. L'API validera que celui-ci est passé dans l'entête _X-CEAI-Gateway-Secret_ avant de traiter la requête.
 
 ## Variables d'environnement
 
@@ -64,10 +62,6 @@ Un exemple de déploiement derrière le produit AWS API Gateway est disponible d
 | `KUBECONFIG_PATH`             | Chemin vers le fichier kubeconfig lié au Cluster Openshift
 
 ## Développement
-
-### Architecture
-
-TODO
 
 ### Tester
 
@@ -93,7 +87,7 @@ cd third_party
 
 ### test.http
 
-Des tests unitaires sont pour la plupart des routes sont disponibles dans le fichier test.http. Pour utiliser celui-ci, vous avez besoin de l'extension VS Code [Rest-Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client)
+Des tests unitaires sont pour la plupart des routes sont disponibles dans le fichier test.http. Pour utiliser celui-ci, vous aurez besoin de l'extension VS Code [Rest-Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client)
 
 # Console CLI
 
@@ -111,3 +105,9 @@ cp ceai [/votre/repertoire/de/bin/prefere/]
 
 ceai --help
 ```
+
+## Références
+* https://www.keycloak.org/
+* https://en.wikipedia.org/wiki/System_for_Cross-domain_Identity_Management
+* https://aws.amazon.com/fr/iam/identity-center/
+* https://docs.openshift.com/container-platform/4.16/rest_api/understanding-api-support-tiers.html

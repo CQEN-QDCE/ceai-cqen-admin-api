@@ -8,7 +8,7 @@ import (
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/keycloak"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/openshift"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/models"
-	"github.com/Nerzal/gocloak/v11"
+	"github.com/Nerzal/gocloak/v13"
 	userv1 "github.com/openshift/api/user/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -28,7 +28,7 @@ type UserState struct {
 }
 
 func GetKeycloakAdminGroup() (*gocloak.Group, error) {
-	return keycloak.GetGroup(ADMIN_ROLE_NAME)
+	return keycloak.GetGroupByPath("/" + ADMIN_ROLE_NAME)
 }
 
 // Gets current User state across all products: Keycloak|AWS|Openshift
@@ -233,13 +233,13 @@ func UpdateUserKeycloak(userState *UserState, pUser *models.UserUpdate) error {
 
 	if err == nil && pUser.Infrarole != nil && *pUser.Infrarole != userState.Infrarole {
 		//Remove former infrarole group
-		oldGroup, err := keycloak.GetGroup(userState.Infrarole)
+		oldGroup, err := keycloak.GetGroupByPath("/" + userState.Infrarole)
 
 		if err == nil {
 			keycloak.DeleteUserFromGroup(kUser, oldGroup)
 
 			//Add to new group
-			newGroup, err := keycloak.GetGroup(*pUser.Infrarole)
+			newGroup, err := keycloak.GetGroupByPath("/" + *pUser.Infrarole)
 
 			if err == nil {
 				keycloak.AddUserToGroup(kUser, newGroup)
@@ -259,6 +259,10 @@ func UpdateUserAws(userState *UserState, pUser *models.UserUpdate) error {
 
 	if pUser.Lastname != nil {
 		auser.Name.FamilyName = *pUser.Lastname
+	}
+
+	if pUser.Firstname != nil || pUser.Lastname != nil {
+		auser.DisplayName = *pUser.Firstname + " " + *pUser.Lastname
 	}
 
 	if pUser.Disabled != nil {

@@ -35,7 +35,9 @@ func (s ServerHandlers) GetUsers(response *apifirst.ResponseWriter, request *htt
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
-		//TODO else
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusOK)
@@ -55,7 +57,9 @@ func (s ServerHandlers) GetUserFromUsername(response *apifirst.ResponseWriter, r
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
-		//TODO else
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusOK)
@@ -85,6 +89,9 @@ func (s ServerHandlers) CreateUser(response *apifirst.ResponseWriter, request *h
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusCreated)
@@ -92,7 +99,7 @@ func (s ServerHandlers) CreateUser(response *apifirst.ResponseWriter, request *h
 	return nil
 }
 
-//Idempotent
+// Idempotent
 func (s ServerHandlers) UpdateUser(response *apifirst.ResponseWriter, request *http.Request) error {
 	//Path params
 	params := mux.Vars(request)
@@ -117,6 +124,9 @@ func (s ServerHandlers) UpdateUser(response *apifirst.ResponseWriter, request *h
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusOK)
@@ -141,6 +151,9 @@ func (s ServerHandlers) DeleteUser(response *apifirst.ResponseWriter, request *h
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusOK)
@@ -172,6 +185,9 @@ func (s ServerHandlers) ResetUserCredential(response *apifirst.ResponseWriter, r
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusOK)
@@ -196,6 +212,9 @@ func (s ServerHandlers) SendRequiredActionEmail(response *apifirst.ResponseWrite
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusOK)
