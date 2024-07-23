@@ -2,7 +2,7 @@
 ############################
 # STEP 1 build executable binary
 ############################
-FROM golang:1.18 AS builder
+FROM golang:1.22 AS builder
 
 #Copy source files
 ENV GOPATH=/go
@@ -35,7 +35,7 @@ RUN cp ./openshift/kubeconfig /go/bin/kubeconfig
 ############################
 # STEP 2 build a small image
 ############################
-FROM registry.access.redhat.com/ubi8/ubi:latest
+FROM registry.access.redhat.com/ubi9
 
 # Copy our static executable.
 COPY --from=builder /go/bin /go/bin

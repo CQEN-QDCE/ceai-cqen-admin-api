@@ -4,7 +4,7 @@
 #Run `podman login registry.redhat.io` command prior running this script the first time 
 
 #Verify if container is built
-if [ ! $( docker images -q ceai_admin_api_server ) ];
+if [ ! "$( docker images -q ceai_admin_api_server )" ];
 then
     docker build -t ceai_admin_api_server .
 fi
