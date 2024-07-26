@@ -118,7 +118,7 @@ func HandleInput(v interface{}) error {
 	}
 
 	//No flag specified?
-	return fmt.Errorf("Aucun format d'entrée spécifié. Utiliser -i, --json, --yaml, --jsonFile ou --yamlFile.")
+	return fmt.Errorf("aucun format d'entrée spécifié. Utiliser -i, --json, --yaml, --jsonFile ou --yamlFile")
 }
 
 func CreateInstanceFromPrompt(t reflect.Type) (interface{}, error) {

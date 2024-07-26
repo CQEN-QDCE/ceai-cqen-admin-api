@@ -176,17 +176,22 @@ func CreateUserAws(user *models.User) (*scim.User, error) {
 		user.Disabled = gocloak.BoolP(false)
 	}
 
-	auser := scim.NewUser(user.Firstname, user.Lastname, user.Email, !gocloak.PBool(user.Disabled))
+	awsUser := scim.NewUser(user.Firstname, user.Lastname, user.Email, !gocloak.PBool(user.Disabled))
 
-	newuser, err := aws.CreateUser(auser)
+	newuser, err := aws.CreateUser(awsUser)
+	if err != nil {
+		return nil, err
+	}
 
-	if err == nil {
-		//Must obtain group id before adding user
-		group, err := aws.GetGroup(user.Infrarole)
+	//Must obtain group id before adding user
+	group, err := aws.GetGroup(user.Infrarole)
+	if err != nil {
+		return nil, err
+	}
 
-		if err == nil {
-			err = aws.AddUserToGroup(newuser, group)
-		}
+	err = aws.AddUserToGroup(newuser, group)
+	if err != nil {
+		return nil, err
 	}
 
 	return newuser, err
@@ -251,43 +256,52 @@ func UpdateUserKeycloak(userState *UserState, pUser *models.UserUpdate) error {
 }
 
 func UpdateUserAws(userState *UserState, pUser *models.UserUpdate) error {
-	auser := userState.Aws
+	awsUser := userState.Aws
 
 	if pUser.Firstname != nil {
-		auser.Name.GivenName = *pUser.Firstname
+		awsUser.Name.GivenName = *pUser.Firstname
 	}
 
 	if pUser.Lastname != nil {
-		auser.Name.FamilyName = *pUser.Lastname
+		awsUser.Name.FamilyName = *pUser.Lastname
 	}
 
 	if pUser.Firstname != nil || pUser.Lastname != nil {
-		auser.DisplayName = *pUser.Firstname + " " + *pUser.Lastname
+		awsUser.DisplayName = *pUser.Firstname + " " + *pUser.Lastname
 	}
 
 	if pUser.Disabled != nil {
-		auser.Active = !*pUser.Disabled
+		awsUser.Active = !*pUser.Disabled
 	}
 
-	updatedUser, aerr := aws.UpdateUser(auser)
+	updatedUser, awsError := aws.UpdateUser(awsUser)
+	if awsError != nil {
+		return awsError
+	}
 
-	if aerr == nil && pUser.Infrarole != nil && *pUser.Infrarole != userState.Infrarole {
-		oldGroup, aerr := aws.GetGroup(userState.Infrarole)
+	if pUser.Infrarole != nil && *pUser.Infrarole != userState.Infrarole {
+		oldGroup, awsError := aws.GetGroup(userState.Infrarole)
+		if awsError != nil {
+			return awsError
+		}
 
-		if aerr == nil {
-			aerr = aws.RemoveUserFromGroup(updatedUser, oldGroup)
+		awsError = aws.RemoveUserFromGroup(updatedUser, oldGroup)
+		if awsError != nil {
+			return awsError
+		}
 
-			if aerr == nil {
-				newGroup, aerr := aws.GetGroup(*pUser.Infrarole)
+		newGroup, awsError := aws.GetGroup(*pUser.Infrarole)
+		if awsError != nil {
+			return awsError
+		}
 
-				if aerr == nil {
-					aerr = aws.AddUserToGroup(updatedUser, newGroup)
-				}
-			}
+		awsError = aws.AddUserToGroup(updatedUser, newGroup)
+		if awsError != nil {
+			return awsError
 		}
 	}
 
-	return aerr
+	return awsError
 }
 
 func UpdateUserOpenshift(userState *UserState, pUser *models.UserUpdate) error {
@@ -366,6 +380,10 @@ func GetUsers() (*[]models.User, error) {
 	}
 
 	kadmins, err := keycloak.GetGroupMembers(kAdminGroup)
+	if err != nil {
+		return nil, NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
+	}
+
 	//Create a dictionary of admin for easy search
 	adminsDict := make(map[string]*gocloak.User, len(kadmins))
 

@@ -150,13 +150,17 @@ func GetIdentityStoreId() (*string, error) {
 
 	ssoInstancesList, err := c.ListInstances(context.TODO(), &ssoadmin.ListInstancesInput{})
 
+	if err != nil {
+		return nil, err
+	}
+
 	if len(ssoInstancesList.Instances) < 1 {
-		err := errors.New("No SSO identity store found on AWS account.")
+		err := errors.New("no SSO identity store found on AWS account")
 		return nil, err
 	}
 
 	if len(ssoInstancesList.Instances) > 1 {
-		err := errors.New("More than one SSO identity store found on AWS account.")
+		err := errors.New("more than one SSO identity store found on AWS account")
 		return nil, err
 	}
 

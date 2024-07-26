@@ -91,6 +91,10 @@ func TestUpdateGroup(t *testing.T) {
 
 	grp, err := GetGroup("Lab_dev2")
 
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
 	grp.DisplayName = "Lab_dev2b"
 
 	err = UpdateGroup(grp)
