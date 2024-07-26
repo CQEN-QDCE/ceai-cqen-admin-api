@@ -5,5 +5,5 @@ on:
     branches: ["release/*", "main"]
 
 jobs:
-  tf-lint:
+  go-validations:
     uses: ./.github/workflows/go-validations.yaml
