@@ -1,0 +1,9 @@
+name: Contributions tests
+
+on:
+  pull_request:
+    branches: ["release/*", "main"]
+
+jobs:
+  go-validations:
+    uses: ./.github/workflows/go-validations.yaml

@@ -437,8 +437,7 @@ func IsErrorWithMessageAndOcNonPersist(errorMessage string, err error) bool {
 }
 
 func GetDummyProject(projectName string) *project.Project {
-	var dummyProject *project.Project
-	dummyProject = new(project.Project)
+	var dummyProject *project.Project = new(project.Project)
 
 	dummyProject.Name = projectName
 

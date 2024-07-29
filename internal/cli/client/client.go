@@ -3,7 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/pkg/apifirst"
 	"github.com/getkin/kin-openapi/openapi3"
@@ -27,7 +27,7 @@ func GetClient() (*apifirst.Client, error) {
 		return nil, fmt.Errorf("error loading OpenAPI Spec content: %s", err.Error())
 	}
 	defer r.Close()
-	contents, err := ioutil.ReadAll(r)
+	contents, err := io.ReadAll(r)
 
 	if err != nil {
 		return nil, fmt.Errorf("error loading OpenAPI Spec content: %s", err.Error())

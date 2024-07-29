@@ -52,16 +52,23 @@ func NewRouter(doc *openapi3.T, serverWrapper interface{}, options *RouterOption
 		pathItem := doc.Paths.Value(path)
 
 		operations := pathItem.Operations()
-		methods := make([]string, 0, len(operations))
-		for method := range operations {
-			methods = append(methods, method)
 
+		for method := range operations {
 			//Closures for Http methods handlers
 			op := operations[method]
 
 			muxRoute := muxRouter.HandleFunc(path, func(w http.ResponseWriter, request *http.Request) {
 				response, err := r.CallRouteFunc(op, w, request)
-				response.WriteResponse()
+
+				if err != nil {
+					log.Printf("error calling request handler: %v \n", err.Error())
+				}
+
+				err = response.WriteResponse()
+
+				if err != nil {
+					log.Printf("error writing response: %v \n", err.Error())
+				}
 
 				if options.CustomCallLogFunc != nil {
 					fnCustomCallLog := *options.CustomCallLogFunc
