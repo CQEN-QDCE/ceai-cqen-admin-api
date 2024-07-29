@@ -1,14 +1,13 @@
 name: Build and Release CLI
 
 on:
-  push:
-    tags:
-      - 'v*.*'
+  release:
+    types: [published]
 
 jobs:
   build-release:
     runs-on: ubuntu-latest
-    name: Validations Go
+    name: Build and Release CLI
     steps:
       - name: Checkout
         uses: actions/checkout@main
