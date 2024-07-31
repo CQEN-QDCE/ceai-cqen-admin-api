@@ -23,7 +23,7 @@ Keycloak est le fournisseur d'identité du laboratoire. L'API s'appuis ce produi
 
 ## AWS Identity Center (SCIM)
 
-Pour permettre aux usagers d'accéder aux comptes de travail, AWS mets à disposition le service pour zone d'accueil Identity Center. Celui-ci utilise le protocol SCIM pour permettre la propagation des informations des usagers à AWS. 
+Pour permettre aux usagers d'accéder aux comptes de travail, AWS mets à disposition le service IAM Identity Center. Celui-ci utilise le protocol SCIM pour permettre la propagation des informations des usagers vers AWS. 
 
 ## AWS Compte *Management* 
 
@@ -54,12 +54,12 @@ Pour s'assurer que l'API ne soit pas accédé directement un "Gateway Secret" pe
 | `AWS_SECRET`                  | Secret du compte IAM de Service
 | `AWS_SSO_INSTANCE_ARN`        | ARN de l'instance AWS SSO
 | `AWS_ADMIN_PERMISSION_SET_ARN`| ARN du Permission Set lié au profil Administrateur dans AWS
-| `AWS_DEV_PERMISSION_SET_ARN`  | ARN du Permission Set lié au profil Developpeur dans AWS
+| `AWS_DEV_PERMISSION_SET_ARN`  | ARN du Permission Set lié au profil Développeur dans AWS
 | `KEYCLOAK_URL`                | Url du serveur Keycloak
 | `KEYCLOAK_REALM`              | Nom du realm Keycloak
 | `KEYCLOAK_CLIENT_ID`          | Identifiant du client Keycloak dédié à l'API
 | `KEYCLOAK_CLIENT_SECRET`      | Secret du client Keycloak dédié à l'API
-| `KUBECONFIG_PATH`             | Chemin vers le fichier kubeconfig lié au Cluster Openshift
+| `KUBECONFIG_PATH`             | Chemin vers le fichier kubeconfig lié au compte de service Openshift
 
 ## Développement
 
