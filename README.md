@@ -19,7 +19,7 @@ L'API d'administration du laboratoire du CEAI consiste en une collection de serv
 
 ## Keycloak
 
-Keycloak est le fournisseur d'identité du laboratoire. L'API s'appuis ce produit pour persister les usagers du laboratoire ainsi que les informations permettant d'effectuer la gestion des accès aux ressources. Un *realm* et un client Keycloak gère aussi les accès à l'API lui-même.
+Keycloak est le fournisseur d'identité du laboratoire. L'API s'appuis sur ce produit pour persister les usagers du laboratoire ainsi que les informations permettant d'effectuer la gestion des accès aux ressources. Un *realm* et un client Keycloak gère aussi les accès à l'API lui-même.
 
 ## AWS Identity Center (SCIM)
 
@@ -27,7 +27,7 @@ Pour permettre aux usagers d'accéder aux comptes de travail, AWS mets à dispos
 
 ## AWS Compte *Management* 
 
-Les informations concernant les comptes de travail de la zone d'accueil sont récupéré via l'API d'AWS. Le compte *management* de la zone LZA expose en lecture seule les informations nécessaires à l'administration du laboratoire.
+Les informations concernant les comptes de travail de la zone d'accueil sont récupérées via l'API d'AWS. Le compte *management* de la zone LZA expose en lecture seule les informations nécessaires à l'administration du laboratoire.
 
 ## Openshift
 
@@ -87,7 +87,7 @@ cd third_party
 
 ### test.http
 
-Des tests unitaires sont pour la plupart des routes sont disponibles dans le fichier test.http. Pour utiliser celui-ci, vous aurez besoin de l'extension VS Code [Rest-Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client)
+Des tests unitaires sont définis pour la plupart des routes dans le fichier test.http. Pour utiliser celui-ci, vous aurez besoin de l'extension VS Code [Rest-Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client)
 
 # Console CLI
 
