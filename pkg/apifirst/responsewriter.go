@@ -50,19 +50,21 @@ func (r *ResponseWriter) GetMarshaledBody() ([]byte, error) {
 
 	}
 
-	err := errors.New("Unsupported content type")
+	err := errors.New("unsupported content type")
 
 	return nil, err
 }
 
-func (r *ResponseWriter) WriteResponse() {
+func (r *ResponseWriter) WriteResponse() error {
 	r.WriteHeader(r.Status)
 
 	mBody, err := r.GetMarshaledBody()
 
 	if err != nil {
-		//error
+		return err
 	}
 
 	r.Write(mBody)
+
+	return nil
 }

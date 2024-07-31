@@ -30,6 +30,8 @@ var updateLaboratoryCmd = &cobra.Command{
 			fmt.Printf("Erreur: %v \n", err)
 			return
 		}
+
+		fmt.Printf("Laboratoire %v mis à jour", args[0])
 	},
 }
 

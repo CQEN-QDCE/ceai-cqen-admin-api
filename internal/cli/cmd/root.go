@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//Output format
+// Output format
 var outputFormat string
 
 // rootCmd represents the base command when called without any subcommands
@@ -15,7 +15,7 @@ var rootCmd = &cobra.Command{
 	Use:     "ceai",
 	Short:   "Console d'administration CLI du CEAI",
 	Long:    `Console d'administration CLI du CEAI`,
-	Version: "0.2.0",
+	Version: "1.0.0-rc1",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		//Validate root persistent Flags here
 

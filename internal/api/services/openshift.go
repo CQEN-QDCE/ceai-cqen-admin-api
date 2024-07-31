@@ -1,7 +1,6 @@
 package services
 
 import (
-	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/keycloak"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/openshift"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/models"
 	openshiftauthorization "github.com/openshift/api/authorization/v1"
@@ -48,7 +47,8 @@ func MapOpenshiftProjectWithMeta(project *openshiftproject.Project) *models.Open
 		openshiftProject.Requester = &requester
 	}
 
-	openshiftProject.CreationDate = &project.CreationTimestamp.Time
+	var creationTime = project.GetCreationTimestamp().Time
+	openshiftProject.CreationDate = &creationTime
 
 	return &openshiftProject
 }
@@ -106,9 +106,11 @@ func GetOpenshiftProjectFromId(projectId string) (*models.OpenshiftProjectWithMe
 
 func CreateOpenshiftProject(createParam *models.OpenshiftProjectWithLab) error {
 	//Validate that lab exist
-	_, err := keycloak.GetGroup(createParam.IdLab)
-
+	exists, err := LaboratoryExists(createParam.IdLab)
 	if err != nil {
+		return NewErrorExternalServerError(err, ERROR_SERVER_KEYCLOAK)
+	}
+	if !exists {
 		return NewErrorExternalRessourceNotFound(err, ERROR_SERVER_KEYCLOAK)
 	}
 

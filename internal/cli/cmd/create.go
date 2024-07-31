@@ -9,7 +9,7 @@ import (
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 var createCmd = &cobra.Command{
@@ -36,7 +36,7 @@ func init() {
 
 }
 
-//Accept Slice interface
+// Accept Slice interface
 func HandleInput(v interface{}) error {
 	//Interactive input
 	if interactive, _ := createCmd.Flags().GetBool("interactive"); interactive {
@@ -101,7 +101,7 @@ func HandleInput(v interface{}) error {
 			return err
 		}
 
-		return json.Unmarshal([]byte(jsonContent), &v)
+		return json.Unmarshal(jsonContent, &v)
 	}
 
 	yamlFilePath, err := createCmd.Flags().GetString("yamlfile")
@@ -114,11 +114,11 @@ func HandleInput(v interface{}) error {
 			return err
 		}
 
-		return yaml.Unmarshal([]byte(yamlContent), &v)
+		return yaml.Unmarshal(yamlContent, &v)
 	}
 
 	//No flag specified?
-	return fmt.Errorf("aucun format d'entrée spécifié")
+	return fmt.Errorf("aucun format d'entrée spécifié. Utiliser -i, --json, --yaml, --jsonFile ou --yamlFile")
 }
 
 func CreateInstanceFromPrompt(t reflect.Type) (interface{}, error) {

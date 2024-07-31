@@ -19,6 +19,8 @@ var deleteUserCmd = &cobra.Command{
 			fmt.Printf("Erreur: %v \n", err)
 			return
 		}
+
+		fmt.Printf("L'usager %v supprimé", args[0])
 	},
 }
 

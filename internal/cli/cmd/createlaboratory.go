@@ -34,6 +34,7 @@ var createLaboratoryCmd = &cobra.Command{
 
 		}
 
+		fmt.Printf("%v laboratoire(s) créé(s)", len(laboratories))
 	},
 }
 

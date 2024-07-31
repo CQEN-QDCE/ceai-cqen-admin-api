@@ -20,6 +20,8 @@ var addLaboratoryUserCmd = &cobra.Command{
 			fmt.Printf("Erreur: %v \n", err)
 			return
 		}
+
+		fmt.Printf("%v usager(s) associé(s) au laboratoire %v", len(args[1:]), args[0])
 	},
 }
 

@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -27,7 +28,7 @@ type Operation struct {
 	Path   string
 }
 
-const CLIENT_USER_AGENT = "CEAI CLI Version 0.1"
+const CLIENT_USER_AGENT = "CEAI CLI Version 1.0.0"
 
 func NewClient(OpenAPIDoc *openapi3.T) *Client {
 	var client Client
@@ -40,7 +41,7 @@ func NewClient(OpenAPIDoc *openapi3.T) *Client {
 	//Create Operations dictionary
 	operations := make(map[string]*Operation)
 
-	for path, pathItem := range OpenAPIDoc.Paths {
+	for path, pathItem := range OpenAPIDoc.Paths.Map() {
 		oapiOperations := pathItem.Operations()
 
 		for method, oapiOperation := range oapiOperations {
@@ -167,8 +168,7 @@ func (c *Client) Request(operationId string, parameters *map[string]string, requ
 
 	//TODO Response validation?? Optional?
 
-	oapiResponse := operation.Responses.Get(resp.StatusCode)
-
+	oapiResponse := operation.Responses.Value(strconv.Itoa(resp.StatusCode))
 	var oapiResponseValue *openapi3.Response
 
 	if oapiResponse != nil {

@@ -19,6 +19,8 @@ var resetCmd = &cobra.Command{
 			fmt.Printf("Error: %v \n", err)
 			return
 		}
+
+		fmt.Printf("Demande de réinitialisation envoyée à %v", args[1])
 	},
 }
 

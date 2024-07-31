@@ -30,7 +30,7 @@ func NewResponse(httpResponse *http.Response, oapiResponse *openapi3.Response) (
 		}
 
 		//Send Response status if not found in spec
-		return nil, fmt.Errorf("Server Error: %s", httpResponse.Status)
+		return nil, fmt.Errorf("server Error: %s", httpResponse.Status)
 	}
 
 	return &response, nil
@@ -48,7 +48,7 @@ func (r *Response) UnmarshalBody(v interface{}) error {
 		return nil
 	}
 
-	err := errors.New("Unsupported content type")
+	err := errors.New("unsupported content type")
 
 	return err
 }

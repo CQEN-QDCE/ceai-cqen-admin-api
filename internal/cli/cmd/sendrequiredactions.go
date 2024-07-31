@@ -20,6 +20,8 @@ var sendRequiredActionsCmd = &cobra.Command{
 			fmt.Printf("Erreur: %v \n", err)
 			return
 		}
+
+		fmt.Printf("Demande de création de compte envoyée à %v", args[1])
 	},
 }
 

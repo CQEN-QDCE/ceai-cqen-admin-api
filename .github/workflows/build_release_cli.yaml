@@ -1,0 +1,27 @@
+name: Build and Release CLI
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    name: Build and Release CLI
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+      - name: Setup Go
+        uses: actions/setup-go@main
+        with:
+          go-version-file: './go.mod'
+      - name: Build CLI
+        run: go build -o ./ceai ./cmd/cli
+      - name: Zip CLI
+        run: zip -r ceai-cli-linux-${{ github.ref_name }}.zip ./ceai
+      - name: Upload to Release
+        uses: Shopify/upload-to-release@master
+        with:
+          name: ceai-cli-linux-${{ github.ref_name }}.zip
+          path: ./ceai-cli-linux-${{ github.ref_name }}.zip
+          repo-token: ${{ secrets.GITHUB_TOKEN }}

@@ -9,7 +9,7 @@ import (
 )
 
 var createUserCmd = &cobra.Command{
-	Use:   "user [email nom prénom organisation role]",
+	Use:   "user",
 	Short: "Créer un usager",
 	Long:  `Créer un usager du CEAI`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -33,6 +33,7 @@ var createUserCmd = &cobra.Command{
 
 		}
 
+		fmt.Printf("%v usager(s) créé(s)", len(users))
 	},
 }
 

@@ -44,8 +44,7 @@ func main() {
 	}
 
 	//API Security validation to support OpenAPI security scheme
-	var fnAuth openapi3filter.AuthenticationFunc
-	fnAuth = Authenticate
+	var fnAuth openapi3filter.AuthenticationFunc = Authenticate
 	fnCallLog := CustomCallLogFunction
 
 	options := &apifirst.RouterOptions{
@@ -90,7 +89,7 @@ func Authenticate(ctx context.Context, authenticationInput *openapi3filter.Authe
 		gatewaySecretHeaderValue := authenticationInput.RequestValidationInput.Request.Header.Get(gatewaySecretHeaderName)
 
 		if gatewaySecret != gatewaySecretHeaderValue {
-			return errors.New("Gateway secrets does not match.")
+			return errors.New("gateway secrets does not match")
 		}
 	case "Username", "UserRoles":
 		userInfoHeaderName := authenticationInput.SecurityScheme.Name
@@ -100,7 +99,7 @@ func Authenticate(ctx context.Context, authenticationInput *openapi3filter.Authe
 			return errors.New(authenticationInput.SecuritySchemeName + " not supplied by Gateway.")
 		}
 	default:
-		return errors.New("Unimplemented security scheme.")
+		return errors.New("unimplemented security scheme")
 	}
 
 	return nil
@@ -117,7 +116,7 @@ func CustomCallLogFunction(request *http.Request, response *apifirst.ResponseWri
 		}
 	}
 
-	log.Printf(output)
+	log.Print(output)
 
 	return nil
 }

@@ -24,7 +24,9 @@ func (s ServerHandlers) GetAwsAccounts(response *apifirst.ResponseWriter, reques
 			response.SetStatus(http.StatusInternalServerError)
 			return err
 		}
-		//TODO else
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusOK)
@@ -44,7 +46,9 @@ func (s ServerHandlers) GetAwsAccount(response *apifirst.ResponseWriter, request
 			response.SetStatus(http.StatusNotFound)
 			return err
 		}
-		//TODO else
+
+		response.SetStatus(http.StatusInternalServerError)
+		return err
 	}
 
 	response.SetStatus(http.StatusOK)

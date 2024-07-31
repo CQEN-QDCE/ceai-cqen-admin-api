@@ -20,6 +20,8 @@ var removeLaboratoryProjectCmd = &cobra.Command{
 			fmt.Printf("Erreur: %v \n", err)
 			return
 		}
+
+		fmt.Printf("Project Openshift #%v desassocié du laboratoire %v", args[1], args[0])
 	},
 }
 
