@@ -8,6 +8,8 @@ import (
 )
 
 type ServerHandlers struct {
+	Config *models.Config
+
 	UserHandlersInterface
 	LaboratoryHandlersInterface
 	OpenshiftHandlersInterface
@@ -21,12 +23,29 @@ func (s ServerHandlers) GetCurrentUserInfo(response *apifirst.ResponseWriter, re
 	roles := request.Header.Get("X-CEAI-UserRoles")
 
 	authUser := models.AuthenticatedUser{
-		Username: &username,
-		Roles:    &roles,
+		Username:  &username,
+		Infrarole: &roles,
+		ApiRole:   &roles,
+		Server:    nil,
 	}
 
 	response.SetStatus(http.StatusOK)
 	response.SetBody(authUser)
+
+	return nil
+}
+
+func (s ServerHandlers) GetProviders(response *apifirst.ResponseWriter, request *http.Request) error {
+
+	/*
+		authUser := models.AuthenticatedUser{
+			Username: &username,
+			Roles:    &roles,
+		}
+	*/
+
+	response.SetStatus(http.StatusOK)
+	//response.SetBody(authUser)
 
 	return nil
 }

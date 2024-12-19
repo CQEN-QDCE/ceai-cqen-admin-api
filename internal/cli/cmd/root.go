@@ -15,7 +15,7 @@ var rootCmd = &cobra.Command{
 	Use:     "ceai",
 	Short:   "Console d'administration CLI du CEAI",
 	Long:    `Console d'administration CLI du CEAI`,
-	Version: "1.0.0-rc1",
+	Version: "2.0.0",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		//Validate root persistent Flags here
 

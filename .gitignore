@@ -26,6 +26,8 @@ test.env
 dev.env
 prod.env
 kubeconfig
+config.yaml
+config.*.yaml
 
 # Dependency directories (remove the comment below to include it)
 # vendor/

@@ -13,13 +13,13 @@ import (
 type UserHandlersInterface interface {
 
 	// (GET /user)
-	GetUsers(response *apifirst.ResponseWriter, r *http.Request) error
+	GetUsers(response *apifirst.ResponseWriter, request *http.Request) error
 	// (GET /user/{username})
 	GetUserFromUsername(response *apifirst.ResponseWriter, request *http.Request) error
 	// (POST /user)
-	CreateUser(response *apifirst.ResponseWriter, r *http.Request) error
+	CreateUser(response *apifirst.ResponseWriter, request *http.Request) error
 	// (PUT /user/{username})
-	UpdateUser(response *apifirst.ResponseWriter, r *http.Request) error
+	UpdateUser(response *apifirst.ResponseWriter, request *http.Request) error
 	// (DELETE /user/{username}/credential/{credentialType})
 	ResetUserCredential(response *apifirst.ResponseWriter, request *http.Request) error
 	// (POST /user/{username}/actionEmail

@@ -9,9 +9,11 @@ import (
 	"os"
 
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/handlers"
+	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/models"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/pkg/apifirst"
 	"github.com/joho/godotenv"
 	"github.com/rakyll/statik/fs"
+	"gopkg.in/yaml.v2"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"
@@ -23,27 +25,42 @@ var Handlers handlers.ServerHandlers
 
 var OpenAPIDoc *openapi3.T
 
+var Config models.Config
+
 func main() {
+	log.Println("API d'administration du CEAI v2.0.0")
+
 	err := godotenv.Load()
 	if err != nil {
-		log.Println(".env file not found")
+		log.Println("fichier .env non trouvé")
 	} else {
-		log.Println(".env file found. Loading environment variables.")
+		log.Println("fichier .env trouvé, chargement des variables d'environnement")
 	}
 
+	log.Println("chargement du fichier de configuration")
+
+	config, err := LoadConfig()
+	if err != nil {
+		log.Fatalf("la lecture du fichier de configuration a échoué: %v", err.Error())
+
+	}
+
+	log.Printf("chargement du %v complété", Config.Description)
+
+	//Chargement de la spécification OpenAPI
 	ctx := context.Background()
 	loader := &openapi3.Loader{Context: ctx, IsExternalRefsAllowed: true}
 
-	OpenAPIDoc, err := loader.LoadFromFile(os.Getenv("OPENAPI_PATH"))
+	OpenAPIDoc, err := loader.LoadFromFile(*Config.OpenAPIPath)
 	if err != nil {
-		log.Fatal("Error loading OpenAPI Spec file: " + err.Error())
+		log.Fatalf("erreur dans le chargement de la spécification OpenAPI: %v", err.Error())
 	}
 
 	if err = OpenAPIDoc.Validate(ctx); err != nil {
-		log.Fatal("Invalid OpenAPI Spec file: " + err.Error())
+		log.Fatalf("fichier de spécification OpenAPI invalide: %v", err.Error())
 	}
 
-	//API Security validation to support OpenAPI security scheme
+	//Application de la spécification OpenAPI de sécurité
 	var fnAuth openapi3filter.AuthenticationFunc = Authenticate
 	fnCallLog := CustomCallLogFunction
 
@@ -52,11 +69,12 @@ func main() {
 		CustomCallLogFunc:  &fnCallLog,
 	}
 
+	Handlers.Config = config
 	r := apifirst.NewRouter(OpenAPIDoc, Handlers, options)
 
-	//Serve Swagger UI if wanted
+	//Servir le Swagger UI si désiré
 	if os.Getenv("SWAGGER_UI_PATH") != "" {
-		swaggerPath := "/" + os.Getenv("SWAGGER_UI_PATH")
+		swaggerPath := "/" + *Config.SwaggerUIPath
 
 		statikFS, err := fs.New()
 		if err != nil {
@@ -67,39 +85,77 @@ func main() {
 		sh := http.StripPrefix(swaggerPath, staticServer)
 		r.Router.PathPrefix(swaggerPath).Handler(sh)
 
-		log.Printf("SwaggerUI available at %v/ endpoint", swaggerPath)
+		log.Printf("SwaggerUI disponible au %v/ ", swaggerPath)
 	}
 
 	//Healthcheck
 	r.Router.HandleFunc("/healthcheck", func(response http.ResponseWriter, request *http.Request) {
+		//TODO Effectuer un test de tous les services de la config
+
 		response.WriteHeader(http.StatusOK)
 	})
 
-	port := os.Getenv("PORT")
+	port := *Config.Port
 
 	log.Fatal(r.Serve(port))
 }
 
+func LoadConfig() (*models.Config, error) {
+
+	//Vérifier si un path est spécifié en variable d'environnement
+	configFilePath := os.Getenv("CONFIG_FILE")
+
+	//TODO Chercher le fichier si le path est nil
+
+	var config *models.Config
+
+	yamlContent, err := os.ReadFile(configFilePath)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = yaml.Unmarshal(yamlContent, config)
+
+	if err != nil {
+		return nil, err
+	}
+
+	//TODO Valider les types de services
+
+	return config, nil
+}
+
 func Authenticate(ctx context.Context, authenticationInput *openapi3filter.AuthenticationInput) error {
-	//Assume .env loaded in main or exported
+	headerName := authenticationInput.SecurityScheme.Name
+	headerValue := authenticationInput.RequestValidationInput.Request.Header.Get(headerName)
+
+	if headerValue == "" {
+		return errors.New(authenticationInput.SecuritySchemeName + " n'est pas spécifié par le gateway")
+	}
+
 	switch authenticationInput.SecuritySchemeName {
 	case "GatewaySecret":
-		gatewaySecret := os.Getenv("GATEWAY_SECRET")
-		gatewaySecretHeaderName := authenticationInput.SecurityScheme.Name
-		gatewaySecretHeaderValue := authenticationInput.RequestValidationInput.Request.Header.Get(gatewaySecretHeaderName)
+		//Le GatewaySecret envoyé par le Gateway doit correspondre à celui spécifié dans la configuration
+		gatewaySecret := *Config.GatewaySecret
 
-		if gatewaySecret != gatewaySecretHeaderValue {
-			return errors.New("gateway secrets does not match")
+		if gatewaySecret != headerValue {
+			return errors.New("le gateway secret spécifié n'est pas valide")
 		}
-	case "Username", "UserRoles":
-		userInfoHeaderName := authenticationInput.SecurityScheme.Name
-		userInfoHeaderValue := authenticationInput.RequestValidationInput.Request.Header.Get(userInfoHeaderName)
-
-		if userInfoHeaderValue == "" {
-			return errors.New(authenticationInput.SecuritySchemeName + " not supplied by Gateway.")
+	case "UserRoles":
+		//Le UserRoles doit correspondre à la méthode HTTP de la requête: api-read = GET, api-write = *
+		switch headerValue {
+		case "api-read":
+			if authenticationInput.RequestValidationInput.Request.Method != "GET" {
+				return errors.New("droits insuffisants pour effectuer cette action")
+			}
+		case "api-write":
+			//Droit à tout pour l'instant
+		default:
+			return errors.New("role '" + headerValue + "' non reconnu")
 		}
 	default:
-		return errors.New("unimplemented security scheme")
+		return errors.New("schéma de sécurité '" + authenticationInput.SecuritySchemeName + "' non reconnu")
 	}
 
 	return nil

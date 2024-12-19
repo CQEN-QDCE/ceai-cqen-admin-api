@@ -25,7 +25,8 @@ type UserWithLabs struct {
 }
 
 type AuthenticatedUser struct {
-	Server   *string `json:"server"`
-	Username *string `json:"username"`
-	Roles    *string `json:"roles"`
+	Server    *string `json:"server"`
+	Username  *string `json:"username"`
+	Infrarole *string `json:"infrarole"`
+	ApiRole   *string `json:"apirole"`
 }

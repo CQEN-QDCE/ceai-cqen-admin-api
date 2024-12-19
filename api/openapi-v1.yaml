@@ -7,6 +7,24 @@ servers:
   - url: /
 components:
   schemas:
+    Provider:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - awsLandingZone
+            - openshiftCluster
+            - deployKF
+            - githubOrganization
+        description:
+          type: string
+        clientUUID:
+          type: string
+        healthy:
+          type: boolean
     User:
       type: object
       required:
@@ -27,10 +45,6 @@ components:
           type: string
         infrarole:
           type: string
-          enum:
-            - Admin
-            - Developer
-          default: Developer
         disabled: 
           type: boolean
           default: false
@@ -45,9 +59,6 @@ components:
           type: string
         infrarole:
           type: string
-          enum:
-            - Admin
-            - Developer
         disabled: 
           type: boolean
     UserWithLabs:
@@ -66,6 +77,10 @@ components:
         username:
           type: string
         roles:
+          type: string
+        infrarole:
+          type: string
+        apirole:
           type: string
     Laboratory:
       type: object
@@ -127,14 +142,43 @@ components:
               nullable: true
               items:
                 $ref: '#/components/schemas/AWSAccount' 
+    KubeflowNamespace:
+      type: object
+      required: 
+        - name
+      properties:
+        name:
+          type: string
+    KubeflowNamespaceWithLab:
+      allOf:
+      - $ref: '#/components/schemas/KubeflowNamespace'
+      - type: object
+        required:
+          - idLab
+        properties:
+          idLab:
+            type: string
+    KubeflowNamespaceWithMeta:
+      allOf:
+      - $ref: '#/components/schemas/KubeflowNamespaceWithLab'
+      - type: object
+        properties:
+          creationDate:
+            type: string
+            format: date-time
+    KubeflowNamespaceUpdate:
+      type: object
+      properties:
+        idLab:
+          type: string
     OpenshiftProject:
       type: object
       required: 
-        - id
+        - name
         - displayname
         - description
       properties:
-        id:
+        name:
           type: string
         displayname:
           type: string
@@ -244,6 +288,8 @@ paths:
   /user:
     get:
       operationId: GetUsers
+      description: >-
+        Liste tout les usagers.
       responses:
         '200':
           description: OK
@@ -266,7 +312,7 @@ paths:
     post:
       operationId: CreateUser
       description: >-
-        Create a user in the environment.
+        Créer un usager.
       requestBody:
         required: true
         content:
@@ -294,11 +340,11 @@ paths:
     get:
       operationId: GetUserFromUsername
       description: >-
-        Get a user from its username.
+        Obtenir un usager à partir de son nom d'usager.
       parameters:
         - name: username
           in: path
-          description: The username of the targetted user.
+          description: Le nom d'usager de l'usager ciblé.
           required: true
           schema:
             type: string
@@ -324,11 +370,11 @@ paths:
     put:
       operationId: UpdateUser
       description: >-
-        Update a user.
+        Mettre à jour les attributs d'un usager.
       parameters:
         - name: username
           in: path
-          description: The username of the targetted user.
+          description: Le nom d'usager de l'usager ciblé.
           required: true
           schema:
             type: string
@@ -358,11 +404,11 @@ paths:
     delete:
       operationId: DeleteUser
       description: >-
-        Delete a user.
+        Supprimer un usager.
       parameters:
         - name: username
           in: path
-          description: The username of the targetted user.
+          description: Le nom d'usager de l'usager ciblé.
           required: true
           schema:
             type: string
@@ -383,17 +429,17 @@ paths:
     delete:
       operationId: ResetUserCredential
       description: >-
-        Reset user credentials. Delete the credential then send an email to create a new one.
+        Supprimer une donnée d'accès d'un usager et envoyer un courriel de réinitialisation.
       parameters:
         - name: username
           in: path
-          description: The username of the targetted user.
+          description: Le nom d'usager de l'usager ciblé.
           required: true
           schema:
             type: string
         - name: credentialType
           in: path
-          description: The type of credential to reset (password, otp, all).
+          description: La donnée d'accès à supprimer (password, otp, all).
           required: true
           schema:
             type: string
@@ -418,11 +464,11 @@ paths:
     post:
       operationId: SendRequiredActionEmail
       description: >-
-        Send a user an email with a link to complete his required actions.
+        Envoyer un courriel d'action requise à un usager.
       parameters:
         - name: username
           in: path
-          description: The username of the targetted user.
+          description: Le nom d'usager de l'usager ciblé.
           required: true
           schema:
             type: string
@@ -443,7 +489,7 @@ paths:
     get:
       operationId: GetLaboratories
       description: >-
-        Get the list of laboratories contained in the environment.
+        Obtenir la liste des laboratoires.
       responses:
         '200':
           description: OK
@@ -466,7 +512,7 @@ paths:
     post:
       operationId: CreateLaboratory
       description: >-
-        Create a laboratory.
+        Créer un laboratoire.
       requestBody:
         required: true
         content:
@@ -492,11 +538,11 @@ paths:
     get:
       operationId: GetLaboratoryFromId
       description: >-
-        Get a laboratory from its identifier.
+        Obtenir un laboratoire à partir de son identifiant.
       parameters:
         - name: laboratoryid
           in: path
-          description: The identifier of the targetted laboratory.
+          description: L'identifiant du laboratoire.
           required: true
           schema:
             type: string
@@ -522,11 +568,11 @@ paths:
     put:
       operationId: UpdateLaboratory
       description: >-
-        Update the attributes of a laboratory.
+        Mettre à jour les attributs d'un laboratoire.
       parameters:
         - name: laboratoryid
           in: path
-          description: The identifier of the targetted laboratory.
+          description: L'identifiant du laboratoire.
           required: true
           schema:
             type: string
@@ -556,11 +602,11 @@ paths:
     delete:
       operationId: DeleteLaboratory
       description: >-
-        Deletes a laboratory. 
+        Supprimer un laboratoire.
       parameters:
         - name: laboratoryid
           in: path
-          description: The identifier of the targetted laboratory.
+          description: L'identifiant du laboratoire.
           required: true
           schema:
             type: string
@@ -581,16 +627,17 @@ paths:
     put:
       operationId: AddLaboratoryUsers
       description: >-
-        Add users to a laboratory.
+        Ajouter des usagers à un laboratoire.
       parameters:
         - name: laboratoryid
           in: path
-          description: The identifier of the targetted laboratory.
+          description: L'identifiant du laboratoire.
           required: true
           schema:
             type: string
       requestBody:
         required: true
+        description: Liste des courriels des usagers à ajouter.
         content:
           'application/json':
             schema:
@@ -616,16 +663,17 @@ paths:
     delete:
       operationId: RemoveLaboratoryUsers
       description: >-
-        Remove users from a laboratory.
+        Retirer des usagers d'un laboratoire.
       parameters:
         - name: laboratoryid
           in: path
-          description: The identifier of the targetted laboratory.
+          description: L'identifiant du laboratoire.
           required: true
           schema:
             type: string
       requestBody:
         required: true
+        description: Liste des courriels des usagers à retirer.
         content:
           'application/json':
             schema:
@@ -650,17 +698,17 @@ paths:
     put:
       operationId: AttachAwsAccountToLaboratory
       description: >-
-        Attach an existing AWS account to a laboratory.
+        Associer un compte AWS à un laboratoire.
       parameters:
         - name: laboratoryid
           in: path
-          description: The identifier of the targetted laboratory.
+          description: L'identifiant du laboratoire.
           required: true
           schema:
             type: string
         - name: accountid
           in: path
-          description: The identifier of the targetted AWS account.
+          description: L'identifiant du compte AWS.
           required: true
           schema:
             type: string
@@ -682,17 +730,17 @@ paths:
     delete:
       operationId: DetachAwsAccountFromLaboratory
       description: >-
-        Detach a AWS account from a laboratory.
+        Dissocier un compte AWS d'un laboratoire.
       parameters:
         - name: laboratoryid
           in: path
-          description: The identifier of the targetted laboratory.
+          description: L'identifiant du laboratoire ciblé.
           required: true
           schema:
             type: string
         - name: accountid
           in: path
-          description: The identifier of the targetted AWS account.
+          description: L'identifiant du compte AWS ciblé.
           required: true
           schema:
             type: string
@@ -713,17 +761,17 @@ paths:
     put:
       operationId: AttachOpenshiftProjectToLaboratory
       description: >-
-        Attach an existing Openshift project to a laboratory.
+        Associer un projet Openshift à un laboratoire.
       parameters:
         - name: laboratoryid
           in: path
-          description: The identifier of the targetted laboratory.
+          description: L'identifiant du laboratoire.
           required: true
           schema:
             type: string
         - name: projectid
           in: path
-          description: The identifier of the targetted Openshift project.
+          description: L'identifiant du projet Openshift.
           required: true
           schema:
             type: string
@@ -745,17 +793,17 @@ paths:
     delete:
       operationId: DetachOpenshiftProjectFromLaboratory
       description: >-
-        Detach an Openshift project from a laboratory.
+        Dissocier un projet Openshift d'un laboratoire.
       parameters:
         - name: laboratoryid
           in: path
-          description: The identifier of the targetted laboratory.
+          description: L'identifiant du laboratoire ciblé.
           required: true
           schema:
             type: string
         - name: projectid
           in: path
-          description: The identifier of the targetted Openshift project.
+          description: L'identifiant du projet Openshift ciblé.
           required: true
           schema:
             type: string
@@ -776,7 +824,7 @@ paths:
     get:
       operationId: GetOpenshiftProjects
       description: >-
-       Get the list of projects defined in Openshift.
+       Obtenir la liste des projets Openshift.
       responses:
         '200':
           description: OK
@@ -799,7 +847,7 @@ paths:
     post:
       operationId: CreateOpenshiftProject
       description: >-
-        Create a project in Openshift.
+        Créer un projet Openshift.
       requestBody:
         required: true
         content:
@@ -825,11 +873,11 @@ paths:
     get:
       operationId: GetOpenshiftProjectFromId
       description: >-
-        Get a project from its identifier in Openshift.
+        Obtenir un projet Openshift à partir de son identifiant.
       parameters:
         - name: projectid
           in: path
-          description: The identifier of the targetted project.
+          description: L'identifiant du projet Openshift.
           required: true
           schema:
             type: string
@@ -855,11 +903,11 @@ paths:
     put:
       operationId: UpdateOpenshiftProject
       description: >-
-        Update the attributes of a project Openshift.
+        Mettre à jour les attributs d'un projet Openshift.
       parameters:
         - name: projectid
           in: path
-          description: The identifier of the targetted project.
+          description: L'identifiant du projet Openshift.
           required: true
           schema:
             type: string
@@ -889,11 +937,11 @@ paths:
     delete:
       operationId: DeleteOpenshiftProject
       description: >-
-        Delete a project in Openshift. 
+        Supprimer un projet Openshift.
       parameters:
         - name: projectid
           in: path
-          description: The identifier of the targetted project.
+          description: L'identifiant du projet Openshift.
           required: true
           schema:
             type: string
@@ -914,7 +962,7 @@ paths:
     get:
       operationId: GetAwsAccounts
       description: >-
-        Get the list of all laboratories AWS accounts 
+        Obtenir la liste des comptes AWS.
       responses:
         '200':
           description: OK
@@ -934,40 +982,15 @@ paths:
         - Username: []
           UserRoles: []
           GatewaySecret: []
-    post:
-      operationId: CreateAWSAccount
-      description: >-
-        Create an AWS account
-      requestBody:
-        required: true
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/AWSAccount'
-      responses:
-        '200':
-          description: OK
-        '409':
-          description: Account informations are not unique.
-        '400':
-          $ref: '#/components/responses/400BadRequest'
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
-      security:
-        - Username: []
-          UserRoles: []
-          GatewaySecret: []
   /aws/account/{accountid}:
     get:
       operationId: GetAwsAccount
       description: >-
-        Get infos of an AWS accounts
+        Obtenir un compte AWS à partir de son identifiant.
       parameters:
         - name: accountid
           in: path
-          description: The identifier of the targetted account.
+          description: L'identifiant du compte AWS.
           required: true
           schema:
             type: string
@@ -994,7 +1017,7 @@ paths:
     post:
       operationId: GetKeycloakAccessToken
       description: >-
-        Get a Keycloak Access Token for a specified user credentials
+        Obtenir un jeton d'accès Keycloak pour les données d'accès spécifiées.
       requestBody:
         required: true
         content:
@@ -1022,14 +1045,14 @@ paths:
     post:
       operationId: RefreshKeycloakAccessToken
       description: >-
-        Get a Keycloak Access Token for a specified user credentials
+        Obtenir un nouveau jeton d'accès Keycloak à partir d'un jeton de rafraîchissement valide.
       requestBody:
         required: true
         content:
           'application/json':
             schema:
               type: string
-              description: A valid refresh token
+              description: Un jeton de rafraîchissement valide.
       responses:
         '200':
           description: OK
@@ -1051,7 +1074,7 @@ paths:
     get:
       operationId: GetCurrentUserInfo
       description: >-
-        Get username and roles of current authenticated user
+        Obtenir les informations de l'usager courant.
       responses:
         '200':
           description: OK
