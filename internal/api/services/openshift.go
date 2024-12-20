@@ -1,6 +1,8 @@
 package services
 
 import (
+	"time"
+
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/api/openshift"
 	"github.com/CQEN-QDCE/ceai-cqen-admin-api/internal/models"
 	openshiftauthorization "github.com/openshift/api/authorization/v1"
@@ -128,6 +130,9 @@ func CreateOpenshiftProject(createParam *models.OpenshiftProjectWithLab) error {
 	if err != nil {
 		return NewErrorExternalServerError(err, ERROR_SERVER_OPENSHIFT)
 	}
+
+	//Fix for openshift updating new object after creation
+	time.Sleep(500 * time.Millisecond)
 
 	return AttachOpenshiftProjectToLaboratory(createParam.IdLab, createParam.Id)
 }
