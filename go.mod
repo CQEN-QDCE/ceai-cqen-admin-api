@@ -1,6 +1,6 @@
 module github.com/CQEN-QDCE/ceai-cqen-admin-api
 
-go 1.22.5
+go 1.23.5
 
 require (
 	github.com/CQEN-QDCE/aws-sso-scim-goclient v0.0.0-20221212183104-038864c99b62
