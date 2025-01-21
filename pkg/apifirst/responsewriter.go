@@ -47,7 +47,8 @@ func (r *ResponseWriter) GetMarshaledBody() ([]byte, error) {
 			return json.Marshal(r.Body)
 		case "": //TODO Support more contentTypes?
 		}
-
+	} else {
+		return nil, nil
 	}
 
 	err := errors.New("unsupported content type")
