@@ -2,7 +2,7 @@
 ############################
 # STEP 1 build executable binary
 ############################
-FROM golang:1.22 AS builder
+FROM golang:1.23 AS builder
 
 #Copy source files
 ENV GOPATH=/go
